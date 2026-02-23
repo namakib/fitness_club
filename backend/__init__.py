@@ -1,10 +1,19 @@
+import os
+
 from flask import Flask
 from .config import Config
 from . import db as database
 
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+_FRONTEND_DIR = os.path.join(_BASE_DIR, '..', 'frontend')
+
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(
+        __name__,
+        template_folder=os.path.join(_FRONTEND_DIR, 'templates'),
+        static_folder=os.path.join(_FRONTEND_DIR, 'static'),
+    )
     app.config.from_object(Config)
 
     database.init_app(app)
