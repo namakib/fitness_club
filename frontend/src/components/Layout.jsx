@@ -90,7 +90,7 @@ export default function Layout() {
               className={`flex cursor-pointer items-center gap-2 rounded-lg py-2 pr-1 text-left text-lg font-bold tracking-tight ${t.navBrand} hover:opacity-90 focus:outline-none transition-opacity`}
               aria-label="Go to dashboard"
             >
-              <img src="/logo.png" alt="" className="h-8 w-auto pointer-events-none" />
+              <img src="/logo.png" alt="" className="h-8 w-auto pointer-events-none dark:[filter:drop-shadow(0_0_1px_white)_drop-shadow(0_0_2px_white)]" />
               <span className="pointer-events-none">Fitness Club</span>
             </button>
             <div className="hidden items-center gap-1 sm:flex">

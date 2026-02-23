@@ -46,7 +46,7 @@ export default function Register() {
       </div>
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <img src="/logo.png" alt="Fitness Club" className="mx-auto mb-2 h-28 w-auto" />
+          <img src="/logo.png" alt="Fitness Club" className="mx-auto mb-2 h-28 w-auto dark:[filter:drop-shadow(0_0_1px_white)_drop-shadow(0_0_2px_white)]" />
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Create Account</h1>
           <p className="mt-2 text-gray-500 dark:text-gray-400">Join the Fitness Club</p>
         </div>

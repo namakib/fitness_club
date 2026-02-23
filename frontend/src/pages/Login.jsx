@@ -45,7 +45,7 @@ export default function Login() {
       </div>
       <div className="w-full max-w-md flex-1 flex flex-col justify-center">
         <div className="mb-8 text-center">
-          <img src="/logo.png" alt="Fitness Club" className="mx-auto mb-2 h-28 w-auto" />
+          <img src="/logo.png" alt="Fitness Club" className="mx-auto mb-2 h-28 w-auto dark:[filter:drop-shadow(0_0_1px_white)_drop-shadow(0_0_2px_white)]" />
           <p className="mt-2 text-gray-500 dark:text-gray-400">Sign in to your account</p>
         </div>
         <form onSubmit={handleSubmit} className={t.authCard}>
