@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import api from '../api';
 import DatePicker from './DatePicker';
+import Modal from './Modal';
 import { ChevronLeftIcon, ChevronRightIcon, CalendarIcon } from './Icons';
 
 function toYMD(d) {
@@ -31,10 +32,16 @@ function parseEvent(event) {
   return { ...event, date, startM, endM };
 }
 
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+}
+
 export default function AvailabilityCalendar({ onSlotClick, refreshTrigger }) {
   const [viewDate, setViewDate] = useState(() => new Date());
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
   const weekStart = useMemo(() => {
     const d = new Date(viewDate);
@@ -242,7 +249,7 @@ export default function AvailabilityCalendar({ onSlotClick, refreshTrigger }) {
                             className={`absolute left-0 right-0 rounded px-1.5 py-0.5 text-[10px] font-medium text-white truncate border cursor-pointer hover:opacity-90 transition pointer-events-auto ${color}`}
                             style={{ ...style, minHeight: 20 }}
                             title={`${ev.title}${ev.location ? ` · ${ev.location}` : ''} ${ev.start_time}–${ev.end_time}`}
-                            onClick={() => onSlotClick?.(ev)}
+                            onClick={() => { setSelectedEvent(ev); onSlotClick?.(ev); }}
                           >
                             {ev.start_time} {ev.title}
                           </div>
@@ -256,6 +263,50 @@ export default function AvailabilityCalendar({ onSlotClick, refreshTrigger }) {
           </div>
         </div>
       </div>
+
+      <Modal
+        open={!!selectedEvent}
+        onClose={() => setSelectedEvent(null)}
+        title={selectedEvent ? (selectedEvent.event_type === 'session' ? 'Session Details' : 'Class Details') : ''}
+      >
+        {selectedEvent && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${selectedEvent.event_type === 'session' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300' : 'bg-violet-100 text-violet-800 dark:bg-violet-900/50 dark:text-violet-300'}`}>
+                {selectedEvent.event_type === 'session' ? 'Personal Session' : 'Group Class'}
+              </span>
+            </div>
+            <dl className="grid gap-3 text-sm">
+              <div>
+                <dt className="text-gray-500 dark:text-gray-400 font-medium">Title</dt>
+                <dd className="text-gray-900 dark:text-gray-100 mt-0.5">{selectedEvent.title}</dd>
+              </div>
+              <div>
+                <dt className="text-gray-500 dark:text-gray-400 font-medium">Date</dt>
+                <dd className="text-gray-900 dark:text-gray-100 mt-0.5">{fmtDate(selectedEvent.event_date)}</dd>
+              </div>
+              <div>
+                <dt className="text-gray-500 dark:text-gray-400 font-medium">Time</dt>
+                <dd className="text-gray-900 dark:text-gray-100 mt-0.5">{selectedEvent.start_time} – {selectedEvent.end_time}</dd>
+              </div>
+              {selectedEvent.location && (
+                <div>
+                  <dt className="text-gray-500 dark:text-gray-400 font-medium">Room</dt>
+                  <dd className="text-gray-900 dark:text-gray-100 mt-0.5">{selectedEvent.location}</dd>
+                </div>
+              )}
+              {selectedEvent.event_type === 'class' && (selectedEvent.enrolled_count != null || selectedEvent.max_participants != null) && (
+                <div>
+                  <dt className="text-gray-500 dark:text-gray-400 font-medium">Enrollment</dt>
+                  <dd className="text-gray-900 dark:text-gray-100 mt-0.5">
+                    {selectedEvent.enrolled_count ?? 0} / {selectedEvent.max_participants ?? '—'} participants
+                  </dd>
+                </div>
+              )}
+            </dl>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
