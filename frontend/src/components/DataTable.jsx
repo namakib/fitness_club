@@ -154,8 +154,36 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
         </div>
       )}
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+      {/* Mobile: card layout */}
+      <div className="divide-y divide-gray-100 dark:divide-gray-700/50 md:hidden">
+        {paged.length === 0 ? (
+          <div className="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+            No matching results.
+          </div>
+        ) : (
+          paged.map((row, i) => (
+            <div
+              key={row.id || safePage * pageSize + i}
+              className="px-4 py-3 space-y-1.5 bg-white dark:bg-gray-800"
+            >
+              {columns.map(col => (
+                <div key={col.key} className="flex justify-between gap-3 text-sm">
+                  <span className="shrink-0 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    {col.label}
+                  </span>
+                  <span className="text-right text-gray-700 dark:text-gray-300 break-words min-w-0">
+                    {col.render ? col.render(row) : row[col.key]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full text-sm min-w-[600px]">
           <thead>
             <tr className="border-b border-gray-100 dark:border-gray-700/50 bg-gray-50/60 dark:bg-gray-700/30">
               {columns.map(col => (
@@ -188,12 +216,12 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
       </div>
 
       {showPagination && (
-        <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-700/50 px-4 py-3">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 dark:border-gray-700/50 px-4 py-3">
+          <p className="text-xs text-gray-500 dark:text-gray-400 order-2 md:order-1">
             {filtered.length} result{filtered.length !== 1 ? 's' : ''}
             {(query || activeCount > 0) && ' (filtered)'}
           </p>
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1 order-1 md:order-2">
             <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={safePage === 0}
               className="rounded-md px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition">
               Prev

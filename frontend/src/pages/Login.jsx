@@ -34,11 +34,16 @@ export default function Login() {
   }
 
   return (
-    <div className={`flex min-h-screen items-center justify-center ${t.authBg} px-4 transition-colors duration-200`}>
+    <div className={`flex min-h-screen flex-col items-center justify-center ${t.authBg} px-4 transition-colors duration-200`}>
+      <div className="absolute left-4 top-4">
+        <Link to="/" className="text-sm text-gray-600 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 transition">
+          ← Back to Home
+        </Link>
+      </div>
       <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md flex-1 flex flex-col justify-center">
         <div className="mb-8 text-center">
           <img src="/logo.png" alt="Fitness Club" className="mx-auto mb-2 h-28 w-auto" />
           <p className="mt-2 text-gray-500 dark:text-gray-400">Sign in to your account</p>
@@ -76,6 +81,9 @@ export default function Login() {
           </p>
         </form>
       </div>
+      <footer className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+        Health & Fitness Club Management
+      </footer>
     </div>
   );
 }
