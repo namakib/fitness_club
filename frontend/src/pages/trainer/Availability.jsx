@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import api from '../../api';
 import toast from 'react-hot-toast';
 import DataTable from '../../components/DataTable';
+import TimePicker from '../../components/TimePicker';
 import t from '../../theme';
 
 export default function Availability() {
@@ -42,13 +43,11 @@ export default function Availability() {
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
             <input type="date" required className={t.input} value={form.available_date} onChange={set('available_date')} />
           </div>
-          <div className="flex-1 min-w-[120px]">
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Start</label>
-            <input type="time" required className={t.input} value={form.start_time} onChange={set('start_time')} />
+          <div className="flex-1 min-w-[200px]">
+            <TimePicker label="Start" value={form.start_time} onChange={(val) => setForm({ ...form, start_time: val })} placeholder="Select start" required />
           </div>
-          <div className="flex-1 min-w-[120px]">
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">End</label>
-            <input type="time" required className={t.input} value={form.end_time} onChange={set('end_time')} />
+          <div className="flex-1 min-w-[200px]">
+            <TimePicker label="End" value={form.end_time} onChange={(val) => setForm({ ...form, end_time: val })} placeholder="Select end" required />
           </div>
           <button type="submit" disabled={busy} className={t.btn}>
             {busy ? 'Adding...' : 'Add Slot'}
