@@ -6,10 +6,14 @@ import {
 import api from '../../api';
 import StatCard from '../../components/StatCard';
 import DataTable from '../../components/DataTable';
+import { useTheme } from '../../context/ThemeContext';
 import t from '../../theme';
 
 export default function TrainerDashboard() {
+  const { isDark } = useTheme();
   const [data, setData] = useState(null);
+  const gridStroke = t.chartGridStroke[isDark ? 'dark' : 'light'];
+  const tickFill = t.chartTickFill[isDark ? 'dark' : 'light'];
 
   useEffect(() => { api.get('/trainer/dashboard').then(setData); }, []);
 
@@ -44,9 +48,9 @@ export default function TrainerDashboard() {
                       <stop offset="100%" stopColor={t.chartPrimary} stopOpacity={0.4} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} allowDecimals={false} />
                   <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 13 }} />
                   <Bar dataKey="count" fill="url(#sessionBarGrad)" radius={[8, 8, 0, 0]} name="Sessions" />
                 </BarChart>
@@ -65,9 +69,9 @@ export default function TrainerDashboard() {
                       <stop offset="100%" stopColor={t.chartGradientFrom} stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} allowDecimals={false} />
                   <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 13 }} />
                   <Area type="monotone" dataKey="count" stroke={t.chartPrimary} strokeWidth={2.5} fill="url(#classGrad)" dot={{ r: 4, fill: '#fff', stroke: t.chartPrimary, strokeWidth: 2 }} activeDot={{ r: 6, fill: t.chartPrimary, stroke: '#fff', strokeWidth: 2 }} name="Classes" />
                 </AreaChart>

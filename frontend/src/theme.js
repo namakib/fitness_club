@@ -30,6 +30,8 @@ const theme = {
   chartSecondary: '#f97316',
   chartGradientFrom: '#f97316',
   chartBar: '#d97706',
+  chartGridStroke: { light: '#e5e7eb', dark: '#4b5563' },
+  chartTickFill: { light: '#6b7280', dark: '#9ca3af' },
 };
 
 export default theme;

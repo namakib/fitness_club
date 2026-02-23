@@ -7,10 +7,14 @@ import api from '../../api';
 import StatCard from '../../components/StatCard';
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
+import { useTheme } from '../../context/ThemeContext';
 import t from '../../theme';
 
 export default function Dashboard() {
+  const { isDark } = useTheme();
   const [data, setData] = useState(null);
+  const gridStroke = t.chartGridStroke[isDark ? 'dark' : 'light'];
+  const tickFill = t.chartTickFill[isDark ? 'dark' : 'light'];
 
   useEffect(() => { api.get('/member/dashboard').then(setData); }, []);
 
@@ -51,9 +55,9 @@ export default function Dashboard() {
                     <stop offset="100%" stopColor={t.chartGradientFrom} stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} domain={['auto', 'auto']} />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                <XAxis dataKey="date" tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} domain={['auto', 'auto']} />
                 <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 13 }} />
                 <Area type="monotone" dataKey="weight" stroke={t.chartPrimary} strokeWidth={2.5} fill="url(#weightGrad)" dot={{ r: 4, fill: '#fff', stroke: t.chartPrimary, strokeWidth: 2 }} activeDot={{ r: 6, fill: t.chartPrimary, stroke: '#fff', strokeWidth: 2 }} name="Weight (kg)" />
               </AreaChart>
@@ -69,9 +73,9 @@ export default function Dashboard() {
                     <stop offset="100%" stopColor={t.chartBar} stopOpacity={0.4} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} domain={['auto', 'auto']} />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                <XAxis dataKey="date" tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} domain={['auto', 'auto']} />
                 <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 13 }} />
                 <Bar dataKey="heartRate" fill="url(#hrBarGrad)" radius={[8, 8, 0, 0]} name="Heart Rate (bpm)" />
               </BarChart>

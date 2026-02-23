@@ -7,12 +7,16 @@ import api from '../../api';
 import StatCard from '../../components/StatCard';
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
+import { useTheme } from '../../context/ThemeContext';
 import t from '../../theme';
 
 const PIE_COLORS = ['#16a34a', '#d97706', '#dc2626'];
 
 export default function AdminDashboard() {
+  const { isDark } = useTheme();
   const [data, setData] = useState(null);
+  const gridStroke = t.chartGridStroke[isDark ? 'dark' : 'light'];
+  const tickFill = t.chartTickFill[isDark ? 'dark' : 'light'];
 
   useEffect(() => { api.get('/admin/dashboard').then(setData); }, []);
 
@@ -73,9 +77,9 @@ export default function AdminDashboard() {
                     <stop offset="100%" stopColor={t.chartPrimary} stopOpacity={0.4} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 13 }} />
                 <Bar dataKey="count" fill="url(#bookingBarGrad)" radius={[8, 8, 0, 0]} name="Bookings" />
               </BarChart>
