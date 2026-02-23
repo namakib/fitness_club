@@ -10,7 +10,7 @@ import StatusBadge from '../../components/StatusBadge';
 import { useTheme } from '../../context/ThemeContext';
 import t from '../../theme';
 
-const PIE_COLORS = ['#16a34a', '#d97706', '#dc2626'];
+const PIE_COLORS = ['#34d399', '#fb923c', '#f87171'];
 
 export default function AdminDashboard() {
   const { isDark } = useTheme();
@@ -53,7 +53,8 @@ export default function AdminDashboard() {
                   {PIE_COLORS.map((color, i) => (
                     <linearGradient key={i} id={`pieGrad${i}`} x1="0" y1="0" x2="1" y2="1">
                       <stop offset="0%" stopColor={color} stopOpacity={1} />
-                      <stop offset="100%" stopColor={color} stopOpacity={0.6} />
+                      <stop offset="45%" stopColor={color} stopOpacity={0.85} />
+                      <stop offset="100%" stopColor={color} stopOpacity={0.45} />
                     </linearGradient>
                   ))}
                 </defs>

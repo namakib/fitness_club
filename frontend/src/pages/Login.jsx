@@ -3,7 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import ThemeToggle from '../components/ThemeToggle';
+import SelectDropdown from '../components/SelectDropdown';
 import t from '../theme';
+
+const ROLE_OPTIONS = [
+  { value: 'member', label: 'Member' },
+  { value: 'trainer', label: 'Trainer' },
+  { value: 'admin', label: 'Admin' },
+];
 
 export default function Login() {
   const { login } = useAuth();
@@ -48,14 +55,14 @@ export default function Login() {
               <input type="password" required className={t.inputLg}
                 value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
             </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
-              <select className={t.inputLg} value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>
-                <option value="member">Member</option>
-                <option value="trainer">Trainer</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
+            <SelectDropdown
+              label="Role"
+              value={form.role}
+              options={ROLE_OPTIONS}
+              onChange={(val) => setForm({ ...form, role: val })}
+              placeholder="Select role"
+              searchable={false}
+            />
           </div>
 
           <button type="submit" disabled={busy}
