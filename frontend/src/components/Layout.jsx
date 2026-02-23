@@ -7,16 +7,13 @@ import t from '../theme';
 
 const navItems = {
   member: [
-    { to: '/member/dashboard', label: 'Dashboard' },
     { to: '/member/health-history', label: 'Health History' },
   ],
   trainer: [
-    { to: '/trainer/dashboard', label: 'Dashboard' },
     { to: '/trainer/schedule', label: 'Schedule' },
     { to: '/trainer/availability', label: 'Availability' },
   ],
   admin: [
-    { to: '/admin/dashboard', label: 'Dashboard' },
     { to: '/admin/room-booking', label: 'Room Booking' },
     { to: '/admin/equipment', label: 'Equipment' },
   ],
@@ -40,7 +37,9 @@ export default function Layout() {
   const location = useLocation();
   const items = navItems[role] || [];
   const dashboardTo = dashboardPath[role] || '/member/dashboard';
+  const profileTo = profilePath[role] || '/member/profile';
   const isOnDashboard = location.pathname === dashboardTo;
+  const isOnProfile = location.pathname === profileTo;
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -88,10 +87,11 @@ export default function Layout() {
             <button
               type="button"
               onClick={handleBrandClick}
-              className={`flex items-center gap-2 text-lg font-bold tracking-tight ${t.navBrand} hover:opacity-90 transition-opacity`}
+              className={`flex cursor-pointer items-center gap-2 rounded-lg py-2 pr-1 text-left text-lg font-bold tracking-tight ${t.navBrand} hover:opacity-90 focus:outline-none transition-opacity`}
+              aria-label="Go to dashboard"
             >
-              <img src="/logo.png" alt="" className="h-8 w-auto" />
-              Fitness Club
+              <img src="/logo.png" alt="" className="h-8 w-auto pointer-events-none" />
+              <span className="pointer-events-none">Fitness Club</span>
             </button>
             <div className="hidden items-center gap-1 sm:flex">
               {items.map(({ to, label }) => (
@@ -112,7 +112,7 @@ export default function Layout() {
               <button
                 type="button"
                 onClick={() => setMenuOpen(prev => !prev)}
-                className="inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                className="inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition"
               >
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/40 text-xs font-bold text-orange-700 dark:text-orange-400">
                   {initials}
@@ -141,7 +141,7 @@ export default function Layout() {
                   <button
                     type="button"
                     onClick={handleProfile}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition ${isOnProfile ? t.navActive : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                   >
                     <UserIcon />
                     Profile

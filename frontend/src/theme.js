@@ -30,6 +30,17 @@ const theme = {
   chartSecondary: '#f97316',
   chartGradientFrom: '#f97316',
   chartBar: '#d97706',
+
+  // Health History (and other) chart series – one color per chart for consistency
+  chartColors: {
+    weight: '#ea580c',
+    bodyFat: '#8b5cf6',
+    bodyFatGradientTo: '#a78bfa',
+    heartRate: '#059669',
+    bpSystolic: '#dc2626',
+    bpDiastolic: '#2563eb',
+  },
+
   chartGridStroke: { light: '#e5e7eb', dark: '#4b5563' },
   chartTickFill: { light: '#6b7280', dark: '#9ca3af' },
   chartTooltip: {
