@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback } from 'react';
 import api from '../../api';
 import toast from 'react-hot-toast';
 import DataTable from '../../components/DataTable';
+import DatePicker from '../../components/DatePicker';
+import SelectDropdown from '../../components/SelectDropdown';
 import StatusBadge from '../../components/StatusBadge';
 import TimePicker from '../../components/TimePicker';
 import t from '../../theme';
@@ -72,10 +74,10 @@ function SessionForm({ rooms, members, trainers, onSaved }) {
 
   return (
     <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <SelectField label="Member" value={form.member_id} onChange={set('member_id')} options={members.map(m => ({ value: m.member_id, label: `${m.name} (${m.email})` }))} />
-      <SelectField label="Trainer" value={form.trainer_id} onChange={set('trainer_id')} options={trainers.map(tr => ({ value: tr.trainer_id, label: `${tr.name} – ${tr.specialization}` }))} />
-      <SelectField label="Room" value={form.room_id} onChange={set('room_id')} options={rooms.map(r => ({ value: r.room_id, label: r.room_name }))} />
-      <Field label="Date" type="date" value={form.session_date} onChange={set('session_date')} required />
+      <SelectDropdown label="Member" value={form.member_id} onChange={(val) => setForm({ ...form, member_id: val })} options={members.map(m => ({ value: m.member_id, label: `${m.name} (${m.email})` }))} placeholder="Select member" searchable={members.length > 5} />
+      <SelectDropdown label="Trainer" value={form.trainer_id} onChange={(val) => setForm({ ...form, trainer_id: val })} options={trainers.map(tr => ({ value: tr.trainer_id, label: `${tr.name} – ${tr.specialization}` }))} placeholder="Select trainer" searchable={trainers.length > 5} />
+      <SelectDropdown label="Room" value={form.room_id} onChange={(val) => setForm({ ...form, room_id: val })} options={rooms.map(r => ({ value: r.room_id, label: r.room_name }))} placeholder="Select room" searchable={rooms.length > 5} />
+      <DatePicker label="Date" value={form.session_date} onChange={(val) => setForm({ ...form, session_date: val })} placeholder="Select date" required />
       <TimePicker label="Start Time" value={form.start_time} onChange={(val) => setForm({ ...form, start_time: val })} placeholder="Select start time" required />
       <TimePicker label="End Time" value={form.end_time} onChange={(val) => setForm({ ...form, end_time: val })} placeholder="Select end time" required />
       <div className="sm:col-span-2 lg:col-span-3">
@@ -101,9 +103,9 @@ function ClassForm({ rooms, trainers, onSaved }) {
   return (
     <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <Field label="Class Name" value={form.class_name} onChange={set('class_name')} required />
-      <SelectField label="Trainer" value={form.trainer_id} onChange={set('trainer_id')} options={trainers.map(tr => ({ value: tr.trainer_id, label: `${tr.name} – ${tr.specialization}` }))} />
-      <SelectField label="Room" value={form.room_id} onChange={set('room_id')} options={rooms.map(r => ({ value: r.room_id, label: r.room_name }))} />
-      <Field label="Date" type="date" value={form.class_date} onChange={set('class_date')} required />
+      <SelectDropdown label="Trainer" value={form.trainer_id} onChange={(val) => setForm({ ...form, trainer_id: val })} options={trainers.map(tr => ({ value: tr.trainer_id, label: `${tr.name} – ${tr.specialization}` }))} placeholder="Select trainer" searchable={trainers.length > 5} />
+      <SelectDropdown label="Room" value={form.room_id} onChange={(val) => setForm({ ...form, room_id: val })} options={rooms.map(r => ({ value: r.room_id, label: r.room_name }))} placeholder="Select room" searchable={rooms.length > 5} />
+      <DatePicker label="Date" value={form.class_date} onChange={(val) => setForm({ ...form, class_date: val })} placeholder="Select date" required />
       <TimePicker label="Start Time" value={form.start_time} onChange={(val) => setForm({ ...form, start_time: val })} placeholder="Select start time" required />
       <TimePicker label="End Time" value={form.end_time} onChange={(val) => setForm({ ...form, end_time: val })} placeholder="Select end time" required />
       <Field label="Max Participants" type="number" min={1} value={form.max_participants} onChange={set('max_participants')} required />
@@ -128,18 +130,6 @@ function Field({ label, ...props }) {
     <div>
       <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
       <input className={t.input} {...props} />
-    </div>
-  );
-}
-
-function SelectField({ label, value, onChange, options }) {
-  return (
-    <div>
-      <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
-      <select className={t.input} value={value} onChange={onChange} required>
-        <option value="">Select...</option>
-        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
     </div>
   );
 }

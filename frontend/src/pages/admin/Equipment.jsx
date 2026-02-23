@@ -2,8 +2,21 @@ import { useEffect, useState, useCallback } from 'react';
 import api from '../../api';
 import toast from 'react-hot-toast';
 import DataTable from '../../components/DataTable';
+import SelectDropdown from '../../components/SelectDropdown';
 import StatusBadge from '../../components/StatusBadge';
 import t from '../../theme';
+
+const EQUIPMENT_STATUS_OPTIONS = [
+  { value: 'operational', label: 'Operational' },
+  { value: 'under_repair', label: 'Under Repair' },
+  { value: 'out_of_service', label: 'Out of Service' },
+];
+
+const MAINTENANCE_STATUS_OPTIONS = [
+  { value: 'reported', label: 'Reported' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'resolved', label: 'Resolved' },
+];
 
 export default function Equipment() {
   const [data, setData] = useState(null);
@@ -47,11 +60,14 @@ export default function Equipment() {
         <h2 className="mb-4 text-base font-semibold text-gray-800 dark:text-gray-200">Log Maintenance Issue</h2>
         <form onSubmit={logIssue} className="flex flex-wrap items-end gap-4">
           <div className="min-w-[200px] flex-1">
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Equipment</label>
-            <select className={t.input} value={issueForm.equipment_id} onChange={e => setIssueForm({ ...issueForm, equipment_id: e.target.value })} required>
-              <option value="">Select equipment...</option>
-              {data.equipment_list.map(eq => <option key={eq.equipment_id} value={eq.equipment_id}>{eq.name} ({eq.type})</option>)}
-            </select>
+            <SelectDropdown
+              label="Equipment"
+              value={issueForm.equipment_id}
+              onChange={(val) => setIssueForm({ ...issueForm, equipment_id: val })}
+              options={data.equipment_list.map(eq => ({ value: eq.equipment_id, label: `${eq.name} (${eq.type})` }))}
+              placeholder="Select equipment..."
+              searchable={data.equipment_list.length > 5}
+            />
           </div>
           <div className="min-w-[250px] flex-[2]">
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Issue Description</label>
@@ -71,12 +87,14 @@ export default function Equipment() {
             { key: 'purchase_date', label: 'Purchased', filter: 'date', render: (r) => fmtDate(r.purchase_date) },
             { key: 'last_maintenance_date', label: 'Last Maint.', render: (r) => fmtDate(r.last_maintenance_date) },
             { key: 'action', label: 'Action', render: (r) => (
-              <select className="rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 px-2 py-1 text-xs"
-                value={r.status} onChange={e => updateStatus(r.equipment_id, e.target.value)}>
-                <option value="operational">Operational</option>
-                <option value="under_repair">Under Repair</option>
-                <option value="out_of_service">Out of Service</option>
-              </select>
+              <SelectDropdown
+                value={r.status}
+                onChange={(val) => updateStatus(r.equipment_id, val)}
+                options={EQUIPMENT_STATUS_OPTIONS}
+                placeholder="Status"
+                searchable={false}
+                floating
+              />
             )},
           ]}
           data={data.equipment_list}
@@ -95,12 +113,14 @@ export default function Equipment() {
             { key: 'resolved_date', label: 'Resolved', render: (r) => fmtDate(r.resolved_date) },
             { key: 'status', label: 'Status', filter: 'enum', render: (r) => <StatusBadge status={r.status} /> },
             { key: 'action', label: '', render: (r) => r.status !== 'resolved' && (
-              <select className="rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 px-2 py-1 text-xs"
-                value={r.status} onChange={e => updateMaintenance(r.log_id, e.target.value)}>
-                <option value="reported">Reported</option>
-                <option value="in_progress">In Progress</option>
-                <option value="resolved">Resolved</option>
-              </select>
+              <SelectDropdown
+                value={r.status}
+                onChange={(val) => updateMaintenance(r.log_id, val)}
+                options={MAINTENANCE_STATUS_OPTIONS}
+                placeholder="Status"
+                searchable={false}
+                floating
+              />
             )},
           ]}
           data={data.maintenance_logs}
