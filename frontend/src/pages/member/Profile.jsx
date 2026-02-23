@@ -5,6 +5,8 @@ import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
 import ProfileHeader from '../../components/ProfileHeader';
 import SelectDropdown from '../../components/SelectDropdown';
+import DatePicker from '../../components/DatePicker';
+import Modal from '../../components/Modal';
 import { UserIcon, ChartIcon, TargetIcon, CalendarIcon, PhoneIcon, GenderIcon, ClockIcon } from '../../components/Icons';
 import t from '../../theme';
 
@@ -115,8 +117,13 @@ function GoalSection({ data, onSaved }) {
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
-    try { await api.post('/member/goals', form); toast.success('Goal added.'); setOpen(false); onSaved(); }
-    catch (err) { toast.error(err.message); }
+    try {
+      await api.post('/member/goals', form);
+      toast.success('Goal added.');
+      setOpen(false);
+      setForm({ goal_type: 'weight_loss', target_value: '', start_date: '', end_date: '' });
+      onSaved();
+    } catch (err) { toast.error(err.message); }
     finally { setBusy(false); }
   }
 
@@ -127,31 +134,41 @@ function GoalSection({ data, onSaved }) {
           <TargetIcon />
           <h2 className="text-lg font-semibold">Fitness Goals</h2>
         </div>
-        <button onClick={() => setOpen(!open)} className={t.btnSmall}>
-          {open ? 'Cancel' : '+ Add Goal'}
+        <button onClick={() => setOpen(true)} className={t.btnSmall}>
+          + Add Goal
         </button>
       </div>
 
-      {open && (
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
-          <form onSubmit={submit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <SelectDropdown
-                label="Type"
-                value={form.goal_type}
-                options={GOAL_TYPES}
-                onChange={(val) => setForm({ ...form, goal_type: val })}
-                placeholder="Select type"
-                searchable={false}
-              />
-              <Field label="Target" value={form.target_value} onChange={set('target_value')} required />
-              <Field label="Start Date" type="date" value={form.start_date} onChange={set('start_date')} required />
-              <Field label="End Date" type="date" value={form.end_date} onChange={set('end_date')} />
-            </div>
-            <button type="submit" disabled={busy} className={t.btn}>{busy ? 'Adding...' : 'Add Goal'}</button>
-          </form>
-        </div>
-      )}
+      <Modal open={open} onClose={() => setOpen(false)} title="Add Fitness Goal">
+        <form onSubmit={submit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <SelectDropdown
+              label="Type"
+              value={form.goal_type}
+              options={GOAL_TYPES}
+              onChange={(val) => setForm({ ...form, goal_type: val })}
+              placeholder="Select type"
+              searchable={false}
+            />
+            <Field label="Target" value={form.target_value} onChange={set('target_value')} required />
+            <DatePicker
+              label="Start Date"
+              value={form.start_date}
+              onChange={(val) => setForm({ ...form, start_date: val })}
+              placeholder="Select start date"
+              required
+            />
+            <DatePicker
+              label="End Date"
+              value={form.end_date}
+              onChange={(val) => setForm({ ...form, end_date: val })}
+              placeholder="Select end date"
+              min={form.start_date || undefined}
+            />
+          </div>
+          <button type="submit" disabled={busy} className={t.btn}>{busy ? 'Adding...' : 'Add Goal'}</button>
+        </form>
+      </Modal>
 
       <DataTable
         columns={[

@@ -1,68 +1,54 @@
 /**
  * Centralized icon components. All accept optional className; ChevronUpDownIcon also accepts open.
  */
-const cn = (defaultClass, className) => (className ? `${defaultClass} ${className}`.trim() : defaultClass);
+const cn = (base, className) => (className ? `${base} ${className}`.trim() : base);
 
-// ─── Chevrons ─────────────────────────────────────────────────────────────
-export function ChevronLeftIcon({ className }) {
+// ─── Chevrons (Single Reusable Component) ──────────────────────────────────
+export function ChevronIcon({ direction = 'right', className, ...props }) {
+  const rotation = {
+    right: '',
+    left: 'rotate-180',
+    up: '-rotate-90',
+    down: 'rotate-90',
+  }[direction];
+
   return (
-    <svg className={cn('h-4 w-4', className)} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+    <svg
+      {...props}
+      className={cn(`h-4 w-4 shrink-0 transition-transform ${rotation}`, className)}
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={2}
+      stroke="currentColor"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
     </svg>
   );
 }
 
-export function ChevronRightIcon({ className }) {
+export const ChevronLeftIcon = (props) => <ChevronIcon direction="left" {...props} />;
+export const ChevronRightIcon = (props) => <ChevronIcon direction="right" {...props} />;
+export const ChevronUpIcon = (props) => <ChevronIcon direction="up" {...props} />;
+export const ChevronDownIcon = (props) => <ChevronIcon direction="down" {...props} />;
+
+export function ChevronUpDownIcon({ open = false, className, ...props }) {
   return (
-    <svg className={cn('h-4 w-4', className)} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-    </svg>
+    <ChevronIcon direction="down" className={cn(open ? 'rotate-180' : '', className)} {...props} />
   );
 }
 
-export function ChevronDoubleLeftIcon({ className }) {
+// ─── Double Chevrons ───────────────────────────────────────────────────────
+export function ChevronDoubleIcon({ direction = 'right', className, ...props }) {
   return (
-    <svg className={cn('h-4 w-4 shrink-0', className)} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m18.75 4.5-7.5 7.5 7.5 7.5" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 4.5-7.5 7.5 7.5 7.5" />
-    </svg>
+    <span className={cn('inline-flex shrink-0 items-center', className)} {...props}>
+      <ChevronIcon direction={direction} className="-mr-0.5" />
+      <ChevronIcon direction={direction} />
+    </span>
   );
 }
 
-export function ChevronDoubleRightIcon({ className }) {
-  return (
-    <svg className={cn('h-4 w-4 shrink-0', className)} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m5.25 4.5 7.5 7.5-7.5 7.5" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="m12.75 4.5 7.5 7.5-7.5 7.5" />
-    </svg>
-  );
-}
-
-export function ChevronUpIcon({ className }) {
-  return (
-    <svg className={cn('h-3.5 w-3.5 shrink-0 text-gray-600 dark:text-gray-400', className)} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-    </svg>
-  );
-}
-
-export function ChevronDownIcon({ className }) {
-  return (
-    <svg className={cn('h-3.5 w-3.5 shrink-0 text-gray-600 dark:text-gray-400', className)} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 8.25 7.5 7.5 7.5-7.5" />
-    </svg>
-  );
-}
-
-export function ChevronUpDownIcon({ open, className }) {
-  const base = 'h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500 transition-transform duration-200';
-  const rotation = open ? ' rotate-180' : '';
-  return (
-    <svg className={cn(base + rotation, className)} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-    </svg>
-  );
-}
+export const ChevronDoubleLeftIcon = (props) => <ChevronDoubleIcon direction="left" {...props} />;
+export const ChevronDoubleRightIcon = (props) => <ChevronDoubleIcon direction="right" {...props} />;
 
 // ─── UI ──────────────────────────────────────────────────────────────────
 export function CheckIcon({ className }) {
