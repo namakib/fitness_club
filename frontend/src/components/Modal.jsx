@@ -1,7 +1,13 @@
 import { useEffect } from 'react';
 import { CloseIcon } from './Icons';
 
-export default function Modal({ open, onClose, title, children }) {
+const SIZE_CLASSES = {
+  sm: 'max-w-sm',
+  md: 'max-w-md',
+  lg: 'max-w-lg',
+};
+
+export default function Modal({ open, onClose, title, children, size = 'md' }) {
   useEffect(() => {
     if (open) document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
@@ -9,15 +15,17 @@ export default function Modal({ open, onClose, title, children }) {
 
   if (!open) return null;
 
+  const maxWidth = SIZE_CLASSES[size] ?? SIZE_CLASSES.md;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/50 dark:bg-black/60"
         onClick={onClose}
         aria-hidden
       />
       <div
-        className="relative w-full max-w-md rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-xl"
+        className={`relative w-full ${maxWidth} rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-xl`}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">

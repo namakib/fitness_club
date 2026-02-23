@@ -103,7 +103,7 @@ export default function TimePicker({ label, value, onChange, placeholder = 'Sele
         </label>
       )}
 
-      <div className="relative min-w-[280px]" ref={ref}>
+      <div className="relative w-full min-w-0" ref={ref}>
         <button
           type="button"
           onClick={() => setOpen(prev => !prev)}
@@ -117,7 +117,7 @@ export default function TimePicker({ label, value, onChange, placeholder = 'Sele
         </button>
 
         {open && (
-          <div className="absolute left-0 right-0 top-full z-50 mt-1.5 w-full min-w-[280px] rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black/5 dark:ring-white/5 overflow-hidden">
+          <div className="absolute left-0 right-0 top-full z-50 mt-1.5 w-full min-w-0 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black/5 dark:ring-white/5 overflow-hidden">
             {/* Compact row: Hour : Minute with spinners + AM/PM toggle */}
             <div className="p-3 border-b border-gray-100 dark:border-gray-700">
               <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-3 text-center">Enter time</p>

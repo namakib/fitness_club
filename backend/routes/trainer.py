@@ -198,8 +198,9 @@ def get_calendar():
     availability = cur.fetchall()
 
     cur.execute(
-        '''SELECT ps.session_id, ps.session_date AS event_date, ps.start_time, ps.end_time,
-                  'session' AS event_type, m.name AS title, r.room_name AS location
+        '''SELECT ps.session_id, ps.member_id, ps.room_id, ps.session_date AS event_date,
+                  ps.start_time, ps.end_time, 'session' AS event_type,
+                  m.name AS title, r.room_name AS location
            FROM personal_session ps
            JOIN member m ON m.member_id = ps.member_id
            JOIN room r ON r.room_id = ps.room_id
@@ -211,7 +212,7 @@ def get_calendar():
     sessions = cur.fetchall()
 
     cur.execute(
-        '''SELECT gc.class_id, gc.class_date AS event_date, gc.start_time, gc.end_time,
+        '''SELECT gc.class_id, gc.room_id, gc.class_date AS event_date, gc.start_time, gc.end_time,
                   'class' AS event_type, gc.class_name AS title, r.room_name AS location,
                   gc.max_participants,
                   (SELECT COUNT(*) FROM class_enrollment ce WHERE ce.class_id = gc.class_id) AS enrolled_count
@@ -232,6 +233,129 @@ def get_calendar():
         year=year,
         month=month,
     )
+
+
+@bp.route('/rooms')
+@role_required('trainer')
+def get_rooms():
+    cur = get_cursor()
+    cur.execute('SELECT room_id, room_name FROM room ORDER BY room_name')
+    rooms = cur.fetchall()
+    cur.close()
+    return jsonify(rooms=serialize_rows(rooms))
+
+
+@bp.route('/sessions/<int:session_id>', methods=('PUT', 'DELETE'))
+@role_required('trainer')
+def update_or_delete_session(session_id):
+    tid = g.user['trainer_id']
+    cur = get_cursor()
+    cur.execute(
+        'SELECT 1 FROM personal_session WHERE session_id = %s AND trainer_id = %s',
+        (session_id, tid))
+    if not cur.fetchone():
+        cur.close()
+        return jsonify(error='Session not found.'), 404
+
+    if request.method == 'DELETE':
+        try:
+            cur.execute(
+                'DELETE FROM personal_session WHERE session_id = %s AND trainer_id = %s',
+                (session_id, tid))
+            get_db().commit()
+            cur.close()
+            return jsonify(message='Session deleted.')
+        except Exception as e:
+            get_db().rollback()
+            cur.close()
+            return jsonify(error=str(e)), 500
+
+    data = request.get_json(silent=True) or {}
+    session_date = data.get('session_date', '').strip()
+    start_time = data.get('start_time', '').strip()
+    end_time = data.get('end_time', '').strip()
+    room_id = data.get('room_id')
+    if not session_date or not start_time or not end_time:
+        cur.close()
+        return jsonify(error='Date, start time, and end time are required.'), 400
+    if start_time >= end_time:
+        cur.close()
+        return jsonify(error='End time must be after start time.'), 400
+    try:
+        cur.execute(
+            '''UPDATE personal_session
+               SET session_date = %s, start_time = %s, end_time = %s, room_id = COALESCE(%s, room_id)
+               WHERE session_id = %s AND trainer_id = %s''',
+            (session_date, start_time, end_time, room_id, session_id, tid))
+        get_db().commit()
+        return jsonify(message='Session updated.')
+    except Exception as e:
+        get_db().rollback()
+        msg = str(e)
+        if 'already booked' in msg.lower():
+            return jsonify(error='Room is already booked for that time slot.'), 409
+        return jsonify(error=str(msg)), 500
+    finally:
+        cur.close()
+
+
+@bp.route('/classes/<int:class_id>', methods=('PUT', 'DELETE'))
+@role_required('trainer')
+def update_or_delete_class(class_id):
+    tid = g.user['trainer_id']
+    cur = get_cursor()
+    cur.execute(
+        'SELECT 1 FROM group_class WHERE class_id = %s AND trainer_id = %s',
+        (class_id, tid))
+    if not cur.fetchone():
+        cur.close()
+        return jsonify(error='Class not found.'), 404
+
+    if request.method == 'DELETE':
+        try:
+            cur.execute(
+                'DELETE FROM group_class WHERE class_id = %s AND trainer_id = %s',
+                (class_id, tid))
+            get_db().commit()
+            cur.close()
+            return jsonify(message='Class deleted.')
+        except Exception as e:
+            get_db().rollback()
+            cur.close()
+            return jsonify(error=str(e)), 500
+
+    data = request.get_json(silent=True) or {}
+    class_date = data.get('class_date', '').strip()
+    start_time = data.get('start_time', '').strip()
+    end_time = data.get('end_time', '').strip()
+    room_id = data.get('room_id')
+    class_name = data.get('class_name', '').strip()
+    max_participants = data.get('max_participants')
+    if not class_date or not start_time or not end_time:
+        cur.close()
+        return jsonify(error='Date, start time, and end time are required.'), 400
+    if start_time >= end_time:
+        cur.close()
+        return jsonify(error='End time must be after start time.'), 400
+    try:
+        cur.execute(
+            '''UPDATE group_class
+               SET class_date = %s, start_time = %s, end_time = %s,
+                   room_id = COALESCE(%s, room_id),
+                   class_name = COALESCE(NULLIF(%s, ''), class_name),
+                   max_participants = COALESCE(%s, max_participants)
+               WHERE class_id = %s AND trainer_id = %s''',
+            (class_date, start_time, end_time, room_id, class_name, max_participants, class_id, tid))
+        get_db().commit()
+        return jsonify(message='Class updated.')
+    except Exception as e:
+        get_db().rollback()
+        msg = str(e)
+        if 'already booked' in msg.lower():
+            return jsonify(error='Room is already booked for that time slot.'), 409
+        return jsonify(error=str(msg)), 500
+    finally:
+        cur.close()
 
 
 @bp.route('/availability')
