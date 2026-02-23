@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% block title %}Equipment Maintenance{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-tools me-2"></i>Equipment Management</h2>
+
+<div class="row g-4">
+  <!-- Equipment List -->
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span>Equipment Inventory</span>
+        <div>
+          <a href="{{ url_for('admin.equipment') }}"
+             class="btn btn-sm {{ 'btn-primary' if not status_filter else 'btn-outline-secondary' }}">All</a>
+          <a href="{{ url_for('admin.equipment', status='operational') }}"
+             class="btn btn-sm {{ 'btn-success' if status_filter == 'operational' else 'btn-outline-success' }}">Operational</a>
+          <a href="{{ url_for('admin.equipment', status='under_repair') }}"
+             class="btn btn-sm {{ 'btn-warning' if status_filter == 'under_repair' else 'btn-outline-warning' }}">Under Repair</a>
+          <a href="{{ url_for('admin.equipment', status='out_of_service') }}"
+             class="btn btn-sm {{ 'btn-danger' if status_filter == 'out_of_service' else 'btn-outline-danger' }}">Out of Service</a>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        {% if equipment_list %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Purchased</th>
+                <th>Last Maint.</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for eq in equipment_list %}
+              <tr>
+                <td>{{ eq.name }}</td>
+                <td>{{ eq.type }}</td>
+                <td>
+                  <span class="badge badge-{{ eq.status }}">
+                    {{ eq.status | replace('_', ' ') | title }}
+                  </span>
+                </td>
+                <td>{{ eq.purchase_date.strftime('%b %Y') if eq.purchase_date else '—' }}</td>
+                <td>{{ eq.last_maintenance_date.strftime('%b %d, %Y') if eq.last_maintenance_date else '—' }}</td>
+                <td>
+                  <form method="POST" class="d-inline">
+                    <input type="hidden" name="action" value="update_status">
+                    <input type="hidden" name="equipment_id" value="{{ eq.equipment_id }}">
+                    <select name="equipment_status" class="form-select form-select-sm"
+                            style="width:auto;display:inline-block"
+                            onchange="this.form.submit()">
+                      <option value="operational" {{ 'selected' if eq.status == 'operational' }}>Operational</option>
+                      <option value="under_repair" {{ 'selected' if eq.status == 'under_repair' }}>Under Repair</option>
+                      <option value="out_of_service" {{ 'selected' if eq.status == 'out_of_service' }}>Out of Service</option>
+                    </select>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted p-3 mb-0">No equipment found.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Log New Issue -->
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header bg-white">Log Maintenance Issue</div>
+      <div class="card-body">
+        <form method="POST">
+          <input type="hidden" name="action" value="log_issue">
+          <div class="mb-3">
+            <label class="form-label">Equipment</label>
+            <select class="form-select" name="equipment_id" required>
+              <option value="">Select equipment...</option>
+              {% for eq in equipment_list %}
+              <option value="{{ eq.equipment_id }}">{{ eq.name }} ({{ eq.type }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Issue Description</label>
+            <textarea class="form-control" name="issue_description" rows="3"
+                      required placeholder="Describe the issue..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-warning w-100">Log Issue</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Maintenance Logs -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header bg-white">
+        <i class="bi bi-wrench me-2"></i>Maintenance Logs
+      </div>
+      <div class="card-body p-0">
+        {% if maintenance_logs %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Equipment</th>
+                <th>Type</th>
+                <th>Issue</th>
+                <th>Reported</th>
+                <th>Resolved</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in maintenance_logs %}
+              <tr>
+                <td>{{ log.equipment_name }}</td>
+                <td>{{ log.equipment_type }}</td>
+                <td>{{ log.issue_description[:60] }}{{ '...' if log.issue_description|length > 60 }}</td>
+                <td>{{ log.reported_date.strftime('%b %d, %Y') }}</td>
+                <td>{{ log.resolved_date.strftime('%b %d, %Y') if log.resolved_date else '—' }}</td>
+                <td>
+                  <span class="badge
+                    {% if log.status == 'resolved' %}bg-success
+                    {% elif log.status == 'in_progress' %}bg-warning text-dark
+                    {% else %}bg-danger{% endif %}">
+                    {{ log.status | replace('_', ' ') | title }}
+                  </span>
+                </td>
+                <td>
+                  {% if log.status != 'resolved' %}
+                  <form method="POST" class="d-inline">
+                    <input type="hidden" name="action" value="update_maintenance">
+                    <input type="hidden" name="log_id" value="{{ log.log_id }}">
+                    <input type="hidden" name="resolved_date" value="">
+                    <select name="maintenance_status" class="form-select form-select-sm"
+                            style="width:auto;display:inline-block"
+                            onchange="if(this.value==='resolved'){this.form.resolved_date.value=new Date().toISOString().split('T')[0];}this.form.submit()">
+                      <option value="reported" {{ 'selected' if log.status == 'reported' }}>Reported</option>
+                      <option value="in_progress" {{ 'selected' if log.status == 'in_progress' }}>In Progress</option>
+                      <option value="resolved" {{ 'selected' if log.status == 'resolved' }}>Resolved</option>
+                    </select>
+                  </form>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <p class="text-muted p-3 mb-0">No maintenance logs found.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
