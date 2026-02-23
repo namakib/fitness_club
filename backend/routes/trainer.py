@@ -133,6 +133,45 @@ def schedule():
     )
 
 
+@bp.route('/profile')
+@role_required('trainer')
+def profile():
+    cur = get_cursor()
+    cur.execute('SELECT * FROM trainer WHERE trainer_id = %s',
+                (g.user['trainer_id'],))
+    trainer = cur.fetchone()
+    cur.close()
+
+    safe = serialize_row(trainer)
+    safe.pop('password_hash', None)
+    return jsonify(trainer=safe)
+
+
+@bp.route('/profile', methods=('PUT',))
+@role_required('trainer')
+def update_profile():
+    data = request.get_json(silent=True) or {}
+    name = data.get('name', '').strip()
+    phone = data.get('phone', '').strip()
+    specialization = data.get('specialization', '').strip()
+
+    cur = get_cursor()
+    try:
+        cur.execute(
+            '''UPDATE trainer SET name = %s, phone = %s, specialization = %s
+               WHERE trainer_id = %s''',
+            (name, phone or None, specialization or None,
+             g.user['trainer_id']),
+        )
+        get_db().commit()
+        return jsonify(message='Profile updated.')
+    except Exception as e:
+        get_db().rollback()
+        return jsonify(error=str(e)), 500
+    finally:
+        cur.close()
+
+
 @bp.route('/availability')
 @role_required('trainer')
 def get_availability():

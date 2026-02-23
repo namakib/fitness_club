@@ -45,8 +45,16 @@ export default function AdminDashboard() {
           <ChartCard title="Equipment Status" subtitle="Breakdown by condition">
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value" nameKey="name" label={({ name, value }) => `${name} (${value})`}>
-                  {pieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                <defs>
+                  {PIE_COLORS.map((color, i) => (
+                    <linearGradient key={i} id={`pieGrad${i}`} x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor={color} stopOpacity={1} />
+                      <stop offset="100%" stopColor={color} stopOpacity={0.6} />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={6} cornerRadius={10} dataKey="value" nameKey="name" label={({ name, value }) => `${name} (${value})`} stroke="none">
+                  {pieData.map((_, i) => <Cell key={i} fill={`url(#pieGrad${i % PIE_COLORS.length})`} />)}
                 </Pie>
                 <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 13 }} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
@@ -59,11 +67,17 @@ export default function AdminDashboard() {
           <ChartCard title="Bookings per Month" subtitle="Sessions + Classes, last 6 months">
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={bookingData}>
+                <defs>
+                  <linearGradient id="bookingBarGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={t.chartPrimary} stopOpacity={1} />
+                    <stop offset="100%" stopColor={t.chartPrimary} stopOpacity={0.4} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 13 }} />
-                <Bar dataKey="count" fill={t.chartPrimary} radius={[6, 6, 0, 0]} name="Bookings" />
+                <Bar dataKey="count" fill="url(#bookingBarGrad)" radius={[8, 8, 0, 0]} name="Bookings" />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>

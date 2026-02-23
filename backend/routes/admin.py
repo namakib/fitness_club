@@ -1,9 +1,46 @@
 from flask import Blueprint, g, jsonify, request
 
-from ..db import get_cursor, get_db, serialize_rows
+from ..db import get_cursor, get_db, serialize_row, serialize_rows
 from .auth import role_required
 
 bp = Blueprint('admin', __name__, url_prefix='/api/admin')
+
+
+@bp.route('/profile')
+@role_required('admin')
+def profile():
+    cur = get_cursor()
+    cur.execute('SELECT * FROM admin WHERE admin_id = %s',
+                (g.user['admin_id'],))
+    admin = cur.fetchone()
+    cur.close()
+
+    safe = serialize_row(admin)
+    safe.pop('password_hash', None)
+    return jsonify(admin=safe)
+
+
+@bp.route('/profile', methods=('PUT',))
+@role_required('admin')
+def update_profile():
+    data = request.get_json(silent=True) or {}
+    name = data.get('name', '').strip()
+    phone = data.get('phone', '').strip()
+
+    cur = get_cursor()
+    try:
+        cur.execute(
+            '''UPDATE admin SET name = %s, phone = %s
+               WHERE admin_id = %s''',
+            (name, phone or None, g.user['admin_id']),
+        )
+        get_db().commit()
+        return jsonify(message='Profile updated.')
+    except Exception as e:
+        get_db().rollback()
+        return jsonify(error=str(e)), 500
+    finally:
+        cur.close()
 
 
 @bp.route('/dashboard')

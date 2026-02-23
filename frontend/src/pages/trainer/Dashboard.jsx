@@ -38,11 +38,17 @@ export default function TrainerDashboard() {
             <ChartCard title="Sessions per Month" subtitle="Last 6 months">
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={sessionData}>
+                  <defs>
+                    <linearGradient id="sessionBarGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={t.chartPrimary} stopOpacity={1} />
+                      <stop offset="100%" stopColor={t.chartPrimary} stopOpacity={0.4} />
+                    </linearGradient>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} allowDecimals={false} />
                   <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 13 }} />
-                  <Bar dataKey="count" fill={t.chartPrimary} radius={[6, 6, 0, 0]} name="Sessions" />
+                  <Bar dataKey="count" fill="url(#sessionBarGrad)" radius={[8, 8, 0, 0]} name="Sessions" />
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>
@@ -54,7 +60,8 @@ export default function TrainerDashboard() {
                 <AreaChart data={classData}>
                   <defs>
                     <linearGradient id="classGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={t.chartGradientFrom} stopOpacity={0.3} />
+                      <stop offset="0%" stopColor={t.chartPrimary} stopOpacity={0.45} />
+                      <stop offset="60%" stopColor={t.chartGradientFrom} stopOpacity={0.15} />
                       <stop offset="100%" stopColor={t.chartGradientFrom} stopOpacity={0} />
                     </linearGradient>
                   </defs>
@@ -62,7 +69,7 @@ export default function TrainerDashboard() {
                   <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} allowDecimals={false} />
                   <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 13 }} />
-                  <Area type="monotone" dataKey="count" stroke={t.chartPrimary} strokeWidth={2.5} fill="url(#classGrad)" dot={{ r: 3, fill: t.chartPrimary }} name="Classes" />
+                  <Area type="monotone" dataKey="count" stroke={t.chartPrimary} strokeWidth={2.5} fill="url(#classGrad)" dot={{ r: 4, fill: '#fff', stroke: t.chartPrimary, strokeWidth: 2 }} activeDot={{ r: 6, fill: t.chartPrimary, stroke: '#fff', strokeWidth: 2 }} name="Classes" />
                 </AreaChart>
               </ResponsiveContainer>
             </ChartCard>

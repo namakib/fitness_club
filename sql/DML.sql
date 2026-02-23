@@ -37,10 +37,10 @@ INSERT INTO trainer (name, email, phone, specialization, password_hash) VALUES
 -- ============================================================
 -- Admins (2)
 -- ============================================================
-INSERT INTO admin (name, email, password_hash) VALUES
-('Ivy Adams',    'ivy@example.com',
+INSERT INTO admin (name, email, phone, password_hash) VALUES
+('Ivy Adams',    'ivy@example.com',   '555-0401',
  'pbkdf2:sha256:1000000$MqgHklKGjhz6v5TV$41233e3cfd6a60ecbf611e673c71f89c4f8613b72a118a95bfccb6741c3619c1'),
-('Jack Turner',  'jack@example.com',
+('Jack Turner',  'jack@example.com',  '555-0402',
  'pbkdf2:sha256:1000000$MqgHklKGjhz6v5TV$41233e3cfd6a60ecbf611e673c71f89c4f8613b72a118a95bfccb6741c3619c1');
 
 -- ============================================================
