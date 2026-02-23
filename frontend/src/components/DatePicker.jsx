@@ -17,16 +17,16 @@ const ChevronRight = () => (
 );
 
 const ChevronDoubleLeft = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+  <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" d="m18.75 4.5-7.5 7.5 7.5 7.5" />
     <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 4.5-7.5 7.5 7.5 7.5" />
   </svg>
 );
 
 const ChevronDoubleRight = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" d="m5.25 19.5 7.5-7.5 7.5 7.5" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="m12.75 19.5 7.5-7.5 7.5 7.5" />
+  <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" d="m12.75 4.5-7.5 7.5 7.5 7.5" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 4.5-7.5 7.5 7.5 7.5" />
   </svg>
 );
 
