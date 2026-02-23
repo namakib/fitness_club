@@ -9,12 +9,12 @@ export default function HealthHistory() {
 
   useEffect(() => { api.get('/member/health-history').then(d => setMetrics(d.metrics)); }, []);
 
-  if (metrics === null) return <div className="animate-pulse h-64 rounded-xl bg-gray-200" />;
+  if (metrics === null) return <div className="animate-pulse h-64 rounded-xl bg-gray-200 dark:bg-gray-700" />;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Health History</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Health History</h1>
         <Link to="/member/profile" className={t.btnSmall}>+ Record Metric</Link>
       </div>
 

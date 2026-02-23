@@ -33,21 +33,21 @@ export default function Availability() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-gray-900">Availability</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Availability</h1>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-base font-semibold text-gray-800">Add Time Slot</h2>
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+        <h2 className="mb-4 text-base font-semibold text-gray-800 dark:text-gray-200">Add Time Slot</h2>
         <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-4">
           <div className="flex-1 min-w-[140px]">
-            <label className="mb-1 block text-sm font-medium text-gray-700">Date</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
             <input type="date" required className={t.input} value={form.available_date} onChange={set('available_date')} />
           </div>
           <div className="flex-1 min-w-[120px]">
-            <label className="mb-1 block text-sm font-medium text-gray-700">Start</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Start</label>
             <input type="time" required className={t.input} value={form.start_time} onChange={set('start_time')} />
           </div>
           <div className="flex-1 min-w-[120px]">
-            <label className="mb-1 block text-sm font-medium text-gray-700">End</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">End</label>
             <input type="time" required className={t.input} value={form.end_time} onChange={set('end_time')} />
           </div>
           <button type="submit" disabled={busy} className={t.btn}>
@@ -57,7 +57,7 @@ export default function Availability() {
       </div>
 
       {slots === null ? (
-        <div className="animate-pulse h-40 rounded-xl bg-gray-200" />
+        <div className="animate-pulse h-40 rounded-xl bg-gray-200 dark:bg-gray-700" />
       ) : (
         <DataTable
           columns={[
@@ -66,7 +66,7 @@ export default function Availability() {
             { key: 'end_time', label: 'End' },
             { key: 'action', label: '', render: (r) => (
               <button onClick={() => handleDelete(r.availability_id)}
-                className="rounded-lg px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50 transition">
+                className="rounded-lg px-2.5 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
                 Remove
               </button>
             )},

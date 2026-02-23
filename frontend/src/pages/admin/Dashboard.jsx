@@ -29,8 +29,8 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">Club-wide overview of members, trainers, equipment, and bookings.</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Admin Dashboard</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Club-wide overview of members, trainers, equipment, and bookings.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -71,26 +71,28 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold tracking-wider text-gray-400 uppercase">Open Issues</p>
-          <p className="mt-3 text-3xl font-bold text-amber-600">{maint.open}</p>
-          <p className="mt-1 text-xs text-gray-400">reported + in progress</p>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+          <p className="text-xs font-semibold tracking-wider text-gray-400 dark:text-gray-500 uppercase">Open Issues</p>
+          <p className="mt-3 text-3xl font-bold text-amber-600 dark:text-amber-400">{maint.open}</p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">reported + in progress</p>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold tracking-wider text-gray-400 uppercase">Resolved</p>
-          <p className="mt-3 text-3xl font-bold text-emerald-600">{maint.resolved}</p>
-          <p className="mt-1 text-xs text-gray-400">maintenance completed</p>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
+          <p className="text-xs font-semibold tracking-wider text-gray-400 dark:text-gray-500 uppercase">Resolved</p>
+          <p className="mt-3 text-3xl font-bold text-emerald-600 dark:text-emerald-400">{maint.resolved}</p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">maintenance completed</p>
         </div>
       </div>
 
       <div>
-        <h2 className="mb-3 text-base font-semibold text-gray-800">Next Upcoming Bookings</h2>
+        <h2 className="mb-3 text-base font-semibold text-gray-800 dark:text-gray-200">Next Upcoming Bookings</h2>
         <DataTable
           columns={[
             { key: 'room_name', label: 'Room' },
             { key: 'booking_type', label: 'Type', render: r => (
               <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
-                r.booking_type === 'Personal Session' ? 'bg-violet-50 text-violet-700 ring-violet-600/20' : 'bg-teal-50 text-teal-700 ring-teal-600/20'
+                r.booking_type === 'Personal Session'
+                  ? 'bg-violet-50 text-violet-700 ring-violet-600/20 dark:bg-violet-900/30 dark:text-violet-400 dark:ring-violet-500/30'
+                  : 'bg-teal-50 text-teal-700 ring-teal-600/20 dark:bg-teal-900/30 dark:text-teal-400 dark:ring-teal-500/30'
               }`}>{r.booking_type}</span>
             )},
             { key: 'event_date', label: 'Date', render: r => fmtDate(r.event_date) },
@@ -111,10 +113,10 @@ export default function AdminDashboard() {
 
 function ChartCard({ title, subtitle, children }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
       <div className="mb-4">
-        <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
-        {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
+        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">{title}</h3>
+        {subtitle && <p className="text-xs text-gray-400 dark:text-gray-500">{subtitle}</p>}
       </div>
       {children}
     </div>
@@ -129,14 +131,14 @@ function fmtDate(d) {
 function Skeleton() {
   return (
     <div className="space-y-6 animate-pulse">
-      <div><div className="h-8 w-56 rounded bg-gray-200" /><div className="mt-2 h-4 w-80 rounded bg-gray-100" /></div>
+      <div><div className="h-8 w-56 rounded bg-gray-200 dark:bg-gray-700" /><div className="mt-2 h-4 w-80 rounded bg-gray-100 dark:bg-gray-700/50" /></div>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => <div key={i} className="h-28 rounded-xl bg-gray-200" />)}
+        {[...Array(4)].map((_, i) => <div key={i} className="h-28 rounded-xl bg-gray-200 dark:bg-gray-700" />)}
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
-        {[...Array(2)].map((_, i) => <div key={i} className="h-64 rounded-xl bg-gray-200" />)}
+        {[...Array(2)].map((_, i) => <div key={i} className="h-64 rounded-xl bg-gray-200 dark:bg-gray-700" />)}
       </div>
-      <div className="h-48 rounded-xl bg-gray-200" />
+      <div className="h-48 rounded-xl bg-gray-200 dark:bg-gray-700" />
     </div>
   );
 }

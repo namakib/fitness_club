@@ -11,11 +11,11 @@ export default function Profile() {
   const load = useCallback(() => api.get('/member/profile').then(setData), []);
   useEffect(() => { load(); }, [load]);
 
-  if (!data) return <div className="animate-pulse space-y-4">{[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-xl bg-gray-200" />)}</div>;
+  if (!data) return <div className="animate-pulse space-y-4">{[...Array(4)].map((_, i) => <div key={i} className="h-24 rounded-xl bg-gray-200 dark:bg-gray-700" />)}</div>;
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Profile</h1>
       <div className="grid gap-8 lg:grid-cols-2">
         <ProfileForm member={data.member} onSaved={load} />
         <MetricForm onSaved={load} />
@@ -70,7 +70,7 @@ function ProfileForm({ member, onSaved }) {
         <Field label="Name" value={form.name} onChange={set('name')} required />
         <Field label="Phone" value={form.phone} onChange={set('phone')} />
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">Gender</label>
+          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Gender</label>
           <select className={t.input} value={form.gender} onChange={set('gender')}>
             <option value="male">Male</option>
             <option value="female">Female</option>
@@ -128,7 +128,7 @@ function GoalForm({ onSaved }) {
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-800">Fitness Goals</h2>
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Fitness Goals</h2>
         <button onClick={() => setOpen(!open)} className={t.btnSmall}>
           {open ? 'Cancel' : '+ Add Goal'}
         </button>
@@ -138,7 +138,7 @@ function GoalForm({ onSaved }) {
           <form onSubmit={submit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Type</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
                 <select className={t.input} value={form.goal_type} onChange={set('goal_type')}>
                   <option value="weight_loss">Weight Loss</option>
                   <option value="muscle_gain">Muscle Gain</option>
@@ -165,7 +165,7 @@ function GoalStatusSelect({ goal, onSaved }) {
     catch (err) { toast.error(err.message); }
   }
   return (
-    <select className="rounded border border-gray-300 px-2 py-1 text-xs" value={goal.status} onChange={handleChange}>
+    <select className="rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 px-2 py-1 text-xs" value={goal.status} onChange={handleChange}>
       <option value="active">Active</option>
       <option value="achieved">Achieved</option>
       <option value="cancelled">Cancelled</option>
@@ -175,22 +175,22 @@ function GoalStatusSelect({ goal, onSaved }) {
 
 function Card({ title, children }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-      {title && <h3 className="mb-4 text-base font-semibold text-gray-800">{title}</h3>}
+    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+      {title && <h3 className="mb-4 text-base font-semibold text-gray-800 dark:text-gray-200">{title}</h3>}
       {children}
     </div>
   );
 }
 
 function Section({ title, children }) {
-  return <div><h2 className="mb-3 text-lg font-semibold text-gray-800">{title}</h2>{children}</div>;
+  return <div><h2 className="mb-3 text-lg font-semibold text-gray-800 dark:text-gray-200">{title}</h2>{children}</div>;
 }
 
 function Field({ label, ...props }) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
-      <input className={`${t.input} ${props.disabled ? 'bg-gray-50 text-gray-500' : ''}`} {...props} />
+      <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+      <input className={`${t.input} ${props.disabled ? 'bg-gray-50 text-gray-500 dark:bg-gray-700 dark:text-gray-400' : ''}`} {...props} />
     </div>
   );
 }

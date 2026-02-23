@@ -7,7 +7,7 @@ export default function ProtectedRoute({ role: requiredRole, children }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className={`h-8 w-8 animate-spin rounded-full border-4 ${t.spinner} border-t-transparent`} />
       </div>
     );

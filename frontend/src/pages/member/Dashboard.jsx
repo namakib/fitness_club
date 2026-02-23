@@ -28,8 +28,8 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">Welcome back! Here's your fitness overview.</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Welcome back! Here's your fitness overview.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -149,10 +149,10 @@ export default function Dashboard() {
 
 function ChartCard({ title, subtitle, children }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
       <div className="mb-4">
-        <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
-        {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
+        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">{title}</h3>
+        {subtitle && <p className="text-xs text-gray-400 dark:text-gray-500">{subtitle}</p>}
       </div>
       {children}
     </div>
@@ -164,7 +164,7 @@ function Section({ title, icon, children }) {
     <div>
       <div className="mb-3 flex items-center gap-2">
         {icon}
-        <h2 className="text-base font-semibold text-gray-800">{title}</h2>
+        <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">{title}</h2>
       </div>
       {children}
     </div>
@@ -184,15 +184,15 @@ function shortDate(d) {
 function Skeleton() {
   return (
     <div className="space-y-6 animate-pulse">
-      <div><div className="h-8 w-48 rounded bg-gray-200" /><div className="mt-2 h-4 w-64 rounded bg-gray-100" /></div>
+      <div><div className="h-8 w-48 rounded bg-gray-200 dark:bg-gray-700" /><div className="mt-2 h-4 w-64 rounded bg-gray-100 dark:bg-gray-700/50" /></div>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => <div key={i} className="h-28 rounded-xl bg-gray-200" />)}
+        {[...Array(4)].map((_, i) => <div key={i} className="h-28 rounded-xl bg-gray-200 dark:bg-gray-700" />)}
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
-        {[...Array(2)].map((_, i) => <div key={i} className="h-64 rounded-xl bg-gray-200" />)}
+        {[...Array(2)].map((_, i) => <div key={i} className="h-64 rounded-xl bg-gray-200 dark:bg-gray-700" />)}
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
-        {[...Array(2)].map((_, i) => <div key={i} className="h-40 rounded-xl bg-gray-200" />)}
+        {[...Array(2)].map((_, i) => <div key={i} className="h-40 rounded-xl bg-gray-200 dark:bg-gray-700" />)}
       </div>
     </div>
   );

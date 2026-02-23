@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import ThemeToggle from '../components/ThemeToggle';
 import t from '../theme';
 
 export default function Login() {
@@ -26,26 +27,29 @@ export default function Login() {
   }
 
   return (
-    <div className={`flex min-h-screen items-center justify-center ${t.authBg} px-4`}>
+    <div className={`flex min-h-screen items-center justify-center ${t.authBg} px-4 transition-colors duration-200`}>
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <img src="/logo.png" alt="Fitness Club" className="mx-auto mb-2 h-28 w-auto" />
-          <p className="mt-2 text-gray-500">Sign in to your account</p>
+          <p className="mt-2 text-gray-500 dark:text-gray-400">Sign in to your account</p>
         </div>
         <form onSubmit={handleSubmit} className={t.authCard}>
           <div className="space-y-5">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Email</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
               <input type="email" required autoFocus className={t.inputLg}
                 value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Password</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
               <input type="password" required className={t.inputLg}
                 value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Role</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
               <select className={t.inputLg} value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}>
                 <option value="member">Member</option>
                 <option value="trainer">Trainer</option>
@@ -59,7 +63,7 @@ export default function Login() {
             {busy ? 'Signing in...' : 'Sign In'}
           </button>
 
-          <p className="mt-4 text-center text-sm text-gray-500">
+          <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
             Don't have an account?{' '}
             <Link to="/register" className={t.link}>Register</Link>
           </p>

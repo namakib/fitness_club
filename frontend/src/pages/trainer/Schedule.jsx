@@ -7,11 +7,11 @@ export default function Schedule() {
 
   useEffect(() => { api.get('/trainer/schedule').then(setData); }, []);
 
-  if (!data) return <div className="animate-pulse space-y-6">{[...Array(3)].map((_, i) => <div key={i} className="h-40 rounded-xl bg-gray-200" />)}</div>;
+  if (!data) return <div className="animate-pulse space-y-6">{[...Array(3)].map((_, i) => <div key={i} className="h-40 rounded-xl bg-gray-200 dark:bg-gray-700" />)}</div>;
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-gray-900">Schedule</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Schedule</h1>
 
       <Section title="Upcoming Personal Sessions">
         <DataTable
@@ -60,7 +60,7 @@ export default function Schedule() {
 }
 
 function Section({ title, children }) {
-  return <div><h2 className="mb-3 text-lg font-semibold text-gray-800">{title}</h2>{children}</div>;
+  return <div><h2 className="mb-3 text-lg font-semibold text-gray-800 dark:text-gray-200">{title}</h2>{children}</div>;
 }
 
 function fmtDate(d) {

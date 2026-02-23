@@ -12,14 +12,14 @@ export default function RoomBooking() {
   const load = useCallback(() => api.get('/admin/room-booking').then(setData), []);
   useEffect(() => { load(); }, [load]);
 
-  if (!data) return <div className="animate-pulse space-y-6">{[...Array(3)].map((_, i) => <div key={i} className="h-40 rounded-xl bg-gray-200" />)}</div>;
+  if (!data) return <div className="animate-pulse space-y-6">{[...Array(3)].map((_, i) => <div key={i} className="h-40 rounded-xl bg-gray-200 dark:bg-gray-700" />)}</div>;
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-gray-900">Room Booking</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Room Booking</h1>
 
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="flex border-b border-gray-200">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+        <div className="flex border-b border-gray-200 dark:border-gray-700">
           <TabButton active={tab === 'session'} onClick={() => setTab('session')}>Personal Session</TabButton>
           <TabButton active={tab === 'class'} onClick={() => setTab('class')}>Group Class</TabButton>
         </div>
@@ -31,13 +31,15 @@ export default function RoomBooking() {
       </div>
 
       <div>
-        <h2 className="mb-3 text-lg font-semibold text-gray-800">Room Schedule</h2>
+        <h2 className="mb-3 text-lg font-semibold text-gray-800 dark:text-gray-200">Room Schedule</h2>
         <DataTable
           columns={[
             { key: 'room_name', label: 'Room', filter: 'enum' },
             { key: 'booking_type', label: 'Type', filter: 'enum', render: (r) => (
               <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
-                r.booking_type === 'Personal Session' ? 'bg-violet-50 text-violet-700 ring-violet-600/20' : 'bg-teal-50 text-teal-700 ring-teal-600/20'
+                r.booking_type === 'Personal Session'
+                  ? 'bg-violet-50 text-violet-700 ring-violet-600/20 dark:bg-violet-900/30 dark:text-violet-400 dark:ring-violet-500/30'
+                  : 'bg-teal-50 text-teal-700 ring-teal-600/20 dark:bg-teal-900/30 dark:text-teal-400 dark:ring-teal-500/30'
               }`}>{r.booking_type}</span>
             )},
             { key: 'event_date', label: 'Date', filter: 'date', render: (r) => fmtDate(r.event_date) },
@@ -123,7 +125,7 @@ function TabButton({ active, onClick, children }) {
 function Field({ label, ...props }) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
+      <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
       <input className={t.input} {...props} />
     </div>
   );
@@ -132,7 +134,7 @@ function Field({ label, ...props }) {
 function SelectField({ label, value, onChange, options }) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
+      <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
       <select className={t.input} value={value} onChange={onChange} required>
         <option value="">Select...</option>
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}

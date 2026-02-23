@@ -101,7 +101,7 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
 
   if (!data || data.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-400">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-8 text-center text-sm text-gray-400 dark:text-gray-500">
         {emptyMessage}
       </div>
     );
@@ -119,9 +119,9 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white">
+    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
       {hasToolbar && (
-        <div className="flex flex-wrap items-center gap-3 border-b border-gray-100 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-3 border-b border-gray-100 dark:border-gray-700/50 px-4 py-3">
           {searchable && (
             <div className="w-full max-w-xs sm:w-auto">
               <SearchInput value={query} onChange={v => { setQuery(v); setPage(0); }} placeholder="Search..." />
@@ -144,7 +144,7 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
 
           {activeCount > 0 && (
             <button onClick={clearFilters}
-              className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-orange-600 hover:bg-orange-50 transition">
+              className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition">
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
               </svg>
@@ -157,26 +157,26 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50/60">
+            <tr className="border-b border-gray-100 dark:border-gray-700/50 bg-gray-50/60 dark:bg-gray-700/30">
               {columns.map(col => (
-                <th key={col.key} className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-500 uppercase">
+                <th key={col.key} className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-500 dark:text-gray-400 uppercase">
                   {col.label}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
             {paged.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-8 text-center text-sm text-gray-400">
+                <td colSpan={columns.length} className="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
                   No matching results.
                 </td>
               </tr>
             ) : (
               paged.map((row, i) => (
-                <tr key={row.id || safePage * pageSize + i} className="transition hover:bg-gray-50/50">
+                <tr key={row.id || safePage * pageSize + i} className="transition hover:bg-gray-50/50 dark:hover:bg-gray-700/30">
                   {columns.map(col => (
-                    <td key={col.key} className="px-4 py-3 whitespace-nowrap text-gray-700">
+                    <td key={col.key} className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
                       {col.render ? col.render(row) : row[col.key]}
                     </td>
                   ))}
@@ -188,26 +188,26 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
       </div>
 
       {showPagination && (
-        <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3">
-          <p className="text-xs text-gray-500">
+        <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-700/50 px-4 py-3">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             {filtered.length} result{filtered.length !== 1 ? 's' : ''}
             {(query || activeCount > 0) && ' (filtered)'}
           </p>
           <div className="flex items-center gap-1">
             <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={safePage === 0}
-              className="rounded-md px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition">
+              className="rounded-md px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition">
               Prev
             </button>
             {Array.from({ length: totalPages }, (_, i) => (
               <button key={i} onClick={() => setPage(i)}
                 className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
-                  i === safePage ? 'bg-orange-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'
+                  i === safePage ? 'bg-orange-600 text-white shadow-sm dark:bg-orange-500' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}>
                 {i + 1}
               </button>
             ))}
             <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={safePage >= totalPages - 1}
-              className="rounded-md px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition">
+              className="rounded-md px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition">
               Next
             </button>
           </div>

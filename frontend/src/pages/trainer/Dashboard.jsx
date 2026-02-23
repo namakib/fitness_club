@@ -21,8 +21,8 @@ export default function TrainerDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Trainer Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">Overview of your sessions, classes, and availability.</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Trainer Dashboard</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Overview of your sessions, classes, and availability.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -71,7 +71,7 @@ export default function TrainerDashboard() {
       )}
 
       <div>
-        <h2 className="mb-3 text-base font-semibold text-gray-800">Next Upcoming Sessions</h2>
+        <h2 className="mb-3 text-base font-semibold text-gray-800 dark:text-gray-200">Next Upcoming Sessions</h2>
         <DataTable
           columns={[
             { key: 'session_date', label: 'Date', render: r => fmtDate(r.session_date) },
@@ -91,10 +91,10 @@ export default function TrainerDashboard() {
 
 function ChartCard({ title, subtitle, children }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
       <div className="mb-4">
-        <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
-        {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
+        <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">{title}</h3>
+        {subtitle && <p className="text-xs text-gray-400 dark:text-gray-500">{subtitle}</p>}
       </div>
       {children}
     </div>
@@ -109,14 +109,14 @@ function fmtDate(d) {
 function Skeleton() {
   return (
     <div className="space-y-6 animate-pulse">
-      <div><div className="h-8 w-56 rounded bg-gray-200" /><div className="mt-2 h-4 w-72 rounded bg-gray-100" /></div>
+      <div><div className="h-8 w-56 rounded bg-gray-200 dark:bg-gray-700" /><div className="mt-2 h-4 w-72 rounded bg-gray-100 dark:bg-gray-700/50" /></div>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => <div key={i} className="h-28 rounded-xl bg-gray-200" />)}
+        {[...Array(4)].map((_, i) => <div key={i} className="h-28 rounded-xl bg-gray-200 dark:bg-gray-700" />)}
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
-        {[...Array(2)].map((_, i) => <div key={i} className="h-64 rounded-xl bg-gray-200" />)}
+        {[...Array(2)].map((_, i) => <div key={i} className="h-64 rounded-xl bg-gray-200 dark:bg-gray-700" />)}
       </div>
-      <div className="h-48 rounded-xl bg-gray-200" />
+      <div className="h-48 rounded-xl bg-gray-200 dark:bg-gray-700" />
     </div>
   );
 }

@@ -53,13 +53,13 @@ export default function StatCard({ label, value, icon, color = 'orange', sub }) 
   const colorCls = t.statIcon[color] || t.statIcon.orange;
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold tracking-wider text-gray-400 uppercase">{label}</p>
+        <p className="text-xs font-semibold tracking-wider text-gray-400 dark:text-gray-500 uppercase">{label}</p>
         {iconEl && <div className={`rounded-lg p-2 ${colorCls}`}>{iconEl}</div>}
       </div>
-      <p className="mt-3 text-3xl font-bold text-gray-900">{value ?? '—'}</p>
-      {sub && <p className="mt-1 text-xs text-gray-400">{sub}</p>}
+      <p className="mt-3 text-3xl font-bold text-gray-900 dark:text-gray-100">{value ?? '—'}</p>
+      {sub && <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{sub}</p>}
     </div>
   );
 }
