@@ -4,15 +4,19 @@ import toast from 'react-hot-toast';
 import DataTable from '../../components/DataTable';
 import DatePicker from '../../components/DatePicker';
 import TimePicker from '../../components/TimePicker';
+import AvailabilityCalendar from '../../components/AvailabilityCalendar';
 import t from '../../theme';
 
 export default function Availability() {
   const [slots, setSlots] = useState(null);
   const [form, setForm] = useState({ available_date: '', start_time: '', end_time: '' });
   const [busy, setBusy] = useState(false);
+  const [calendarKey, setCalendarKey] = useState(0);
 
   const load = useCallback(() => api.get('/trainer/availability').then(d => setSlots(d.slots)), []);
   useEffect(() => { load(); }, [load]);
+
+  const refreshCalendar = useCallback(() => setCalendarKey((k) => k + 1), []);
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
@@ -24,12 +28,13 @@ export default function Availability() {
       toast.success('Slot added.');
       setForm({ available_date: '', start_time: '', end_time: '' });
       load();
+      refreshCalendar();
     } catch (err) { toast.error(err.message); }
     finally { setBusy(false); }
   }
 
   async function handleDelete(id) {
-    try { await api.delete(`/trainer/availability/${id}`); toast.success('Slot removed.'); load(); }
+    try { await api.delete(`/trainer/availability/${id}`); toast.success('Slot removed.'); load(); refreshCalendar(); }
     catch (err) { toast.error(err.message); }
   }
 
@@ -37,19 +42,21 @@ export default function Availability() {
     <div className="space-y-8">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Availability</h1>
 
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
+      <AvailabilityCalendar refreshTrigger={calendarKey} onSlotClick={() => {}} />
+
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:p-6 shadow-sm">
         <h2 className="mb-4 text-base font-semibold text-gray-800 dark:text-gray-200">Add Time Slot</h2>
-        <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-4">
-          <div className="flex-1 min-w-[200px]">
+        <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+          <div className="min-w-0">
             <DatePicker label="Date" value={form.available_date} onChange={(val) => setForm({ ...form, available_date: val })} placeholder="Select date" required min={new Date().toISOString().slice(0, 10)} />
           </div>
-          <div className="flex-1 min-w-[200px]">
+          <div className="min-w-0">
             <TimePicker label="Start" value={form.start_time} onChange={(val) => setForm({ ...form, start_time: val })} placeholder="Select start" required />
           </div>
-          <div className="flex-1 min-w-[200px]">
+          <div className="min-w-0">
             <TimePicker label="End" value={form.end_time} onChange={(val) => setForm({ ...form, end_time: val })} placeholder="Select end" required />
           </div>
-          <button type="submit" disabled={busy} className={t.btn}>
+          <button type="submit" disabled={busy} className={`${t.btn} w-full sm:w-auto`}>
             {busy ? 'Adding...' : 'Add Slot'}
           </button>
         </form>

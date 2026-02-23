@@ -172,6 +172,68 @@ def update_profile():
         cur.close()
 
 
+@bp.route('/calendar')
+@role_required('trainer')
+def get_calendar():
+    """Return availability slots, sessions, and classes for a month (for calendar view)."""
+    year = request.args.get('year', type=int)
+    month = request.args.get('month', type=int)
+    if not year or not month:
+        from datetime import date
+        today = date.today()
+        year, month = today.year, today.month
+
+    cur = get_cursor()
+    tid = g.user['trainer_id']
+
+    cur.execute(
+        '''SELECT availability_id, available_date AS event_date, start_time, end_time,
+                  'availability' AS event_type, 'Available' AS title
+           FROM trainer_availability
+           WHERE trainer_id = %s
+             AND EXTRACT(YEAR FROM available_date) = %s
+             AND EXTRACT(MONTH FROM available_date) = %s
+           ORDER BY available_date, start_time''',
+        (tid, year, month))
+    availability = cur.fetchall()
+
+    cur.execute(
+        '''SELECT ps.session_id, ps.session_date AS event_date, ps.start_time, ps.end_time,
+                  'session' AS event_type, m.name AS title, r.room_name AS location
+           FROM personal_session ps
+           JOIN member m ON m.member_id = ps.member_id
+           JOIN room r ON r.room_id = ps.room_id
+           WHERE ps.trainer_id = %s AND ps.status = 'scheduled'
+             AND EXTRACT(YEAR FROM ps.session_date) = %s
+             AND EXTRACT(MONTH FROM ps.session_date) = %s
+           ORDER BY ps.session_date, ps.start_time''',
+        (tid, year, month))
+    sessions = cur.fetchall()
+
+    cur.execute(
+        '''SELECT gc.class_id, gc.class_date AS event_date, gc.start_time, gc.end_time,
+                  'class' AS event_type, gc.class_name AS title, r.room_name AS location,
+                  gc.max_participants,
+                  (SELECT COUNT(*) FROM class_enrollment ce WHERE ce.class_id = gc.class_id) AS enrolled_count
+           FROM group_class gc
+           JOIN room r ON r.room_id = gc.room_id
+           WHERE gc.trainer_id = %s
+             AND EXTRACT(YEAR FROM gc.class_date) = %s
+             AND EXTRACT(MONTH FROM gc.class_date) = %s
+           ORDER BY gc.class_date, gc.start_time''',
+        (tid, year, month))
+    classes = cur.fetchall()
+
+    cur.close()
+    return jsonify(
+        availability=serialize_rows(availability),
+        sessions=serialize_rows(sessions),
+        classes=serialize_rows(classes),
+        year=year,
+        month=month,
+    )
+
+
 @bp.route('/availability')
 @role_required('trainer')
 def get_availability():
