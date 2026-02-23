@@ -1,3 +1,5 @@
+import t from '../theme';
+
 const iconMap = {
   weight: (
     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -21,16 +23,9 @@ const iconMap = {
   ),
 };
 
-const colorMap = {
-  indigo: 'bg-indigo-50 text-indigo-600',
-  emerald: 'bg-emerald-50 text-emerald-600',
-  violet: 'bg-violet-50 text-violet-600',
-  amber: 'bg-amber-50 text-amber-600',
-};
-
-export default function StatCard({ label, value, icon, color = 'indigo', sub }) {
+export default function StatCard({ label, value, icon, color = 'orange', sub }) {
   const iconEl = iconMap[icon];
-  const colorCls = colorMap[color] || colorMap.indigo;
+  const colorCls = t.statIcon[color] || t.statIcon.orange;
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">

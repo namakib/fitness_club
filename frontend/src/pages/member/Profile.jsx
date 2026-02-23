@@ -3,6 +3,7 @@ import api from '../../api';
 import toast from 'react-hot-toast';
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
+import t from '../../theme';
 
 export default function Profile() {
   const [data, setData] = useState(null);
@@ -70,13 +71,13 @@ function ProfileForm({ member, onSaved }) {
         <Field label="Phone" value={form.phone} onChange={set('phone')} />
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700">Gender</label>
-          <select className={inputCls} value={form.gender} onChange={set('gender')}>
+          <select className={t.input} value={form.gender} onChange={set('gender')}>
             <option value="male">Male</option>
             <option value="female">Female</option>
             <option value="other">Other</option>
           </select>
         </div>
-        <button type="submit" disabled={busy} className={btnCls}>{busy ? 'Saving...' : 'Save Changes'}</button>
+        <button type="submit" disabled={busy} className={t.btn}>{busy ? 'Saving...' : 'Save Changes'}</button>
       </form>
     </Card>
   );
@@ -104,7 +105,7 @@ function MetricForm({ onSaved }) {
           <Field label="Blood Pressure" placeholder="e.g. 120/80" value={form.blood_pressure} onChange={set('blood_pressure')} />
           <Field label="Heart Rate (bpm)" type="number" value={form.heart_rate} onChange={set('heart_rate')} />
         </div>
-        <button type="submit" disabled={busy} className={btnCls}>{busy ? 'Saving...' : 'Record Metric'}</button>
+        <button type="submit" disabled={busy} className={t.btn}>{busy ? 'Saving...' : 'Record Metric'}</button>
       </form>
     </Card>
   );
@@ -128,7 +129,7 @@ function GoalForm({ onSaved }) {
     <div>
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-800">Fitness Goals</h2>
-        <button onClick={() => setOpen(!open)} className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500 transition">
+        <button onClick={() => setOpen(!open)} className={t.btnSmall}>
           {open ? 'Cancel' : '+ Add Goal'}
         </button>
       </div>
@@ -138,7 +139,7 @@ function GoalForm({ onSaved }) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Type</label>
-                <select className={inputCls} value={form.goal_type} onChange={set('goal_type')}>
+                <select className={t.input} value={form.goal_type} onChange={set('goal_type')}>
                   <option value="weight_loss">Weight Loss</option>
                   <option value="muscle_gain">Muscle Gain</option>
                   <option value="endurance">Endurance</option>
@@ -150,7 +151,7 @@ function GoalForm({ onSaved }) {
               <Field label="Start Date" type="date" value={form.start_date} onChange={set('start_date')} required />
               <Field label="End Date" type="date" value={form.end_date} onChange={set('end_date')} />
             </div>
-            <button type="submit" disabled={busy} className={btnCls}>{busy ? 'Adding...' : 'Add Goal'}</button>
+            <button type="submit" disabled={busy} className={t.btn}>{busy ? 'Adding...' : 'Add Goal'}</button>
           </form>
         </Card>
       )}
@@ -189,13 +190,10 @@ function Field({ label, ...props }) {
   return (
     <div>
       <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
-      <input className={`${inputCls} ${props.disabled ? 'bg-gray-50 text-gray-500' : ''}`} {...props} />
+      <input className={`${t.input} ${props.disabled ? 'bg-gray-50 text-gray-500' : ''}`} {...props} />
     </div>
   );
 }
-
-const inputCls = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none';
-const btnCls = 'rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 transition';
 
 function fmtDate(d) {
   if (!d) return '—';

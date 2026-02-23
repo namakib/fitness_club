@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../api';
 import DataTable from '../../components/DataTable';
+import t from '../../theme';
 
 export default function HealthHistory() {
   const [metrics, setMetrics] = useState(null);
@@ -14,9 +15,7 @@ export default function HealthHistory() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Health History</h1>
-        <Link to="/member/profile" className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500 transition">
-          + Record Metric
-        </Link>
+        <Link to="/member/profile" className={t.btnSmall}>+ Record Metric</Link>
       </div>
 
       <DataTable

@@ -7,6 +7,7 @@ import api from '../../api';
 import StatCard from '../../components/StatCard';
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
+import t from '../../theme';
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
@@ -31,15 +32,13 @@ export default function Dashboard() {
         <p className="mt-1 text-sm text-gray-500">Welcome back! Here's your fitness overview.</p>
       </div>
 
-      {/* Stat Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Latest Weight" value={summary?.latest_weight ? `${summary.latest_weight} kg` : null} icon="weight" color="indigo" />
+        <StatCard label="Latest Weight" value={summary?.latest_weight ? `${summary.latest_weight} kg` : null} icon="weight" color="orange" />
         <StatCard label="Active Goals" value={summary?.active_goal_count ?? 0} icon="goal" color="emerald" />
         <StatCard label="Classes Enrolled" value={summary?.enrolled_class_count ?? 0} icon="class" color="violet" />
         <StatCard label="Upcoming Sessions" value={summary?.upcoming_session_count ?? 0} icon="session" color="amber" />
       </div>
 
-      {/* Charts Row */}
       {chartData.length > 1 && (
         <div className="grid gap-6 lg:grid-cols-2">
           <ChartCard title="Weight Trend" subtitle="kg over time">
@@ -47,15 +46,15 @@ export default function Dashboard() {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="weightGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6366f1" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                    <stop offset="0%" stopColor={t.chartGradientFrom} stopOpacity={0.3} />
+                    <stop offset="100%" stopColor={t.chartGradientFrom} stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} domain={['auto', 'auto']} />
                 <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 13 }} />
-                <Area type="monotone" dataKey="weight" stroke="#6366f1" strokeWidth={2.5} fill="url(#weightGrad)" dot={{ r: 3, fill: '#6366f1' }} name="Weight (kg)" />
+                <Area type="monotone" dataKey="weight" stroke={t.chartPrimary} strokeWidth={2.5} fill="url(#weightGrad)" dot={{ r: 3, fill: t.chartPrimary }} name="Weight (kg)" />
               </AreaChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -67,17 +66,16 @@ export default function Dashboard() {
                 <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} domain={['auto', 'auto']} />
                 <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 13 }} />
-                <Bar dataKey="heartRate" fill="#8b5cf6" radius={[6, 6, 0, 0]} name="Heart Rate (bpm)" />
+                <Bar dataKey="heartRate" fill={t.chartBar} radius={[6, 6, 0, 0]} name="Heart Rate (bpm)" />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
         </div>
       )}
 
-      {/* Two-column layout for tables */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Section title="Recent Health Metrics" icon={
-          <svg className="h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <svg className="h-5 w-5 text-orange-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
           </svg>
         }>

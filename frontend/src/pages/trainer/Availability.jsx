@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import api from '../../api';
 import toast from 'react-hot-toast';
 import DataTable from '../../components/DataTable';
+import t from '../../theme';
 
 export default function Availability() {
   const [slots, setSlots] = useState(null);
@@ -30,8 +31,6 @@ export default function Availability() {
     catch (err) { toast.error(err.message); }
   }
 
-  const inputCls = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none';
-
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-bold text-gray-900">Availability</h1>
@@ -41,18 +40,17 @@ export default function Availability() {
         <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-4">
           <div className="flex-1 min-w-[140px]">
             <label className="mb-1 block text-sm font-medium text-gray-700">Date</label>
-            <input type="date" required className={inputCls} value={form.available_date} onChange={set('available_date')} />
+            <input type="date" required className={t.input} value={form.available_date} onChange={set('available_date')} />
           </div>
           <div className="flex-1 min-w-[120px]">
             <label className="mb-1 block text-sm font-medium text-gray-700">Start</label>
-            <input type="time" required className={inputCls} value={form.start_time} onChange={set('start_time')} />
+            <input type="time" required className={t.input} value={form.start_time} onChange={set('start_time')} />
           </div>
           <div className="flex-1 min-w-[120px]">
             <label className="mb-1 block text-sm font-medium text-gray-700">End</label>
-            <input type="time" required className={inputCls} value={form.end_time} onChange={set('end_time')} />
+            <input type="time" required className={t.input} value={form.end_time} onChange={set('end_time')} />
           </div>
-          <button type="submit" disabled={busy}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 transition">
+          <button type="submit" disabled={busy} className={t.btn}>
             {busy ? 'Adding...' : 'Add Slot'}
           </button>
         </form>
@@ -67,10 +65,8 @@ export default function Availability() {
             { key: 'start_time', label: 'Start' },
             { key: 'end_time', label: 'End' },
             { key: 'action', label: '', render: (r) => (
-              <button
-                onClick={() => handleDelete(r.availability_id)}
-                className="rounded-lg px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50 transition"
-              >
+              <button onClick={() => handleDelete(r.availability_id)}
+                className="rounded-lg px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50 transition">
                 Remove
               </button>
             )},

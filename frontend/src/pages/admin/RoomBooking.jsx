@@ -3,6 +3,7 @@ import api from '../../api';
 import toast from 'react-hot-toast';
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
+import t from '../../theme';
 
 export default function RoomBooking() {
   const [data, setData] = useState(null);
@@ -69,13 +70,13 @@ function SessionForm({ rooms, members, trainers, onSaved }) {
   return (
     <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <SelectField label="Member" value={form.member_id} onChange={set('member_id')} options={members.map(m => ({ value: m.member_id, label: `${m.name} (${m.email})` }))} />
-      <SelectField label="Trainer" value={form.trainer_id} onChange={set('trainer_id')} options={trainers.map(t => ({ value: t.trainer_id, label: `${t.name} – ${t.specialization}` }))} />
+      <SelectField label="Trainer" value={form.trainer_id} onChange={set('trainer_id')} options={trainers.map(tr => ({ value: tr.trainer_id, label: `${tr.name} – ${tr.specialization}` }))} />
       <SelectField label="Room" value={form.room_id} onChange={set('room_id')} options={rooms.map(r => ({ value: r.room_id, label: r.room_name }))} />
       <Field label="Date" type="date" value={form.session_date} onChange={set('session_date')} required />
       <Field label="Start Time" type="time" value={form.start_time} onChange={set('start_time')} required />
       <Field label="End Time" type="time" value={form.end_time} onChange={set('end_time')} required />
       <div className="sm:col-span-2 lg:col-span-3">
-        <button type="submit" disabled={busy} className={btnCls}>{busy ? 'Booking...' : 'Book Session'}</button>
+        <button type="submit" disabled={busy} className={t.btn}>{busy ? 'Booking...' : 'Book Session'}</button>
       </div>
     </form>
   );
@@ -97,14 +98,14 @@ function ClassForm({ rooms, trainers, onSaved }) {
   return (
     <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <Field label="Class Name" value={form.class_name} onChange={set('class_name')} required />
-      <SelectField label="Trainer" value={form.trainer_id} onChange={set('trainer_id')} options={trainers.map(t => ({ value: t.trainer_id, label: `${t.name} – ${t.specialization}` }))} />
+      <SelectField label="Trainer" value={form.trainer_id} onChange={set('trainer_id')} options={trainers.map(tr => ({ value: tr.trainer_id, label: `${tr.name} – ${tr.specialization}` }))} />
       <SelectField label="Room" value={form.room_id} onChange={set('room_id')} options={rooms.map(r => ({ value: r.room_id, label: r.room_name }))} />
       <Field label="Date" type="date" value={form.class_date} onChange={set('class_date')} required />
       <Field label="Start Time" type="time" value={form.start_time} onChange={set('start_time')} required />
       <Field label="End Time" type="time" value={form.end_time} onChange={set('end_time')} required />
       <Field label="Max Participants" type="number" min={1} value={form.max_participants} onChange={set('max_participants')} required />
       <div className="sm:col-span-2 lg:col-span-3">
-        <button type="submit" disabled={busy} className={btnCls}>{busy ? 'Scheduling...' : 'Schedule Class'}</button>
+        <button type="submit" disabled={busy} className={t.btn}>{busy ? 'Scheduling...' : 'Schedule Class'}</button>
       </div>
     </form>
   );
@@ -113,7 +114,7 @@ function ClassForm({ rooms, trainers, onSaved }) {
 function TabButton({ active, onClick, children }) {
   return (
     <button onClick={onClick}
-      className={`px-5 py-3 text-sm font-medium transition ${active ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}>
+      className={`px-5 py-3 text-sm font-medium transition ${active ? t.tabActive : t.tabInactive}`}>
       {children}
     </button>
   );
@@ -123,7 +124,7 @@ function Field({ label, ...props }) {
   return (
     <div>
       <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
-      <input className={inputCls} {...props} />
+      <input className={t.input} {...props} />
     </div>
   );
 }
@@ -132,16 +133,13 @@ function SelectField({ label, value, onChange, options }) {
   return (
     <div>
       <label className="mb-1 block text-sm font-medium text-gray-700">{label}</label>
-      <select className={inputCls} value={value} onChange={onChange} required>
+      <select className={t.input} value={value} onChange={onChange} required>
         <option value="">Select...</option>
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>
   );
 }
-
-const inputCls = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none';
-const btnCls = 'rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 transition';
 
 function fmtDate(d) {
   if (!d) return '—';

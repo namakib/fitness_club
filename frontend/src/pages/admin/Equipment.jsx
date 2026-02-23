@@ -3,6 +3,7 @@ import api from '../../api';
 import toast from 'react-hot-toast';
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
+import t from '../../theme';
 
 const STATUS_FILTERS = ['', 'operational', 'under_repair', 'out_of_service'];
 const STATUS_LABELS = { '': 'All', operational: 'Operational', under_repair: 'Under Repair', out_of_service: 'Out of Service' };
@@ -46,36 +47,33 @@ export default function Equipment() {
     <div className="space-y-8">
       <h1 className="text-2xl font-bold text-gray-900">Equipment & Maintenance</h1>
 
-      {/* Log Issue Form */}
       <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-base font-semibold text-gray-800">Log Maintenance Issue</h2>
         <form onSubmit={logIssue} className="flex flex-wrap items-end gap-4">
           <div className="min-w-[200px] flex-1">
             <label className="mb-1 block text-sm font-medium text-gray-700">Equipment</label>
-            <select className={inputCls} value={issueForm.equipment_id} onChange={e => setIssueForm({ ...issueForm, equipment_id: e.target.value })} required>
+            <select className={t.input} value={issueForm.equipment_id} onChange={e => setIssueForm({ ...issueForm, equipment_id: e.target.value })} required>
               <option value="">Select equipment...</option>
               {data.equipment_list.map(eq => <option key={eq.equipment_id} value={eq.equipment_id}>{eq.name} ({eq.type})</option>)}
             </select>
           </div>
           <div className="min-w-[250px] flex-[2]">
             <label className="mb-1 block text-sm font-medium text-gray-700">Issue Description</label>
-            <input className={inputCls} value={issueForm.issue_description} onChange={e => setIssueForm({ ...issueForm, issue_description: e.target.value })} required placeholder="Describe the issue..." />
+            <input className={t.input} value={issueForm.issue_description} onChange={e => setIssueForm({ ...issueForm, issue_description: e.target.value })} required placeholder="Describe the issue..." />
           </div>
-          <button type="submit" disabled={busy} className={btnCls}>{busy ? 'Logging...' : 'Log Issue'}</button>
+          <button type="submit" disabled={busy} className={t.btn}>{busy ? 'Logging...' : 'Log Issue'}</button>
         </form>
       </div>
 
-      {/* Filter Buttons */}
       <div className="flex flex-wrap gap-2">
         {STATUS_FILTERS.map(f => (
           <button key={f} onClick={() => setFilter(f)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${filter === f ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50'}`}>
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${filter === f ? t.filterActive : t.filterInactive}`}>
             {STATUS_LABELS[f]}
           </button>
         ))}
       </div>
 
-      {/* Equipment Inventory */}
       <div>
         <h2 className="mb-3 text-lg font-semibold text-gray-800">Equipment Inventory</h2>
         <DataTable
@@ -86,11 +84,8 @@ export default function Equipment() {
             { key: 'purchase_date', label: 'Purchased', render: (r) => fmtDate(r.purchase_date) },
             { key: 'last_maintenance_date', label: 'Last Maint.', render: (r) => fmtDate(r.last_maintenance_date) },
             { key: 'action', label: 'Action', render: (r) => (
-              <select
-                className="rounded border border-gray-300 px-2 py-1 text-xs"
-                value={r.status}
-                onChange={e => updateStatus(r.equipment_id, e.target.value)}
-              >
+              <select className="rounded border border-gray-300 px-2 py-1 text-xs"
+                value={r.status} onChange={e => updateStatus(r.equipment_id, e.target.value)}>
                 <option value="operational">Operational</option>
                 <option value="under_repair">Under Repair</option>
                 <option value="out_of_service">Out of Service</option>
@@ -102,7 +97,6 @@ export default function Equipment() {
         />
       </div>
 
-      {/* Maintenance Logs */}
       <div>
         <h2 className="mb-3 text-lg font-semibold text-gray-800">Maintenance Logs</h2>
         <DataTable
@@ -114,11 +108,8 @@ export default function Equipment() {
             { key: 'resolved_date', label: 'Resolved', render: (r) => fmtDate(r.resolved_date) },
             { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
             { key: 'action', label: '', render: (r) => r.status !== 'resolved' && (
-              <select
-                className="rounded border border-gray-300 px-2 py-1 text-xs"
-                value={r.status}
-                onChange={e => updateMaintenance(r.log_id, e.target.value)}
-              >
+              <select className="rounded border border-gray-300 px-2 py-1 text-xs"
+                value={r.status} onChange={e => updateMaintenance(r.log_id, e.target.value)}>
                 <option value="reported">Reported</option>
                 <option value="in_progress">In Progress</option>
                 <option value="resolved">Resolved</option>
@@ -132,9 +123,6 @@ export default function Equipment() {
     </div>
   );
 }
-
-const inputCls = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none';
-const btnCls = 'rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 transition';
 
 function fmtDate(d) {
   if (!d) return '—';
