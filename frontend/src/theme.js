@@ -32,6 +32,20 @@ const theme = {
   chartBar: '#d97706',
   chartGridStroke: { light: '#e5e7eb', dark: '#4b5563' },
   chartTickFill: { light: '#6b7280', dark: '#9ca3af' },
+  chartTooltip: {
+    light: {
+      content: { backgroundColor: '#ffffff', color: '#1f2937', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' },
+      label: { color: '#1f2937' },
+      item: { color: '#1f2937' },
+      cursor: { fill: 'rgba(0,0,0,0.06)', stroke: 'none' },
+    },
+    dark: {
+      content: { backgroundColor: '#1f2937', color: '#f3f4f6', border: '1px solid #4b5563', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' },
+      label: { color: '#f3f4f6' },
+      item: { color: '#f3f4f6' },
+      cursor: { fill: 'rgba(75, 85, 99, 0.4)', stroke: 'none' },
+    },
+  },
 };
 
 export default theme;

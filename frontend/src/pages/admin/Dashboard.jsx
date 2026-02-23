@@ -17,6 +17,10 @@ export default function AdminDashboard() {
   const [data, setData] = useState(null);
   const gridStroke = t.chartGridStroke[isDark ? 'dark' : 'light'];
   const tickFill = t.chartTickFill[isDark ? 'dark' : 'light'];
+  const tt = t.chartTooltip[isDark ? 'dark' : 'light'];
+  const tooltipStyle = { ...tt.content, borderRadius: 12, fontSize: 13 };
+  const tooltipLabelStyle = tt.label;
+  const tooltipItemStyle = tt.item;
 
   useEffect(() => { api.get('/admin/dashboard').then(setData); }, []);
 
@@ -61,7 +65,7 @@ export default function AdminDashboard() {
                 <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={6} cornerRadius={10} dataKey="value" nameKey="name" label={({ name, value }) => `${name} (${value})`} stroke="none">
                   {pieData.map((_, i) => <Cell key={i} fill={`url(#pieGrad${i % PIE_COLORS.length})`} />)}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 13 }} />
+                <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} cursor={tt.cursor} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
               </PieChart>
             </ResponsiveContainer>
@@ -81,8 +85,8 @@ export default function AdminDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} allowDecimals={false} />
-                <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 13 }} />
-                <Bar dataKey="count" fill="url(#bookingBarGrad)" radius={[8, 8, 0, 0]} name="Bookings" />
+                <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} cursor={tt.cursor} />
+                <Bar dataKey="count" fill="url(#bookingBarGrad)" activeBar={{ fill: 'url(#bookingBarGrad)' }} radius={[8, 8, 0, 0]} name="Bookings" />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>

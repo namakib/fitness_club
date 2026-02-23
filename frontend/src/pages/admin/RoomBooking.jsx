@@ -3,6 +3,7 @@ import api from '../../api';
 import toast from 'react-hot-toast';
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
+import TimePicker from '../../components/TimePicker';
 import t from '../../theme';
 
 export default function RoomBooking() {
@@ -75,8 +76,8 @@ function SessionForm({ rooms, members, trainers, onSaved }) {
       <SelectField label="Trainer" value={form.trainer_id} onChange={set('trainer_id')} options={trainers.map(tr => ({ value: tr.trainer_id, label: `${tr.name} – ${tr.specialization}` }))} />
       <SelectField label="Room" value={form.room_id} onChange={set('room_id')} options={rooms.map(r => ({ value: r.room_id, label: r.room_name }))} />
       <Field label="Date" type="date" value={form.session_date} onChange={set('session_date')} required />
-      <Field label="Start Time" type="time" value={form.start_time} onChange={set('start_time')} required />
-      <Field label="End Time" type="time" value={form.end_time} onChange={set('end_time')} required />
+      <TimePicker label="Start Time" value={form.start_time} onChange={(val) => setForm({ ...form, start_time: val })} placeholder="Select start time" required />
+      <TimePicker label="End Time" value={form.end_time} onChange={(val) => setForm({ ...form, end_time: val })} placeholder="Select end time" required />
       <div className="sm:col-span-2 lg:col-span-3">
         <button type="submit" disabled={busy} className={t.btn}>{busy ? 'Booking...' : 'Book Session'}</button>
       </div>
@@ -103,8 +104,8 @@ function ClassForm({ rooms, trainers, onSaved }) {
       <SelectField label="Trainer" value={form.trainer_id} onChange={set('trainer_id')} options={trainers.map(tr => ({ value: tr.trainer_id, label: `${tr.name} – ${tr.specialization}` }))} />
       <SelectField label="Room" value={form.room_id} onChange={set('room_id')} options={rooms.map(r => ({ value: r.room_id, label: r.room_name }))} />
       <Field label="Date" type="date" value={form.class_date} onChange={set('class_date')} required />
-      <Field label="Start Time" type="time" value={form.start_time} onChange={set('start_time')} required />
-      <Field label="End Time" type="time" value={form.end_time} onChange={set('end_time')} required />
+      <TimePicker label="Start Time" value={form.start_time} onChange={(val) => setForm({ ...form, start_time: val })} placeholder="Select start time" required />
+      <TimePicker label="End Time" value={form.end_time} onChange={(val) => setForm({ ...form, end_time: val })} placeholder="Select end time" required />
       <Field label="Max Participants" type="number" min={1} value={form.max_participants} onChange={set('max_participants')} required />
       <div className="sm:col-span-2 lg:col-span-3">
         <button type="submit" disabled={busy} className={t.btn}>{busy ? 'Scheduling...' : 'Schedule Class'}</button>

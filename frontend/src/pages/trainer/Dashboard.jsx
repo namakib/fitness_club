@@ -14,6 +14,10 @@ export default function TrainerDashboard() {
   const [data, setData] = useState(null);
   const gridStroke = t.chartGridStroke[isDark ? 'dark' : 'light'];
   const tickFill = t.chartTickFill[isDark ? 'dark' : 'light'];
+  const tt = t.chartTooltip[isDark ? 'dark' : 'light'];
+  const tooltipStyle = { ...tt.content, borderRadius: 12, fontSize: 13 };
+  const tooltipLabelStyle = tt.label;
+  const tooltipItemStyle = tt.item;
 
   useEffect(() => { api.get('/trainer/dashboard').then(setData); }, []);
 
@@ -51,8 +55,8 @@ export default function TrainerDashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
                   <XAxis dataKey="month" tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 13 }} />
-                  <Bar dataKey="count" fill="url(#sessionBarGrad)" radius={[8, 8, 0, 0]} name="Sessions" />
+                  <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} cursor={tt.cursor} />
+                  <Bar dataKey="count" fill="url(#sessionBarGrad)" activeBar={{ fill: 'url(#sessionBarGrad)' }} radius={[8, 8, 0, 0]} name="Sessions" />
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>
@@ -72,7 +76,7 @@ export default function TrainerDashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
                   <XAxis dataKey="month" tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 13 }} />
+                  <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} cursor={tt.cursor} />
                   <Area type="monotone" dataKey="count" stroke={t.chartPrimary} strokeWidth={2.5} fill="url(#classGrad)" dot={{ r: 4, fill: '#fff', stroke: t.chartPrimary, strokeWidth: 2 }} activeDot={{ r: 6, fill: t.chartPrimary, stroke: '#fff', strokeWidth: 2 }} name="Classes" />
                 </AreaChart>
               </ResponsiveContainer>

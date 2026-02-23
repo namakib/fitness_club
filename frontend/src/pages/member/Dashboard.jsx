@@ -15,6 +15,10 @@ export default function Dashboard() {
   const [data, setData] = useState(null);
   const gridStroke = t.chartGridStroke[isDark ? 'dark' : 'light'];
   const tickFill = t.chartTickFill[isDark ? 'dark' : 'light'];
+  const tt = t.chartTooltip[isDark ? 'dark' : 'light'];
+  const tooltipStyle = { ...tt.content, borderRadius: 12, fontSize: 13 };
+  const tooltipLabelStyle = tt.label;
+  const tooltipItemStyle = tt.item;
 
   useEffect(() => { api.get('/member/dashboard').then(setData); }, []);
 
@@ -58,7 +62,7 @@ export default function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
                 <XAxis dataKey="date" tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} domain={['auto', 'auto']} />
-                <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 13 }} />
+                <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} cursor={tt.cursor} />
                 <Area type="monotone" dataKey="weight" stroke={t.chartPrimary} strokeWidth={2.5} fill="url(#weightGrad)" dot={{ r: 4, fill: '#fff', stroke: t.chartPrimary, strokeWidth: 2 }} activeDot={{ r: 6, fill: t.chartPrimary, stroke: '#fff', strokeWidth: 2 }} name="Weight (kg)" />
               </AreaChart>
             </ResponsiveContainer>
@@ -76,8 +80,8 @@ export default function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
                 <XAxis dataKey="date" tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: tickFill }} axisLine={false} tickLine={false} domain={['auto', 'auto']} />
-                <Tooltip contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: 13 }} />
-                <Bar dataKey="heartRate" fill="url(#hrBarGrad)" radius={[8, 8, 0, 0]} name="Heart Rate (bpm)" />
+                <Tooltip contentStyle={tooltipStyle} labelStyle={tooltipLabelStyle} itemStyle={tooltipItemStyle} cursor={tt.cursor} />
+                <Bar dataKey="heartRate" activeBar={{ fill: 'url(#hrBarGrad)' }} fill="url(#hrBarGrad)" radius={[8, 8, 0, 0]} name="Heart Rate (bpm)" />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
