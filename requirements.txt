@@ -1,4 +1,5 @@
 Flask>=3.0
+flask-cors>=5.0
 psycopg2-binary>=2.9
 werkzeug>=3.0
 python-dotenv>=1.0

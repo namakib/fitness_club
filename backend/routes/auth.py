@@ -1,24 +1,18 @@
 import functools
 
-from flask import (
-    Blueprint, flash, g, redirect, render_template,
-    request, session, url_for,
-)
+from flask import Blueprint, g, jsonify, request, session
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from ..db import get_cursor, get_db
+from ..db import get_cursor, get_db, serialize_row
 
-bp = Blueprint('auth', __name__)
+bp = Blueprint('auth', __name__, url_prefix='/api')
 
-
-# ── Role-based access decorators ──────────────────────────────
 
 def login_required(view):
     @functools.wraps(view)
     def wrapped(**kwargs):
         if g.user is None:
-            flash('Please log in first.', 'warning')
-            return redirect(url_for('auth.login'))
+            return jsonify(error='Authentication required.'), 401
         return view(**kwargs)
     return wrapped
 
@@ -28,17 +22,13 @@ def role_required(role):
         @functools.wraps(view)
         def wrapped(**kwargs):
             if g.user is None:
-                flash('Please log in first.', 'warning')
-                return redirect(url_for('auth.login'))
+                return jsonify(error='Authentication required.'), 401
             if session.get('role') != role:
-                flash('You do not have permission to access this page.', 'danger')
-                return redirect(url_for('auth.login'))
+                return jsonify(error='Permission denied.'), 403
             return view(**kwargs)
         return wrapped
     return decorator
 
-
-# ── Load logged-in user before every request ──────────────────
 
 @bp.before_app_request
 def load_logged_in_user():
@@ -61,123 +51,93 @@ def load_logged_in_user():
     cur.close()
 
 
-# ── Registration (members only) ──────────────────────────────
-
-@bp.route('/register', methods=('GET', 'POST'))
+@bp.route('/register', methods=('POST',))
 def register():
-    if request.method == 'POST':
-        name = request.form['name'].strip()
-        email = request.form['email'].strip().lower()
-        dob = request.form['dob']
-        gender = request.form['gender']
-        phone = request.form.get('phone', '').strip()
-        password = request.form['password']
+    data = request.get_json(silent=True) or {}
+    name = data.get('name', '').strip()
+    email = data.get('email', '').strip().lower()
+    dob = data.get('dob', '')
+    gender = data.get('gender', '')
+    phone = data.get('phone', '').strip()
+    password = data.get('password', '')
 
-        error = None
-        if not name:
-            error = 'Name is required.'
-        elif not email:
-            error = 'Email is required.'
-        elif not dob:
-            error = 'Date of birth is required.'
-        elif not password:
-            error = 'Password is required.'
-        elif len(password) < 6:
-            error = 'Password must be at least 6 characters.'
+    if not name:
+        return jsonify(error='Name is required.'), 400
+    if not email:
+        return jsonify(error='Email is required.'), 400
+    if not dob:
+        return jsonify(error='Date of birth is required.'), 400
+    if not password:
+        return jsonify(error='Password is required.'), 400
+    if len(password) < 6:
+        return jsonify(error='Password must be at least 6 characters.'), 400
 
-        if error is None:
-            cur = get_cursor()
-            try:
-                cur.execute(
-                    '''INSERT INTO member (name, email, dob, gender, phone, password_hash)
-                       VALUES (%s, %s, %s, %s, %s, %s)''',
-                    (name, email, dob, gender, phone or None,
-                     generate_password_hash(password, method='pbkdf2:sha256')),
-                )
-                get_db().commit()
-                flash('Registration successful! Please log in.', 'success')
-                return redirect(url_for('auth.login'))
-            except Exception as e:
-                get_db().rollback()
-                if 'unique' in str(e).lower():
-                    error = 'An account with this email already exists.'
-                else:
-                    error = f'Registration failed: {e}'
-            finally:
-                cur.close()
-
-        flash(error, 'danger')
-
-    return render_template('register.html')
+    cur = get_cursor()
+    try:
+        cur.execute(
+            '''INSERT INTO member (name, email, dob, gender, phone, password_hash)
+               VALUES (%s, %s, %s, %s, %s, %s)''',
+            (name, email, dob, gender, phone or None,
+             generate_password_hash(password, method='pbkdf2:sha256')),
+        )
+        get_db().commit()
+        return jsonify(message='Registration successful.'), 201
+    except Exception as e:
+        get_db().rollback()
+        if 'unique' in str(e).lower():
+            return jsonify(error='An account with this email already exists.'), 409
+        return jsonify(error=f'Registration failed: {e}'), 500
+    finally:
+        cur.close()
 
 
-# ── Login ─────────────────────────────────────────────────────
-
-@bp.route('/login', methods=('GET', 'POST'))
+@bp.route('/login', methods=('POST',))
 def login():
-    if request.method == 'POST':
-        email = request.form['email'].strip().lower()
-        password = request.form['password']
-        role = request.form['role']
+    data = request.get_json(silent=True) or {}
+    email = data.get('email', '').strip().lower()
+    password = data.get('password', '')
+    role = data.get('role', '')
 
-        error = None
-        user = None
+    table_map = {
+        'member':  ('member',  'member_id'),
+        'trainer': ('trainer', 'trainer_id'),
+        'admin':   ('admin',   'admin_id'),
+    }
 
-        table_map = {
-            'member':  ('member',  'member_id'),
-            'trainer': ('trainer', 'trainer_id'),
-            'admin':   ('admin',   'admin_id'),
-        }
+    if role not in table_map:
+        return jsonify(error='Invalid role selected.'), 400
 
-        if role not in table_map:
-            error = 'Invalid role selected.'
-        else:
-            table, id_col = table_map[role]
-            cur = get_cursor()
-            cur.execute(f'SELECT * FROM {table} WHERE email = %s', (email,))
-            user = cur.fetchone()
-            cur.close()
+    table, id_col = table_map[role]
+    cur = get_cursor()
+    cur.execute(f'SELECT * FROM {table} WHERE email = %s', (email,))
+    user = cur.fetchone()
+    cur.close()
 
-            if user is None:
-                error = 'Invalid email or role.'
-            elif not check_password_hash(user['password_hash'], password):
-                error = 'Incorrect password.'
+    if user is None:
+        return jsonify(error='Invalid email or role.'), 401
+    if not check_password_hash(user['password_hash'], password):
+        return jsonify(error='Incorrect password.'), 401
 
-        if error is None:
-            session.clear()
-            session['user_id'] = user[id_col]
-            session['role'] = role
+    session.clear()
+    session['user_id'] = user[id_col]
+    session['role'] = role
 
-            destinations = {
-                'member':  'member.dashboard',
-                'trainer': 'trainer.schedule',
-                'admin':   'admin.room_booking',
-            }
-            return redirect(url_for(destinations[role]))
+    safe_user = serialize_row(user)
+    safe_user.pop('password_hash', None)
 
-        flash(error, 'danger')
-
-    return render_template('login.html')
+    return jsonify(user=safe_user, role=role)
 
 
-# ── Logout ────────────────────────────────────────────────────
-
-@bp.route('/logout')
+@bp.route('/logout', methods=('POST',))
 def logout():
     session.clear()
-    flash('You have been logged out.', 'info')
-    return redirect(url_for('auth.login'))
+    return jsonify(message='Logged out.')
 
 
-# ── Root redirect ─────────────────────────────────────────────
-
-@bp.route('/')
-def index():
-    if g.user:
-        destinations = {
-            'member':  'member.dashboard',
-            'trainer': 'trainer.schedule',
-            'admin':   'admin.room_booking',
-        }
-        return redirect(url_for(destinations.get(session.get('role'), 'auth.login')))
-    return redirect(url_for('auth.login'))
+@bp.route('/me')
+def me():
+    if g.user is None:
+        return jsonify(user=None, role=None)
+    safe_user = serialize_row(g.user)
+    safe_user.pop('password_hash', None)
+    return jsonify(user=safe_user, role=session.get('role'))

@@ -1,20 +1,17 @@
-import os
-
 from flask import Flask
+from flask_cors import CORS
 from .config import Config
 from . import db as database
 
-_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-_FRONTEND_DIR = os.path.join(_BASE_DIR, '..', 'frontend')
-
 
 def create_app():
-    app = Flask(
-        __name__,
-        template_folder=os.path.join(_FRONTEND_DIR, 'templates'),
-        static_folder=os.path.join(_FRONTEND_DIR, 'static'),
-    )
+    app = Flask(__name__)
     app.config.from_object(Config)
+
+    CORS(app, supports_credentials=True, origins=[
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+    ])
 
     database.init_app(app)
 

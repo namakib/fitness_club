@@ -23,6 +23,7 @@ DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5432}"
 DB_PASSWORD="${DB_PASSWORD:-}"
 FLASK_PORT="${FLASK_PORT:-5000}"
+VITE_PORT="${VITE_PORT:-5173}"
 
 RESET=false
 SKIP_DB=false
@@ -58,7 +59,6 @@ check_postgres() {
         return
     fi
 
-    # Check if installed via Homebrew but not on PATH
     local pg_bin=""
     for dir in /opt/homebrew/opt/postgresql@*/bin /opt/homebrew/opt/postgresql/bin /usr/local/opt/postgresql@*/bin /usr/local/opt/postgresql/bin; do
         if [ -d "$dir" ] 2>/dev/null; then
@@ -78,7 +78,6 @@ check_postgres() {
     brew install postgresql@17
     brew services start postgresql@17
 
-    # Add to PATH
     local installed_bin
     installed_bin="$(brew --prefix postgresql@17)/bin"
     export PATH="$installed_bin:$PATH"
@@ -100,7 +99,6 @@ start_postgres() {
         brew services start postgresql 2>/dev/null || true
     fi
 
-    # Also try pg_ctl with common data directories
     for datadir in \
         /opt/homebrew/var/postgresql@17 \
         /opt/homebrew/var/postgresql \
@@ -137,7 +135,6 @@ setup_database() {
         $psql_cmd -c "DROP DATABASE IF EXISTS $DB_NAME;" postgres 2>/dev/null || true
     fi
 
-    # Create database if it doesn't exist
     if $psql_cmd -lqt postgres 2>/dev/null | cut -d \| -f 1 | grep -qw "$DB_NAME"; then
         success "Database '$DB_NAME' already exists"
     else
@@ -146,17 +143,14 @@ setup_database() {
         success "Database '$DB_NAME' created"
     fi
 
-    # Run DDL
     info "Running DDL.sql (schema, view, trigger, index)..."
     $psql_cmd -d "$DB_NAME" -f "$PROJECT_DIR/sql/DDL.sql" -q
     success "Schema created"
 
-    # Run DML
     info "Running DML.sql (sample data)..."
     $psql_cmd -d "$DB_NAME" -f "$PROJECT_DIR/sql/DML.sql" -q
     success "Sample data loaded"
 
-    # Verify
     local table_count
     table_count=$($psql_cmd -d "$DB_NAME" -t -c \
         "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';" \
@@ -181,7 +175,27 @@ setup_python() {
     success "Dependencies installed"
 }
 
-# ── 6. Export environment variables for Flask ─────────────────
+# ── 6. Set up Node.js / frontend dependencies ────────────────
+setup_frontend() {
+    if ! command -v node &>/dev/null; then
+        info "Node.js not found. Installing via Homebrew..."
+        check_brew
+        brew install node
+        success "Node.js installed: $(node --version)"
+    else
+        success "Node.js found: $(node --version)"
+    fi
+
+    if [ ! -d "$PROJECT_DIR/frontend/node_modules" ]; then
+        info "Installing frontend dependencies..."
+        cd "$PROJECT_DIR/frontend" && npm install --silent 2>&1 | tail -1
+        success "Frontend dependencies installed"
+    else
+        success "Frontend dependencies exist"
+    fi
+}
+
+# ── 7. Export environment variables for Flask ─────────────────
 configure_env() {
     export DB_HOST DB_PORT DB_NAME DB_USER DB_PASSWORD
     export FLASK_APP=run.py
@@ -189,25 +203,42 @@ configure_env() {
     export SECRET_KEY="${SECRET_KEY:-dev-secret-key-$(date +%s)}"
 }
 
-# ── 7. Launch the application ────────────────────────────────
+# ── 8. Launch both servers ────────────────────────────────────
+cleanup() {
+    info "Shutting down..."
+    [ -n "$FLASK_PID" ] && kill "$FLASK_PID" 2>/dev/null
+    [ -n "$VITE_PID" ] && kill "$VITE_PID" 2>/dev/null
+    exit 0
+}
+
 launch_app() {
+    trap cleanup SIGINT SIGTERM
+
     echo ""
     echo -e "${GREEN}========================================${NC}"
     echo -e "${GREEN} Fitness Club Management System${NC}"
     echo -e "${GREEN}========================================${NC}"
     echo ""
-    echo -e "  App running at:  ${CYAN}http://localhost:${FLASK_PORT}${NC}"
+    echo -e "  Backend API:  ${CYAN}http://localhost:${FLASK_PORT}${NC}"
+    echo -e "  Frontend:     ${CYAN}http://localhost:${VITE_PORT}${NC}"
     echo ""
     echo -e "  Sample logins (password: ${YELLOW}password123${NC}):"
     echo -e "    Member:  alice@example.com"
     echo -e "    Trainer: frank@example.com"
     echo -e "    Admin:   ivy@example.com"
     echo ""
-    echo -e "  Press ${RED}Ctrl+C${NC} to stop the server."
+    echo -e "  Press ${RED}Ctrl+C${NC} to stop both servers."
     echo ""
 
     cd "$PROJECT_DIR"
-    python run.py
+    python run.py &
+    FLASK_PID=$!
+
+    cd "$PROJECT_DIR/frontend"
+    npx vite --port "$VITE_PORT" &
+    VITE_PID=$!
+
+    wait
 }
 
 # ── Main ──────────────────────────────────────────────────────
@@ -219,5 +250,6 @@ check_postgres
 start_postgres
 setup_database
 setup_python
+setup_frontend
 configure_env
 launch_app
