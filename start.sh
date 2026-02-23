@@ -22,7 +22,7 @@ DB_USER="${DB_USER:-$(whoami)}"
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5432}"
 DB_PASSWORD="${DB_PASSWORD:-}"
-FLASK_PORT="${FLASK_PORT:-5000}"
+FLASK_PORT="${FLASK_PORT:-5001}"
 VITE_PORT="${VITE_PORT:-5173}"
 
 RESET=false
@@ -221,6 +221,14 @@ launch_app() {
     echo ""
     echo -e "  Backend API:  ${CYAN}http://localhost:${FLASK_PORT}${NC}"
     echo -e "  Frontend:     ${CYAN}http://localhost:${VITE_PORT}${NC}"
+    if command -v ipconfig &>/dev/null; then
+        LOCAL_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)
+    else
+        LOCAL_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || true)
+    fi
+    if [ -n "$LOCAL_IP" ]; then
+        echo -e "  Network:       ${CYAN}http://${LOCAL_IP}:${VITE_PORT}${NC}"
+    fi
     echo ""
     echo -e "  Sample logins (password: ${YELLOW}password123${NC}):"
     echo -e "    Member:  alice@example.com"
