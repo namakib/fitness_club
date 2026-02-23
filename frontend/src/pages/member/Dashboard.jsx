@@ -42,10 +42,10 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Latest Weight" value={summary?.latest_weight ? `${summary.latest_weight} kg` : null} icon="weight" color="orange" />
-        <StatCard label="Active Goals" value={summary?.active_goal_count ?? 0} icon="goal" color="emerald" />
-        <StatCard label="Classes Enrolled" value={summary?.enrolled_class_count ?? 0} icon="class" color="violet" />
-        <StatCard label="Upcoming Sessions" value={summary?.upcoming_session_count ?? 0} icon="session" color="amber" />
+        <StatCard label="Latest Weight" value={summary?.latest_weight != null ? `${summary.latest_weight} kg` : null} icon="weight" color="orange" />
+        <StatCard label="Active Goals" value={summary?.active_goals ?? 0} icon="goal" color="emerald" />
+        <StatCard label="Classes Enrolled" value={summary?.classes_attended ?? 0} icon="class" color="violet" />
+        <StatCard label="Upcoming Sessions" value={summary?.upcoming_sessions ?? 0} icon="session" color="amber" />
       </div>
 
       {chartData.length > 1 && (
