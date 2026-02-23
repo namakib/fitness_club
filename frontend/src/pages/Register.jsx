@@ -3,7 +3,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../api';
 import toast from 'react-hot-toast';
 import ThemeToggle from '../components/ThemeToggle';
+import SelectDropdown from '../components/SelectDropdown';
+import DatePicker from '../components/DatePicker';
 import t from '../theme';
+
+const GENDERS = [
+  { value: 'male', label: 'Male' },
+  { value: 'female', label: 'Female' },
+  { value: 'other', label: 'Other' },
+];
 
 export default function Register() {
   const navigate = useNavigate();
@@ -48,18 +56,22 @@ export default function Register() {
               <input type="email" required className={t.inputLg} value={form.email} onChange={set('email')} />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Date of Birth</label>
-                <input type="date" required className={t.inputLg} value={form.dob} onChange={set('dob')} />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Gender</label>
-                <select className={t.inputLg} value={form.gender} onChange={set('gender')}>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
+              <DatePicker
+                label="Date of Birth"
+                value={form.dob}
+                onChange={(val) => setForm({ ...form, dob: val })}
+                placeholder="Select date"
+                max={new Date().toISOString().slice(0, 10)}
+                required
+              />
+              <SelectDropdown
+                label="Gender"
+                value={form.gender}
+                options={GENDERS}
+                onChange={(val) => setForm({ ...form, gender: val })}
+                placeholder="Select gender"
+                searchable={false}
+              />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Phone <span className="text-gray-400 dark:text-gray-500">(optional)</span></label>
