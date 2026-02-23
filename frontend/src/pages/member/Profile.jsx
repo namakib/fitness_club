@@ -7,6 +7,8 @@ import ProfileHeader from '../../components/ProfileHeader';
 import SelectDropdown from '../../components/SelectDropdown';
 import DatePicker from '../../components/DatePicker';
 import Modal from '../../components/Modal';
+import PhoneInput from '../../components/PhoneInput';
+import { formatPhoneDisplay } from '../../components/PhoneInput';
 import { UserIcon, ChartIcon, TargetIcon, CalendarIcon, PhoneIcon, GenderIcon, ClockIcon } from '../../components/Icons';
 import t from '../../theme';
 
@@ -36,7 +38,7 @@ export default function Profile() {
 
   const meta = [
     { icon: <CalendarIcon />, label: 'Date of Birth', value: member.dob ? fmtDate(member.dob) : null },
-    { icon: <PhoneIcon />, label: 'Phone', value: member.phone },
+    { icon: <PhoneIcon />, label: 'Phone', value: formatPhoneDisplay(member.phone) || member.phone },
     { icon: <GenderIcon />, label: 'Gender', value: member.gender ? capitalize(member.gender) : null },
     { icon: <ClockIcon />, label: 'Joined', value: member.created_at ? new Date(member.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : null },
   ];
@@ -92,7 +94,7 @@ function ProfileForm({ member, onSaved }) {
     <form onSubmit={submit} className="space-y-4">
       <Field label="Email" value={member.email} disabled />
       <Field label="Name" value={form.name} onChange={set('name')} required />
-      <Field label="Phone" value={form.phone} onChange={set('phone')} />
+      <PhoneInput label="Phone" value={form.phone} onChange={set('phone')} />
       <SelectDropdown
         label="Gender"
         value={form.gender}

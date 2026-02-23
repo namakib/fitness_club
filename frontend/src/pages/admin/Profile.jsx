@@ -3,6 +3,7 @@ import api from '../../api';
 import toast from 'react-hot-toast';
 import ProfileHeader from '../../components/ProfileHeader';
 import StatCard from '../../components/StatCard';
+import PhoneInput, { formatPhoneDisplay } from '../../components/PhoneInput';
 import { UserIcon, PhoneIcon, UsersIcon, TrainerIcon } from '../../components/Icons';
 import t from '../../theme';
 
@@ -77,7 +78,7 @@ function ProfileForm({ admin, onSaved }) {
     <form onSubmit={submit} className="space-y-4">
       <Field label="Email" value={admin.email} disabled />
       <Field label="Name" value={form.name} onChange={set('name')} required />
-      <Field label="Phone" value={form.phone} onChange={set('phone')} />
+      <PhoneInput label="Phone" value={form.phone} onChange={set('phone')} />
       <button type="submit" disabled={busy} className={t.btn}>{busy ? 'Saving...' : 'Save Changes'}</button>
     </form>
   );

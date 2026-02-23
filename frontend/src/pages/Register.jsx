@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import ThemeToggle from '../components/ThemeToggle';
 import SelectDropdown from '../components/SelectDropdown';
 import DatePicker from '../components/DatePicker';
+import PhoneInput from '../components/PhoneInput';
 import t from '../theme';
 
 const GENDERS = [
@@ -78,10 +79,12 @@ export default function Register() {
                 searchable={false}
               />
             </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Phone <span className="text-gray-400 dark:text-gray-500">(optional)</span></label>
-              <input type="tel" className={t.inputLg} value={form.phone} onChange={set('phone')} />
-            </div>
+            <PhoneInput
+              label="Phone (optional)"
+              value={form.phone}
+              onChange={set('phone')}
+              className={t.inputLg}
+            />
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
               <input type="password" required minLength={6} className={t.inputLg} value={form.password} onChange={set('password')} />

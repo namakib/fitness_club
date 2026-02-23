@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import ProfileHeader from '../../components/ProfileHeader';
 import StatCard from '../../components/StatCard';
 import SelectDropdown from '../../components/SelectDropdown';
+import PhoneInput, { formatPhoneDisplay } from '../../components/PhoneInput';
 import { UserIcon, TagIcon, PhoneIcon, UsersIcon } from '../../components/Icons';
 import t from '../../theme';
 
@@ -34,7 +35,7 @@ export default function TrainerProfile() {
 
   const meta = [
     { icon: <TagIcon />, label: 'Specialization', value: trainer.specialization },
-    { icon: <PhoneIcon />, label: 'Phone', value: trainer.phone },
+    { icon: <PhoneIcon />, label: 'Phone', value: formatPhoneDisplay(trainer.phone) || trainer.phone },
     ...(stats ? [{ icon: <UsersIcon />, label: 'Members Trained', value: String(stats.total_members) }] : []),
   ];
 
@@ -90,7 +91,7 @@ function ProfileForm({ trainer, onSaved }) {
     <form onSubmit={submit} className="space-y-4">
       <Field label="Email" value={trainer.email} disabled />
       <Field label="Name" value={form.name} onChange={set('name')} required />
-      <Field label="Phone" value={form.phone} onChange={set('phone')} />
+      <PhoneInput label="Phone" value={form.phone} onChange={set('phone')} />
       <SelectDropdown
         label="Specialization"
         value={form.specialization}
