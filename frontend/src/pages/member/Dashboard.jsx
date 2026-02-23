@@ -98,7 +98,7 @@ export default function Dashboard() {
         }>
           <DataTable
             columns={[
-              { key: 'goal_type', label: 'Type', render: (r) => <span className="capitalize">{(r.goal_type || '').replace(/_/g, ' ')}</span> },
+              { key: 'goal_type', label: 'Type', filter: 'enum', render: (r) => <span className="capitalize">{(r.goal_type || '').replace(/_/g, ' ')}</span> },
               { key: 'target_value', label: 'Target' },
               { key: 'end_date', label: 'Due', render: (r) => fmtDate(r.end_date) },
             ]}
@@ -116,10 +116,10 @@ export default function Dashboard() {
         }>
           <DataTable
             columns={[
-              { key: 'session_date', label: 'Date', render: (r) => fmtDate(r.session_date) },
+              { key: 'session_date', label: 'Date', filter: 'date', render: (r) => fmtDate(r.session_date) },
               { key: 'time', label: 'Time', render: (r) => `${r.start_time} – ${r.end_time}` },
-              { key: 'trainer_name', label: 'Trainer' },
-              { key: 'room_name', label: 'Room' },
+              { key: 'trainer_name', label: 'Trainer', filter: 'enum' },
+              { key: 'room_name', label: 'Room', filter: 'enum' },
             ]}
             data={upcoming_sessions}
             emptyMessage="No upcoming sessions."
@@ -133,10 +133,10 @@ export default function Dashboard() {
         }>
           <DataTable
             columns={[
-              { key: 'class_name', label: 'Class' },
-              { key: 'class_date', label: 'Date', render: (r) => fmtDate(r.class_date) },
+              { key: 'class_name', label: 'Class', filter: 'enum' },
+              { key: 'class_date', label: 'Date', filter: 'date', render: (r) => fmtDate(r.class_date) },
               { key: 'time', label: 'Time', render: (r) => `${r.start_time} – ${r.end_time}` },
-              { key: 'room_name', label: 'Room' },
+              { key: 'room_name', label: 'Room', filter: 'enum' },
             ]}
             data={upcoming_classes}
             emptyMessage="No upcoming classes."

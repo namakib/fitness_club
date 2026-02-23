@@ -20,7 +20,7 @@ export default function HealthHistory() {
 
       <DataTable
         columns={[
-          { key: 'recorded_at', label: 'Date & Time', render: (r) => fmtDateTime(r.recorded_at) },
+          { key: 'recorded_at', label: 'Date & Time', filter: 'date', filterLabel: 'Date', render: (r) => fmtDateTime(r.recorded_at) },
           { key: 'weight', label: 'Weight (kg)' },
           { key: 'body_fat_pct', label: 'Body Fat %' },
           { key: 'blood_pressure', label: 'Blood Pressure' },

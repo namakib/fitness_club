@@ -6,6 +6,94 @@ from .auth import role_required
 bp = Blueprint('admin', __name__, url_prefix='/api/admin')
 
 
+@bp.route('/dashboard')
+@role_required('admin')
+def dashboard():
+    cur = get_cursor()
+
+    cur.execute('SELECT COUNT(*) AS total FROM member')
+    total_members = cur.fetchone()['total']
+
+    cur.execute('SELECT COUNT(*) AS total FROM trainer')
+    total_trainers = cur.fetchone()['total']
+
+    cur.execute('SELECT COUNT(*) AS total FROM equipment')
+    total_equipment = cur.fetchone()['total']
+
+    cur.execute('SELECT COUNT(*) AS total FROM room')
+    total_rooms = cur.fetchone()['total']
+
+    cur.execute(
+        '''SELECT status, COUNT(*) AS count
+           FROM equipment GROUP BY status ORDER BY status''')
+    equipment_status = serialize_rows(cur.fetchall())
+
+    cur.execute(
+        '''SELECT
+             COALESCE(SUM(CASE WHEN status IN ('reported','in_progress') THEN 1 ELSE 0 END), 0) AS open,
+             COALESCE(SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END), 0) AS resolved
+           FROM equipment_maintenance''')
+    maint = cur.fetchone()
+    maintenance_summary = {'open': maint['open'], 'resolved': maint['resolved']}
+
+    cur.execute(
+        '''SELECT month, yr, mn, SUM(cnt)::int AS count FROM (
+             SELECT TO_CHAR(session_date, 'Mon') AS month,
+                    EXTRACT(YEAR FROM session_date) AS yr,
+                    EXTRACT(MONTH FROM session_date) AS mn,
+                    COUNT(*) AS cnt
+             FROM personal_session
+             WHERE session_date >= CURRENT_DATE - INTERVAL '6 months'
+             GROUP BY month, yr, mn
+           UNION ALL
+             SELECT TO_CHAR(class_date, 'Mon') AS month,
+                    EXTRACT(YEAR FROM class_date) AS yr,
+                    EXTRACT(MONTH FROM class_date) AS mn,
+                    COUNT(*) AS cnt
+             FROM group_class
+             WHERE class_date >= CURRENT_DATE - INTERVAL '6 months'
+             GROUP BY month, yr, mn
+           ) sub
+           GROUP BY month, yr, mn
+           ORDER BY yr, mn''')
+    booking_trend = serialize_rows(cur.fetchall())
+
+    cur.execute(
+        '''(SELECT r.room_name, 'Personal Session' AS booking_type,
+                   ps.session_date AS event_date,
+                   ps.start_time, ps.end_time, ps.status,
+                   m.name AS participant, t.name AS trainer_name
+            FROM personal_session ps
+            JOIN room r ON r.room_id = ps.room_id
+            JOIN member m ON m.member_id = ps.member_id
+            JOIN trainer t ON t.trainer_id = ps.trainer_id
+            WHERE ps.session_date >= CURRENT_DATE
+          UNION ALL
+            SELECT r.room_name, 'Group Class' AS booking_type,
+                   gc.class_date AS event_date,
+                   gc.start_time, gc.end_time, 'scheduled' AS status,
+                   gc.class_name AS participant, t.name AS trainer_name
+            FROM group_class gc
+            JOIN room r ON r.room_id = gc.room_id
+            JOIN trainer t ON t.trainer_id = gc.trainer_id
+            WHERE gc.class_date >= CURRENT_DATE)
+          ORDER BY event_date, start_time
+          LIMIT 5''')
+    upcoming_bookings = serialize_rows(cur.fetchall())
+
+    cur.close()
+    return jsonify(
+        total_members=total_members,
+        total_trainers=total_trainers,
+        total_equipment=total_equipment,
+        total_rooms=total_rooms,
+        equipment_status=equipment_status,
+        maintenance_summary=maintenance_summary,
+        booking_trend=booking_trend,
+        upcoming_bookings=upcoming_bookings,
+    )
+
+
 @bp.route('/room-booking')
 @role_required('admin')
 def room_booking():

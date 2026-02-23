@@ -1,9 +1,84 @@
 from flask import Blueprint, g, jsonify, request
 
-from ..db import get_cursor, get_db, serialize_rows
+from ..db import get_cursor, get_db, serialize_row, serialize_rows
 from .auth import role_required
 
 bp = Blueprint('trainer', __name__, url_prefix='/api/trainer')
+
+
+@bp.route('/dashboard')
+@role_required('trainer')
+def dashboard():
+    cur = get_cursor()
+    tid = g.user['trainer_id']
+
+    cur.execute(
+        '''SELECT COUNT(*) AS total FROM personal_session
+           WHERE trainer_id = %s AND status = 'scheduled'
+             AND session_date >= CURRENT_DATE''', (tid,))
+    total_sessions = cur.fetchone()['total']
+
+    cur.execute(
+        '''SELECT COUNT(*) AS total FROM group_class
+           WHERE trainer_id = %s AND class_date >= CURRENT_DATE''', (tid,))
+    total_classes = cur.fetchone()['total']
+
+    cur.execute(
+        '''SELECT COUNT(DISTINCT member_id) AS total FROM personal_session
+           WHERE trainer_id = %s''', (tid,))
+    total_members = cur.fetchone()['total']
+
+    cur.execute(
+        '''SELECT COUNT(*) AS total FROM trainer_availability
+           WHERE trainer_id = %s AND available_date >= CURRENT_DATE''', (tid,))
+    total_slots = cur.fetchone()['total']
+
+    cur.execute(
+        '''SELECT ps.session_date, ps.start_time, ps.end_time,
+                  m.name AS member_name, r.room_name
+           FROM personal_session ps
+           JOIN member m ON m.member_id = ps.member_id
+           JOIN room r ON r.room_id = ps.room_id
+           WHERE ps.trainer_id = %s AND ps.status = 'scheduled'
+             AND ps.session_date >= CURRENT_DATE
+           ORDER BY ps.session_date, ps.start_time
+           LIMIT 5''', (tid,))
+    upcoming = cur.fetchall()
+
+    cur.execute(
+        '''SELECT TO_CHAR(session_date, 'Mon') AS month,
+                  EXTRACT(YEAR FROM session_date) AS yr,
+                  EXTRACT(MONTH FROM session_date) AS mn,
+                  COUNT(*) AS count
+           FROM personal_session
+           WHERE trainer_id = %s
+             AND session_date >= CURRENT_DATE - INTERVAL '6 months'
+           GROUP BY month, yr, mn
+           ORDER BY yr, mn''', (tid,))
+    session_trend = cur.fetchall()
+
+    cur.execute(
+        '''SELECT TO_CHAR(class_date, 'Mon') AS month,
+                  EXTRACT(YEAR FROM class_date) AS yr,
+                  EXTRACT(MONTH FROM class_date) AS mn,
+                  COUNT(*) AS count
+           FROM group_class
+           WHERE trainer_id = %s
+             AND class_date >= CURRENT_DATE - INTERVAL '6 months'
+           GROUP BY month, yr, mn
+           ORDER BY yr, mn''', (tid,))
+    class_trend = cur.fetchall()
+
+    cur.close()
+    return jsonify(
+        total_sessions=total_sessions,
+        total_classes=total_classes,
+        total_members=total_members,
+        total_availability_slots=total_slots,
+        upcoming_sessions=serialize_rows(upcoming),
+        session_trend=serialize_rows(session_trend),
+        class_trend=serialize_rows(class_trend),
+    )
 
 
 @bp.route('/schedule')

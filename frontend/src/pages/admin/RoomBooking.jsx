@@ -34,17 +34,17 @@ export default function RoomBooking() {
         <h2 className="mb-3 text-lg font-semibold text-gray-800">Room Schedule</h2>
         <DataTable
           columns={[
-            { key: 'room_name', label: 'Room' },
-            { key: 'booking_type', label: 'Type', render: (r) => (
+            { key: 'room_name', label: 'Room', filter: 'enum' },
+            { key: 'booking_type', label: 'Type', filter: 'enum', render: (r) => (
               <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
                 r.booking_type === 'Personal Session' ? 'bg-violet-50 text-violet-700 ring-violet-600/20' : 'bg-teal-50 text-teal-700 ring-teal-600/20'
               }`}>{r.booking_type}</span>
             )},
-            { key: 'event_date', label: 'Date', render: (r) => fmtDate(r.event_date) },
+            { key: 'event_date', label: 'Date', filter: 'date', render: (r) => fmtDate(r.event_date) },
             { key: 'time', label: 'Time', render: (r) => `${r.start_time} – ${r.end_time}` },
             { key: 'participant', label: 'Participant / Class' },
-            { key: 'trainer_name', label: 'Trainer' },
-            { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
+            { key: 'trainer_name', label: 'Trainer', filter: 'enum' },
+            { key: 'status', label: 'Status', filter: 'enum', render: (r) => <StatusBadge status={r.status} /> },
           ]}
           data={data.bookings}
           emptyMessage="No bookings found."

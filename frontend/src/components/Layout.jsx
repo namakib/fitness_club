@@ -9,10 +9,12 @@ const navItems = {
     { to: '/member/health-history', label: 'Health History' },
   ],
   trainer: [
+    { to: '/trainer/dashboard', label: 'Dashboard' },
     { to: '/trainer/schedule', label: 'Schedule' },
     { to: '/trainer/availability', label: 'Availability' },
   ],
   admin: [
+    { to: '/admin/dashboard', label: 'Dashboard' },
     { to: '/admin/room-booking', label: 'Room Booking' },
     { to: '/admin/equipment', label: 'Equipment' },
   ],

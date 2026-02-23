@@ -5,16 +5,12 @@ import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
 import t from '../../theme';
 
-const STATUS_FILTERS = ['', 'operational', 'under_repair', 'out_of_service'];
-const STATUS_LABELS = { '': 'All', operational: 'Operational', under_repair: 'Under Repair', out_of_service: 'Out of Service' };
-
 export default function Equipment() {
   const [data, setData] = useState(null);
-  const [filter, setFilter] = useState('');
   const [issueForm, setIssueForm] = useState({ equipment_id: '', issue_description: '' });
   const [busy, setBusy] = useState(false);
 
-  const load = useCallback(() => api.get(`/admin/equipment${filter ? `?status=${filter}` : ''}`).then(setData), [filter]);
+  const load = useCallback(() => api.get('/admin/equipment').then(setData), []);
   useEffect(() => { load(); }, [load]);
 
   async function logIssue(e) {
@@ -65,23 +61,14 @@ export default function Equipment() {
         </form>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {STATUS_FILTERS.map(f => (
-          <button key={f} onClick={() => setFilter(f)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${filter === f ? t.filterActive : t.filterInactive}`}>
-            {STATUS_LABELS[f]}
-          </button>
-        ))}
-      </div>
-
       <div>
         <h2 className="mb-3 text-lg font-semibold text-gray-800">Equipment Inventory</h2>
         <DataTable
           columns={[
             { key: 'name', label: 'Name' },
-            { key: 'type', label: 'Type' },
-            { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
-            { key: 'purchase_date', label: 'Purchased', render: (r) => fmtDate(r.purchase_date) },
+            { key: 'type', label: 'Type', filter: 'enum' },
+            { key: 'status', label: 'Status', filter: 'enum', render: (r) => <StatusBadge status={r.status} /> },
+            { key: 'purchase_date', label: 'Purchased', filter: 'date', render: (r) => fmtDate(r.purchase_date) },
             { key: 'last_maintenance_date', label: 'Last Maint.', render: (r) => fmtDate(r.last_maintenance_date) },
             { key: 'action', label: 'Action', render: (r) => (
               <select className="rounded border border-gray-300 px-2 py-1 text-xs"
@@ -101,12 +88,12 @@ export default function Equipment() {
         <h2 className="mb-3 text-lg font-semibold text-gray-800">Maintenance Logs</h2>
         <DataTable
           columns={[
-            { key: 'equipment_name', label: 'Equipment' },
-            { key: 'equipment_type', label: 'Type' },
+            { key: 'equipment_name', label: 'Equipment', filter: 'enum' },
+            { key: 'equipment_type', label: 'Type', filter: 'enum' },
             { key: 'issue_description', label: 'Issue' },
-            { key: 'reported_date', label: 'Reported', render: (r) => fmtDate(r.reported_date) },
+            { key: 'reported_date', label: 'Reported', filter: 'date', render: (r) => fmtDate(r.reported_date) },
             { key: 'resolved_date', label: 'Resolved', render: (r) => fmtDate(r.resolved_date) },
-            { key: 'status', label: 'Status', render: (r) => <StatusBadge status={r.status} /> },
+            { key: 'status', label: 'Status', filter: 'enum', render: (r) => <StatusBadge status={r.status} /> },
             { key: 'action', label: '', render: (r) => r.status !== 'resolved' && (
               <select className="rounded border border-gray-300 px-2 py-1 text-xs"
                 value={r.status} onChange={e => updateMaintenance(r.log_id, e.target.value)}>

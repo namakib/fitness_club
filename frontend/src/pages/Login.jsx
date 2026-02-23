@@ -10,7 +10,7 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', password: '', role: 'member' });
   const [busy, setBusy] = useState(false);
 
-  const dest = { member: '/member/dashboard', trainer: '/trainer/schedule', admin: '/admin/room-booking' };
+  const dest = { member: '/member/dashboard', trainer: '/trainer/dashboard', admin: '/admin/dashboard' };
 
   async function handleSubmit(e) {
     e.preventDefault();
