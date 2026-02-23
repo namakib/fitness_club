@@ -5,6 +5,7 @@ import DataTable from '../../components/DataTable';
 import DatePicker from '../../components/DatePicker';
 import TimePicker from '../../components/TimePicker';
 import AvailabilityCalendar from '../../components/AvailabilityCalendar';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import t from '../../theme';
 
 export default function Availability() {
@@ -12,6 +13,7 @@ export default function Availability() {
   const [form, setForm] = useState({ available_date: '', start_time: '', end_time: '' });
   const [busy, setBusy] = useState(false);
   const [calendarKey, setCalendarKey] = useState(0);
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // { id, busy }
 
   const load = useCallback(() => api.get('/trainer/availability').then(d => setSlots(d.slots)), []);
   useEffect(() => { load(); }, [load]);
@@ -33,9 +35,20 @@ export default function Availability() {
     finally { setBusy(false); }
   }
 
-  async function handleDelete(id) {
-    try { await api.delete(`/trainer/availability/${id}`); toast.success('Slot removed.'); load(); refreshCalendar(); }
-    catch (err) { toast.error(err.message); }
+  async function handleConfirmDelete() {
+    if (!deleteConfirm) return;
+    setDeleteConfirm((prev) => ({ ...prev, busy: true }));
+    try {
+      await api.delete(`/trainer/availability/${deleteConfirm.id}`);
+      toast.success('Slot removed.');
+      setDeleteConfirm(null);
+      load();
+      refreshCalendar();
+    } catch (err) {
+      toast.error(err.message);
+      setDeleteConfirm((prev) => ({ ...prev, busy: false }));
+      throw err;
+    }
   }
 
   return (
@@ -71,7 +84,7 @@ export default function Availability() {
             { key: 'start_time', label: 'Start' },
             { key: 'end_time', label: 'End' },
             { key: 'action', label: '', render: (r) => (
-              <button onClick={() => handleDelete(r.availability_id)}
+              <button onClick={() => setDeleteConfirm({ id: r.availability_id, busy: false })}
                 className="rounded-lg px-2.5 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition">
                 Remove
               </button>
@@ -81,6 +94,18 @@ export default function Availability() {
           emptyMessage="No availability slots set."
         />
       )}
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        title="Remove Time Slot?"
+        message="Are you sure you want to remove this availability slot?"
+        confirmLabel="Remove"
+        cancelLabel="Cancel"
+        variant="danger"
+        loading={deleteConfirm?.busy ?? false}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

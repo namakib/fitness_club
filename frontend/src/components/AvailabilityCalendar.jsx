@@ -5,6 +5,7 @@ import DatePicker from './DatePicker';
 import TimePicker from './TimePicker';
 import SelectDropdown from './SelectDropdown';
 import Modal from './Modal';
+import ConfirmDialog from './ConfirmDialog';
 import NumberInput from './NumberInput';
 import t from '../theme';
 import { ChevronLeftIcon, ChevronRightIcon, CalendarIcon } from './Icons';
@@ -43,14 +44,17 @@ function fmtDate(d) {
 }
 
 function EventEditForm({ event, form, setForm, rooms, onRoomsLoad, busy, setBusy, onSaved, onClose }) {
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [confirmDeleteBusy, setConfirmDeleteBusy] = useState(false);
+
   useEffect(() => { onRoomsLoad(); }, [onRoomsLoad]);
 
   const roomOptions = rooms.map((r) => ({ value: r.room_id, label: r.room_name }));
 
-  async function handleDelete() {
-    const label = event.event_type === 'session' ? 'session' : 'class';
-    if (!window.confirm(`Are you sure you want to delete this ${label}? This cannot be undone.`)) return;
-    setBusy(true);
+  const label = event.event_type === 'session' ? 'session' : 'class';
+
+  async function handleConfirmDelete() {
+    setConfirmDeleteBusy(true);
     try {
       if (event.event_type === 'session') {
         await api.delete(`/trainer/sessions/${event.session_id}`);
@@ -62,8 +66,9 @@ function EventEditForm({ event, form, setForm, rooms, onRoomsLoad, busy, setBusy
       onSaved();
     } catch (err) {
       toast.error(err.message);
+      throw err;
     } finally {
-      setBusy(false);
+      setConfirmDeleteBusy(false);
     }
   }
 
@@ -177,13 +182,25 @@ function EventEditForm({ event, form, setForm, rooms, onRoomsLoad, busy, setBusy
         </div>
         <button
           type="button"
-          onClick={handleDelete}
+          onClick={() => setConfirmDeleteOpen(true)}
           disabled={busy}
           className="rounded-lg px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition disabled:opacity-50"
         >
           Delete
         </button>
       </div>
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onClose={() => setConfirmDeleteOpen(false)}
+        title={`Delete ${label.charAt(0).toUpperCase() + label.slice(1)}?`}
+        message={`Are you sure you want to delete this ${label}? This cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+        loading={confirmDeleteBusy}
+        onConfirm={handleConfirmDelete}
+      />
     </form>
   );
 }
