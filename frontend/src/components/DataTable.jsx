@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import SearchInput from './SearchInput';
 import FilterDropdown from './FilterDropdown';
+import { CloseIcon } from './Icons';
 
 function fmtDateLabel(d) {
   if (!d) return '';
@@ -145,9 +146,7 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
           {activeCount > 0 && (
             <button onClick={clearFilters}
               className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition">
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-              </svg>
+              <CloseIcon />
               Clear filters
             </button>
           )}

@@ -1,19 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-
-const ChevronIcon = ({ open }) => (
-  <svg
-    className={`h-3.5 w-3.5 shrink-0 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-    fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-  </svg>
-);
+import { ChevronUpDownIcon, CheckIcon } from './Icons';
 
 export default function FilterDropdown({ label, value, options, onChange }) {
   const [open, setOpen] = useState(false);
@@ -46,7 +32,7 @@ export default function FilterDropdown({ label, value, options, onChange }) {
         `}
       >
         <span className="max-w-[140px] truncate">{displayLabel}</span>
-        <ChevronIcon open={open} />
+        <ChevronUpDownIcon open={open} className="h-3.5 w-3.5" />
       </button>
 
       {open && (
@@ -60,7 +46,7 @@ export default function FilterDropdown({ label, value, options, onChange }) {
             `}
           >
             <span>All</span>
-            {!value && <CheckIcon />}
+            {!value && <CheckIcon className="h-3.5 w-3.5" />}
           </button>
 
           <div className="mx-2 my-0.5 border-t border-gray-100 dark:border-gray-700" />
@@ -78,7 +64,7 @@ export default function FilterDropdown({ label, value, options, onChange }) {
                 `}
               >
                 <span className="truncate pr-2">{opt.label}</span>
-                {active && <CheckIcon />}
+                {active && <CheckIcon className="h-3.5 w-3.5" />}
               </button>
             );
           })}

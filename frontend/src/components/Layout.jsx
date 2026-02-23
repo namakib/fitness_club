@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from './ThemeToggle';
+import { UserIcon, SignOutIcon, ChevronUpDownIcon, DashboardIcon } from './Icons';
 import t from '../theme';
 
 const navItems = {
@@ -27,28 +28,19 @@ const profilePath = {
   admin: '/admin/profile',
 };
 
-const UserIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-  </svg>
-);
-
-const SignOutIcon = () => (
-  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-  </svg>
-);
-
-const ChevronIcon = ({ open }) => (
-  <svg className={`h-3.5 w-3.5 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-  </svg>
-);
+const dashboardPath = {
+  member: '/member/dashboard',
+  trainer: '/trainer/dashboard',
+  admin: '/admin/dashboard',
+};
 
 export default function Layout() {
   const { user, role, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const items = navItems[role] || [];
+  const dashboardTo = dashboardPath[role] || '/member/dashboard';
+  const isOnDashboard = location.pathname === dashboardTo;
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -72,6 +64,15 @@ export default function Layout() {
     navigate(profilePath[role] || '/member/profile');
   }
 
+  function handleDashboard() {
+    setMenuOpen(false);
+    navigate(dashboardTo);
+  }
+
+  function handleBrandClick() {
+    navigate(dashboardTo);
+  }
+
   const initials = (user?.name || '')
     .split(' ')
     .map(w => w[0])
@@ -84,10 +85,14 @@ export default function Layout() {
       <nav className="sticky top-0 z-30 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-8">
-            <span className={`flex items-center gap-2 text-lg font-bold tracking-tight ${t.navBrand}`}>
+            <button
+              type="button"
+              onClick={handleBrandClick}
+              className={`flex items-center gap-2 text-lg font-bold tracking-tight ${t.navBrand} hover:opacity-90 transition-opacity`}
+            >
               <img src="/logo.png" alt="" className="h-8 w-auto" />
               Fitness Club
-            </span>
+            </button>
             <div className="hidden items-center gap-1 sm:flex">
               {items.map(({ to, label }) => (
                 <NavLink key={to} to={to}
@@ -114,7 +119,7 @@ export default function Layout() {
                 </span>
                 <span className="hidden sm:block max-w-[120px] truncate">{user?.name}</span>
                 <span className={`ml-0.5 hidden sm:inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${t.roleBadge}`}>{role}</span>
-                <ChevronIcon open={menuOpen} />
+                <ChevronUpDownIcon open={menuOpen} className="h-3.5 w-3.5" />
               </button>
 
               {menuOpen && (
@@ -123,6 +128,15 @@ export default function Layout() {
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user?.name}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={handleDashboard}
+                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition ${isOnDashboard ? t.navActive : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                  >
+                    <DashboardIcon />
+                    Dashboard
+                  </button>
 
                   <button
                     type="button"

@@ -1,32 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import t from '../theme';
-
-const ClockIcon = () => (
-  <svg className="h-4 w-4 text-gray-400 dark:text-gray-500 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-  </svg>
-);
-
-const ChevronIcon = ({ open }) => (
-  <svg
-    className={`h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-    fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"
-  >
-    <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-  </svg>
-);
-
-const ChevronUp = () => (
-  <svg className="h-3.5 w-3.5 shrink-0 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-  </svg>
-);
-
-const ChevronDown = () => (
-  <svg className="h-3.5 w-3.5 shrink-0 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 8.25 7.5 7.5 7.5-7.5" />
-  </svg>
-);
+import { ClockIcon, ChevronUpDownIcon, ChevronUpIcon, ChevronDownIcon } from './Icons';
 
 /** HH:mm (24h) to 12h display e.g. "9:00 AM", "2:30 PM" */
 function formatTimeDisplay(hhmm) {
@@ -139,7 +113,7 @@ export default function TimePicker({ label, value, onChange, placeholder = 'Sele
             <ClockIcon />
             {display || placeholder}
           </span>
-          <ChevronIcon open={open} />
+          <ChevronUpDownIcon open={open} />
         </button>
 
         {open && (
@@ -150,25 +124,25 @@ export default function TimePicker({ label, value, onChange, placeholder = 'Sele
               <div className="flex items-center justify-center gap-1">
                 <div className="flex-1 flex flex-col items-center rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 overflow-hidden min-w-0">
                   <button type="button" onClick={() => stepHour(1)} className="p-1.5 w-full flex justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
-                    <ChevronUp />
+                    <ChevronUpIcon />
                   </button>
                   <span className="px-2 py-1 text-lg font-semibold text-gray-900 dark:text-gray-100 tabular-nums text-center w-full">
                     {hour12}
                   </span>
                   <button type="button" onClick={() => stepHour(-1)} className="p-1.5 w-full flex justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
-                    <ChevronDown />
+                    <ChevronDownIcon />
                   </button>
                 </div>
                 <span className="text-lg font-semibold text-gray-500 dark:text-gray-400 px-0.5 flex-shrink-0">:</span>
                 <div className="flex-1 flex flex-col items-center rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 overflow-hidden min-w-0">
                   <button type="button" onClick={() => stepMinute(1)} className="p-1.5 w-full flex justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
-                    <ChevronUp />
+                    <ChevronUpIcon />
                   </button>
                   <span className="px-2 py-1 text-lg font-semibold text-gray-900 dark:text-gray-100 tabular-nums text-center w-full">
                     {String(minute).padStart(2, '0')}
                   </span>
                   <button type="button" onClick={() => stepMinute(-1)} className="p-1.5 w-full flex justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
-                    <ChevronDown />
+                    <ChevronDownIcon />
                   </button>
                 </div>
                 <div className="flex flex-col rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden flex-shrink-0">
