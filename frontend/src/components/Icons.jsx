@@ -33,7 +33,7 @@ export const ChevronDownIcon = (props) => <ChevronIcon direction="down" {...prop
 
 export function ChevronUpDownIcon({ open = false, className, ...props }) {
   return (
-    <ChevronIcon direction="down" className={cn(open ? 'rotate-180' : '', className)} {...props} />
+    <ChevronIcon direction={open ? 'up' : 'down'} className={className} {...props} />
   );
 }
 

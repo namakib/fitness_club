@@ -55,8 +55,6 @@ export default function Availability() {
     <div className="space-y-8">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Availability</h1>
 
-      <AvailabilityCalendar refreshTrigger={calendarKey} onEventUpdated={refreshCalendar} />
-
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:p-6 shadow-sm">
         <h2 className="mb-4 text-base font-semibold text-gray-800 dark:text-gray-200">Add Time Slot</h2>
         <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
@@ -94,6 +92,8 @@ export default function Availability() {
           emptyMessage="No availability slots set."
         />
       )}
+
+      <AvailabilityCalendar refreshTrigger={calendarKey} onEventUpdated={refreshCalendar} />
 
       <ConfirmDialog
         open={!!deleteConfirm}
