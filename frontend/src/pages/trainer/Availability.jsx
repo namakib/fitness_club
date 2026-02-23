@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import api from '../../api';
 import toast from 'react-hot-toast';
 import DataTable from '../../components/DataTable';
+import DatePicker from '../../components/DatePicker';
 import TimePicker from '../../components/TimePicker';
 import t from '../../theme';
 
@@ -39,9 +40,8 @@ export default function Availability() {
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
         <h2 className="mb-4 text-base font-semibold text-gray-800 dark:text-gray-200">Add Time Slot</h2>
         <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-4">
-          <div className="flex-1 min-w-[140px]">
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
-            <input type="date" required className={t.input} value={form.available_date} onChange={set('available_date')} />
+          <div className="flex-1 min-w-[200px]">
+            <DatePicker label="Date" value={form.available_date} onChange={(val) => setForm({ ...form, available_date: val })} placeholder="Select date" required min={new Date().toISOString().slice(0, 10)} />
           </div>
           <div className="flex-1 min-w-[200px]">
             <TimePicker label="Start" value={form.start_time} onChange={(val) => setForm({ ...form, start_time: val })} placeholder="Select start" required />
