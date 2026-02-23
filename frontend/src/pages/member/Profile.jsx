@@ -5,7 +5,7 @@ import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
 import ProfileHeader from '../../components/ProfileHeader';
 import SelectDropdown from '../../components/SelectDropdown';
-import { UserIcon, HeartIcon, ChartIcon, TargetIcon, CalendarIcon, PhoneIcon, GenderIcon, ClockIcon } from '../../components/Icons';
+import { UserIcon, ChartIcon, TargetIcon, CalendarIcon, PhoneIcon, GenderIcon, ClockIcon } from '../../components/Icons';
 import t from '../../theme';
 
 const GENDERS = [
@@ -48,10 +48,6 @@ export default function Profile() {
         <div className="space-y-6">
           <Card title="Edit Profile" icon={<UserIcon />}>
             <ProfileForm member={member} onSaved={load} />
-          </Card>
-
-          <Card title="Record Health Metric" icon={<HeartIcon />}>
-            <MetricForm onSaved={load} />
           </Card>
         </div>
       </div>
@@ -104,34 +100,6 @@ function ProfileForm({ member, onSaved }) {
         searchable={false}
       />
       <button type="submit" disabled={busy} className={t.btn}>{busy ? 'Saving...' : 'Save Changes'}</button>
-    </form>
-  );
-}
-
-/* ── Metric Form ──────────────────────────────────────────── */
-
-function MetricForm({ onSaved }) {
-  const [form, setForm] = useState({ weight: '', body_fat_pct: '', blood_pressure: '', heart_rate: '' });
-  const [busy, setBusy] = useState(false);
-  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
-
-  async function submit(e) {
-    e.preventDefault();
-    setBusy(true);
-    try { await api.post('/member/metrics', form); toast.success('Metric recorded.'); setForm({ weight: '', body_fat_pct: '', blood_pressure: '', heart_rate: '' }); onSaved(); }
-    catch (err) { toast.error(err.message); }
-    finally { setBusy(false); }
-  }
-
-  return (
-    <form onSubmit={submit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <Field label="Weight (kg)" type="number" step="0.1" value={form.weight} onChange={set('weight')} />
-        <Field label="Body Fat %" type="number" step="0.1" value={form.body_fat_pct} onChange={set('body_fat_pct')} />
-        <Field label="Blood Pressure" placeholder="e.g. 120/80" value={form.blood_pressure} onChange={set('blood_pressure')} />
-        <Field label="Heart Rate (bpm)" type="number" value={form.heart_rate} onChange={set('heart_rate')} />
-      </div>
-      <button type="submit" disabled={busy} className={t.btn}>{busy ? 'Saving...' : 'Record Metric'}</button>
     </form>
   );
 }

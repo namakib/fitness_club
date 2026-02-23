@@ -1,19 +1,22 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState, useCallback } from 'react';
 import {
   ResponsiveContainer, AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
 import api from '../../api';
 import DataTable from '../../components/DataTable';
+import Modal from '../../components/Modal';
+import RecordMetricForm from '../../components/RecordMetricForm';
 import { useTheme } from '../../context/ThemeContext';
 import t from '../../theme';
 
 export default function HealthHistory() {
   const { isDark } = useTheme();
   const [metrics, setMetrics] = useState(null);
+  const [metricModalOpen, setMetricModalOpen] = useState(false);
 
-  useEffect(() => { api.get('/member/health-history').then(d => setMetrics(d.metrics)); }, []);
+  const load = useCallback(() => api.get('/member/health-history').then(d => setMetrics(d.metrics)), []);
+  useEffect(() => { load(); }, [load]);
 
   if (metrics === null) return <div className="animate-pulse h-64 rounded-xl bg-gray-200 dark:bg-gray-700" />;
 
@@ -44,13 +47,22 @@ export default function HealthHistory() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Health History</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Track your metrics over time.</p>
         </div>
-        <Link to="/member/profile" className={t.btnSmall}>+ Record Metric</Link>
+        <button onClick={() => setMetricModalOpen(true)} className={t.btnSmall}>
+          + Record Metric
+        </button>
       </div>
+
+      <Modal open={metricModalOpen} onClose={() => setMetricModalOpen(false)} title="Record Health Metric">
+        <RecordMetricForm
+          onSaved={() => { setMetricModalOpen(false); load(); }}
+          onCancel={() => setMetricModalOpen(false)}
+        />
+      </Modal>
 
       {hasCharts && (
         <div className="grid gap-6 lg:grid-cols-2">
@@ -152,7 +164,7 @@ export default function HealthHistory() {
             { key: 'heart_rate', label: 'Heart Rate (bpm)' },
           ]}
           data={metrics}
-          emptyMessage="No health metrics recorded yet. Go to your profile to add one."
+          emptyMessage="No health metrics recorded yet. Click + Record Metric to add one."
         />
       </div>
     </div>
