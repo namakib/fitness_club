@@ -72,11 +72,44 @@ export default function SelectDropdown({ label, value, options, onChange, placeh
           }
         }
       };
+
+      const getScrollParents = (el) => {
+        const parents = [];
+        let node = el.parentElement;
+        while (node && node !== document.body) {
+          const style = getComputedStyle(node);
+          const overflow = style.overflow + style.overflowX + style.overflowY;
+          if (/(auto|scroll|overlay)/.test(overflow)) {
+            parents.push(node);
+          }
+          node = node.parentElement;
+        }
+        return parents;
+      };
+
+      let rafId = null;
+      const throttledUpdate = () => {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => {
+          rafId = null;
+          updatePosition();
+        });
+      };
+
       updatePosition();
-      window.addEventListener('scroll', updatePosition, true);
+      const scrollParents = getScrollParents(triggerRef.current);
+      scrollParents.forEach((target) => {
+        target.addEventListener('scroll', throttledUpdate, { passive: true });
+      });
+      window.addEventListener('scroll', throttledUpdate, { passive: true });
       window.addEventListener('resize', updatePosition);
+
       return () => {
-        window.removeEventListener('scroll', updatePosition, true);
+        if (rafId) cancelAnimationFrame(rafId);
+        scrollParents.forEach((target) => {
+          target.removeEventListener('scroll', throttledUpdate);
+        });
+        window.removeEventListener('scroll', throttledUpdate);
         window.removeEventListener('resize', updatePosition);
       };
     }
@@ -124,8 +157,8 @@ export default function SelectDropdown({ label, value, options, onChange, placeh
           const panelContent = (
             <div
               ref={floating ? panelRef : undefined}
-              className={`rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black/5 dark:ring-white/5 transition-all duration-150 ease-out ${
-                floating ? floatingAnimClass : inlineAnimClass
+              className={`rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black/5 dark:ring-white/5 duration-150 ease-out ${
+                floating ? `transition-opacity transition-transform ${floatingAnimClass}` : `transition-all ${inlineAnimClass}`
               }`}
               style={floating ? floatingStyle : {}}
             >
