@@ -187,17 +187,26 @@ function GoalSection({ data, onSaved }) {
   );
 }
 
+const GOAL_STATUS_OPTIONS = [
+  { value: 'active', label: 'Active' },
+  { value: 'achieved', label: 'Achieved' },
+  { value: 'cancelled', label: 'Cancelled' },
+];
+
 function GoalStatusSelect({ goal, onSaved }) {
-  async function handleChange(e) {
-    try { await api.put(`/member/goals/${goal.goal_id}`, { status: e.target.value }); toast.success('Goal updated.'); onSaved(); }
+  async function handleChange(val) {
+    try { await api.put(`/member/goals/${goal.goal_id}`, { status: val }); toast.success('Goal updated.'); onSaved(); }
     catch (err) { toast.error(err.message); }
   }
   return (
-    <select className="rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 px-2 py-1 text-xs" value={goal.status} onChange={handleChange}>
-      <option value="active">Active</option>
-      <option value="achieved">Achieved</option>
-      <option value="cancelled">Cancelled</option>
-    </select>
+    <SelectDropdown
+      value={goal.status}
+      onChange={handleChange}
+      options={GOAL_STATUS_OPTIONS}
+      placeholder="Status"
+      searchable={false}
+      floating
+    />
   );
 }
 
