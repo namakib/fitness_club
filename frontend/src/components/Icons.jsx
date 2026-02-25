@@ -1,6 +1,6 @@
 /**
  * Centralized icon components. All accept optional className and variant="svg"|"fa".
- * Default variant="svg"; use variant="fa" for Font Awesome. ChevronUpDownIcon also accepts open.
+ * Default variant is DEFAULT_ICON_VARIANT; set to 'fa' or 'svg' to switch globally. ChevronUpDownIcon also accepts open.
  */
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -29,13 +29,15 @@ import {
   faVenusMars,
   faDumbbell,
   faWeightScale,
-  faTarget,
   faPeopleGroup,
   faCalendarCheck,
   faWrench,
   faBuilding,
 } from '@fortawesome/free-solid-svg-icons';
 import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
+
+// Set to 'svg' to use inline SVGs; 'fa' for Font Awesome.
+export const DEFAULT_ICON_VARIANT = 'fa';
 
 const cn = (base, className) => (className ? `${base} ${className}`.trim() : base);
 
@@ -46,7 +48,7 @@ const FaIcon = ({ icon, className = 'h-4 w-4', ...props }) => (
 const CHEVRON_FA = { left: faChevronLeft, right: faChevronRight, up: faChevronUp, down: faChevronDown };
 
 // ─── Chevrons (Single Reusable Component) ──────────────────────────────────
-export function ChevronIcon({ variant = 'svg', direction = 'right', className, ...props }) {
+export function ChevronIcon({ variant = DEFAULT_ICON_VARIANT, direction = 'right', className, ...props }) {
   if (variant === 'fa') {
     return <FaIcon icon={CHEVRON_FA[direction]} className={cn('h-4 w-4', className)} {...props} />;
   }
@@ -75,7 +77,7 @@ export const ChevronRightIcon = (props) => <ChevronIcon direction="right" {...pr
 export const ChevronUpIcon = (props) => <ChevronIcon direction="up" {...props} />;
 export const ChevronDownIcon = (props) => <ChevronIcon direction="down" {...props} />;
 
-export function ChevronUpDownIcon({ variant = 'svg', open = false, className, ...props }) {
+export function ChevronUpDownIcon({ variant = DEFAULT_ICON_VARIANT, open = false, className, ...props }) {
   if (variant === 'fa') {
     return <FaIcon icon={open ? faChevronUp : faChevronDown} className={cn('h-4 w-4', className)} {...props} />;
   }
@@ -85,7 +87,7 @@ export function ChevronUpDownIcon({ variant = 'svg', open = false, className, ..
 }
 
 // ─── Double Chevrons ───────────────────────────────────────────────────────
-export function ChevronDoubleIcon({ variant = 'svg', direction = 'right', className, ...props }) {
+export function ChevronDoubleIcon({ variant = DEFAULT_ICON_VARIANT, direction = 'right', className, ...props }) {
   if (variant === 'fa') {
     const icon = direction === 'left' ? faAnglesLeft : faAnglesRight;
     return <FaIcon icon={icon} className={cn('h-4 w-4', className)} {...props} />;
@@ -102,7 +104,7 @@ export const ChevronDoubleLeftIcon = (props) => <ChevronDoubleIcon direction="le
 export const ChevronDoubleRightIcon = (props) => <ChevronDoubleIcon direction="right" {...props} />;
 
 // ─── UI ──────────────────────────────────────────────────────────────────
-export function CheckIcon({ variant = 'svg', className, ...props }) {
+export function CheckIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') {
     return <FaIcon icon={faCheck} className={cn('h-4 w-4 text-orange-600 dark:text-orange-400', className)} {...props} />;
   }
@@ -113,7 +115,7 @@ export function CheckIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function CloseIcon({ variant = 'svg', className, ...props }) {
+export function CloseIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') {
     return <FaIcon icon={faXmark} className={cn('h-3.5 w-3.5', className)} {...props} />;
   }
@@ -124,7 +126,7 @@ export function CloseIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function SearchIcon({ variant = 'svg', className, ...props }) {
+export function SearchIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') {
     return <FaIcon icon={faMagnifyingGlass} className={cn('h-4 w-4 text-gray-400 dark:text-gray-500', className)} {...props} />;
   }
@@ -136,7 +138,7 @@ export function SearchIcon({ variant = 'svg', className, ...props }) {
 }
 
 // ─── Theme ────────────────────────────────────────────────────────────────
-export function SunIcon({ variant = 'svg', className, ...props }) {
+export function SunIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faSun} className={cn('h-3.5 w-3.5', className)} {...props} />;
   return (
     <svg className={cn('h-3.5 w-3.5', className)} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" {...props}>
@@ -145,7 +147,7 @@ export function SunIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function MoonIcon({ variant = 'svg', className, ...props }) {
+export function MoonIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faMoon} className={cn('h-3.5 w-3.5', className)} {...props} />;
   return (
     <svg className={cn('h-3.5 w-3.5', className)} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" {...props}>
@@ -154,7 +156,7 @@ export function MoonIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function SignOutIcon({ variant = 'svg', className, ...props }) {
+export function SignOutIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faRightFromBracket} className={cn('h-4 w-4', className)} {...props} />;
   return (
     <svg className={cn('h-4 w-4', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -163,7 +165,7 @@ export function SignOutIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function DashboardIcon({ variant = 'svg', className, ...props }) {
+export function DashboardIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faGauge} className={cn('h-4 w-4 shrink-0', className)} {...props} />;
   return (
     <svg className={cn('h-4 w-4 shrink-0', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -173,7 +175,7 @@ export function DashboardIcon({ variant = 'svg', className, ...props }) {
 }
 
 // ─── Content ─────────────────────────────────────────────────────────────
-export function CalendarIcon({ variant = 'svg', className, ...props }) {
+export function CalendarIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faCalendarDays} className={cn('h-4 w-4 text-gray-400 dark:text-gray-500', className)} {...props} />;
   return (
     <svg className={cn('h-4 w-4 text-gray-400 dark:text-gray-500', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -182,7 +184,7 @@ export function CalendarIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function ClockIcon({ variant = 'svg', className, ...props }) {
+export function ClockIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faClock} className={cn('h-4 w-4 text-gray-400 dark:text-gray-500', className)} {...props} />;
   return (
     <svg className={cn('h-4 w-4 text-gray-400 dark:text-gray-500', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -191,7 +193,7 @@ export function ClockIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function UserIcon({ variant = 'svg', className, ...props }) {
+export function UserIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faUser} className={cn('h-4 w-4', className)} {...props} />;
   return (
     <svg className={cn('h-4 w-4', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -200,7 +202,7 @@ export function UserIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function UsersIcon({ variant = 'svg', className, ...props }) {
+export function UsersIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faUsers} className={cn('h-4 w-4', className)} {...props} />;
   return (
     <svg className={cn('h-4 w-4', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -209,7 +211,7 @@ export function UsersIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function PhoneIcon({ variant = 'svg', className, ...props }) {
+export function PhoneIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faPhone} className={cn('h-4 w-4', className)} {...props} />;
   return (
     <svg className={cn('h-4 w-4', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -218,7 +220,7 @@ export function PhoneIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function HeartIcon({ variant = 'svg', className, ...props }) {
+export function HeartIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faHeart} className={cn('h-5 w-5 text-gray-400 dark:text-gray-500', className)} {...props} />;
   return (
     <svg className={cn('h-5 w-5 text-gray-400 dark:text-gray-500', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -227,7 +229,7 @@ export function HeartIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function ChartIcon({ variant = 'svg', className, ...props }) {
+export function ChartIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faChartColumn} className={cn('h-5 w-5 text-gray-400 dark:text-gray-500', className)} {...props} />;
   return (
     <svg className={cn('h-5 w-5 text-gray-400 dark:text-gray-500', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -236,7 +238,7 @@ export function ChartIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function TargetIcon({ variant = 'svg', className, ...props }) {
+export function TargetIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faBullseye} className={cn('h-5 w-5 text-gray-400 dark:text-gray-500', className)} {...props} />;
   return (
     <svg className={cn('h-5 w-5 text-gray-400 dark:text-gray-500', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -245,7 +247,7 @@ export function TargetIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function TagIcon({ variant = 'svg', className, ...props }) {
+export function TagIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faTag} className={cn('h-4 w-4', className)} {...props} />;
   return (
     <svg className={cn('h-4 w-4', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -255,7 +257,7 @@ export function TagIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function GenderIcon({ variant = 'svg', className, ...props }) {
+export function GenderIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faVenusMars} className={cn('h-4 w-4', className)} {...props} />;
   return (
     <svg className={cn('h-4 w-4', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -264,7 +266,7 @@ export function GenderIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function TrainerIcon({ variant = 'svg', className, ...props }) {
+export function TrainerIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faDumbbell} className={cn('h-4 w-4', className)} {...props} />;
   return (
     <svg className={cn('h-4 w-4', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -274,7 +276,7 @@ export function TrainerIcon({ variant = 'svg', className, ...props }) {
 }
 
 // ─── StatCard icons (h-5 w-5) ────────────────────────────────────────────
-export function WeightIcon({ variant = 'svg', className, ...props }) {
+export function WeightIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faWeightScale} className={cn('h-5 w-5', className)} {...props} />;
   return (
     <svg className={cn('h-5 w-5', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -283,8 +285,8 @@ export function WeightIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function GoalIcon({ variant = 'svg', className, ...props }) {
-  if (variant === 'fa') return <FaIcon icon={faTarget} className={cn('h-5 w-5', className)} {...props} />;
+export function GoalIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
+  if (variant === 'fa') return <FaIcon icon={faBullseye} className={cn('h-5 w-5', className)} {...props} />;
   return (
     <svg className={cn('h-5 w-5', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
@@ -292,7 +294,7 @@ export function GoalIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function ClassIcon({ variant = 'svg', className, ...props }) {
+export function ClassIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faPeopleGroup} className={cn('h-5 w-5', className)} {...props} />;
   return (
     <svg className={cn('h-5 w-5', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -301,7 +303,7 @@ export function ClassIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function SessionIcon({ variant = 'svg', className, ...props }) {
+export function SessionIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faCalendarCheck} className={cn('h-5 w-5', className)} {...props} />;
   return (
     <svg className={cn('h-5 w-5', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -310,7 +312,7 @@ export function SessionIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function WrenchIcon({ variant = 'svg', className, ...props }) {
+export function WrenchIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faWrench} className={cn('h-5 w-5', className)} {...props} />;
   return (
     <svg className={cn('h-5 w-5', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -319,7 +321,7 @@ export function WrenchIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function BuildingIcon({ variant = 'svg', className, ...props }) {
+export function BuildingIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faBuilding} className={cn('h-5 w-5', className)} {...props} />;
   return (
     <svg className={cn('h-5 w-5', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -329,7 +331,7 @@ export function BuildingIcon({ variant = 'svg', className, ...props }) {
 }
 
 // ─── Eye (password show/hide) ─────────────────────────────────────────────
-export function EyeIcon({ variant = 'svg', className, ...props }) {
+export function EyeIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faEye} className={cn('h-4 w-4', className)} {...props} />;
   return (
     <svg className={cn('h-4 w-4', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -339,7 +341,7 @@ export function EyeIcon({ variant = 'svg', className, ...props }) {
   );
 }
 
-export function EyeSlashIcon({ variant = 'svg', className, ...props }) {
+export function EyeSlashIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') return <FaIcon icon={faEyeSlash} className={cn('h-4 w-4', className)} {...props} />;
   return (
     <svg className={cn('h-4 w-4', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>

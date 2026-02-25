@@ -3,9 +3,14 @@ import { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext(null);
 
 function getInitial() {
-  const stored = localStorage.getItem('theme');
-  if (stored === 'dark' || stored === 'light') return stored === 'dark';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (typeof window === 'undefined') return false;
+  try {
+    const stored = localStorage.getItem('theme');
+    if (stored === 'dark' || stored === 'light') return stored === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  } catch {
+    return false;
+  }
 }
 
 export function ThemeProvider({ children }) {

@@ -203,7 +203,23 @@ configure_env() {
     export SECRET_KEY="${SECRET_KEY:-dev-secret-key-$(date +%s)}"
 }
 
-# ── 8. Launch both servers ────────────────────────────────────
+# ── 8. Kill any existing servers on our ports ───────────────────
+kill_existing_servers() {
+    local killed=false
+    for port in "$FLASK_PORT" "$VITE_PORT"; do
+        pids=$(lsof -ti ":$port" 2>/dev/null) || true
+        if [ -n "$pids" ]; then
+            info "Killing existing process(es) on port $port..."
+            echo "$pids" | xargs kill -9 2>/dev/null || true
+            success "Port $port cleared"
+            killed=true
+        fi
+    done
+    # Give the OS a moment to release the ports before starting new servers
+    [ "$killed" = true ] && sleep 2
+}
+
+# ── 9. Launch both servers ──────────────────────────────────────
 cleanup() {
     info "Shutting down..."
     [ -n "$FLASK_PID" ] && kill "$FLASK_PID" 2>/dev/null
@@ -254,6 +270,7 @@ echo ""
 echo -e "${CYAN}=== Health & Fitness Club — Setup & Launch ===${NC}"
 echo ""
 
+kill_existing_servers
 check_postgres
 start_postgres
 setup_database

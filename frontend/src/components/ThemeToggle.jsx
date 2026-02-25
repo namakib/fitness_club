@@ -15,20 +15,20 @@ export default function ThemeToggle() {
 
       <span className="pointer-events-none absolute left-1 text-amber-500 transition-opacity duration-200"
         style={{ opacity: isDark ? 0.4 : 0 }}>
-        <SunIcon />
+        <SunIcon variant="svg" />
       </span>
 
       <span className="pointer-events-none absolute right-1 text-gray-400 transition-opacity duration-200"
         style={{ opacity: isDark ? 0 : 0.4 }}>
-        <MoonIcon />
+        <MoonIcon variant="svg" />
       </span>
 
       <span
         className={`pointer-events-none flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-md ring-0 transition-transform duration-300 ${isDark ? 'translate-x-7' : 'translate-x-0.5'}`}
       >
         {isDark
-          ? <span className="text-indigo-500"><MoonIcon /></span>
-          : <span className="text-amber-500"><SunIcon /></span>
+          ? <span className="text-indigo-500"><MoonIcon variant="svg" /></span>
+          : <span className="text-amber-500"><SunIcon variant="svg" /></span>
         }
       </span>
     </button>

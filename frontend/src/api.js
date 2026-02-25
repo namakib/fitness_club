@@ -17,7 +17,13 @@ async function request(path, opts = {}) {
     ...opts,
   });
 
-  const data = await res.json();
+  let data;
+  const contentType = res.headers.get('content-type') || '';
+  try {
+    data = contentType.includes('application/json') ? await res.json() : {};
+  } catch {
+    data = { error: res.statusText || 'Invalid response' };
+  }
 
   console.log(
     `%cResponse %c${res.status} ${res.statusText}`,
