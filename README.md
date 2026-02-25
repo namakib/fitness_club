@@ -12,9 +12,9 @@ A PostgreSQL-backed web application for managing a small fitness club, built wit
 
 ## Tech Stack
 
-- **Backend**: Python 3 / Flask
+- **Backend**: Python 3 / Flask (REST API)
 - **Database**: PostgreSQL
-- **Frontend**: Jinja2 templates, Bootstrap 5, Bootstrap Icons
+- **Frontend**: React (Vite), Tailwind CSS, Recharts
 - **Auth**: Flask sessions with werkzeug password hashing (pbkdf2:sha256)
 
 ## Prerequisites
@@ -35,9 +35,10 @@ This single script handles **everything** automatically:
 4. Runs DDL.sql (tables, constraints, view, trigger, index)
 5. Loads DML.sql (sample data)
 6. Creates a Python virtual environment and installs dependencies
-7. Launches the Flask web app
+7. Launches the Flask API and the React frontend dev server
 
-The application will be available at **http://localhost:5000**.
+- **Backend API**: http://localhost:5001  
+- **Frontend**: http://localhost:5173  
 
 ### Script Options
 
@@ -55,8 +56,19 @@ export DB_USER=$(whoami)       # default: your macOS username
 export DB_HOST=localhost       # default
 export DB_PORT=5432            # default
 export DB_PASSWORD=            # default: empty (Homebrew PostgreSQL uses peer auth)
-export FLASK_PORT=5000         # default
+export FLASK_PORT=5001         # default
+export VITE_PORT=5173          # default (frontend)
 ```
+
+## Publishing / Deployment
+
+To deploy to a server or a hosting provider (Render, Railway, Vercel, etc.), see **[docs/Deployment.md](docs/Deployment.md)** for:
+
+- Building the frontend for production
+- Running the backend with **Gunicorn**
+- Serving the React app from Flask (single-server deploy)
+- Splitting frontend and backend (e.g. Vercel + Render)
+- Environment variables and CORS for production
 
 ## Manual Setup (Step by Step)
 
@@ -79,7 +91,7 @@ psql -d fitness_club -f sql/DML.sql
 python run.py
 ```
 
-The application will be available at **http://localhost:5000**.
+The API runs at **http://localhost:5001** and the frontend at **http://localhost:5173**.
 
 ## Sample Login Credentials
 
