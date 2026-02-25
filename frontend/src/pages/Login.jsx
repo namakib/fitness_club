@@ -4,8 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import ThemeToggle from '../components/ThemeToggle';
 import SelectDropdown from '../components/SelectDropdown';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
+import { EyeIcon, EyeSlashIcon } from '../components/Icons';
 import t from '../theme';
 
 const ROLE_OPTIONS = [
@@ -74,7 +73,7 @@ export default function Login() {
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} className="h-4 w-4" />
+                  {showPassword ? <EyeSlashIcon variant="fa" className="h-4 w-4" /> : <EyeIcon variant="fa" className="h-4 w-4" />}
                 </button>
               </div>
             </div>
