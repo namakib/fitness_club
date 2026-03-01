@@ -5,7 +5,7 @@ import { useNavMode } from '../context/NavModeContext';
 import ThemeToggle from './ThemeToggle';
 import {
   UserIcon, SignOutIcon, ChevronUpDownIcon, DashboardIcon,
-  SessionIcon, CalendarIcon, ClassIcon, HeartIcon, TargetIcon,
+  CalendarIcon, HeartIcon,
   ClockIcon, BuildingIcon, WrenchIcon, TagIcon,
 } from './Icons';
 import t from '../theme';
@@ -13,11 +13,8 @@ import t from '../theme';
 const sidebarItems = {
   member: [
     { to: '/member/dashboard', label: 'Dashboard', Icon: DashboardIcon },
-    { to: '/member/book-session', label: 'Book Session', Icon: SessionIcon },
-    { to: '/member/my-schedule', label: 'My Schedule', Icon: CalendarIcon },
-    { to: '/member/classes', label: 'Classes', Icon: ClassIcon },
-    { to: '/member/health-history', label: 'Health History', Icon: HeartIcon },
-    { to: '/member/goals', label: 'Goals', Icon: TargetIcon },
+    { to: '/member/schedule', label: 'Schedule', Icon: CalendarIcon },
+    { to: '/member/goals', label: 'Health & Goals', Icon: HeartIcon },
     { to: '/member/profile', label: 'Profile', Icon: UserIcon },
   ],
   trainer: [

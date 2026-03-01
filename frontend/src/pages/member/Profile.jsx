@@ -1,12 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import api from '../../api';
 import toast from 'react-hot-toast';
-import DataTable from '../../components/DataTable';
 import ProfileHeader from '../../components/ProfileHeader';
 import SelectDropdown from '../../components/SelectDropdown';
 import PhoneInput from '../../components/PhoneInput';
 import { formatPhoneDisplay } from '../../components/PhoneInput';
-import { UserIcon, ChartIcon, CalendarIcon, PhoneIcon, GenderIcon, ClockIcon } from '../../components/Icons';
+import { UserIcon, CalendarIcon, PhoneIcon, GenderIcon, ClockIcon } from '../../components/Icons';
 import NavModeToggle from '../../components/NavModeToggle';
 import t from '../../theme';
 
@@ -47,19 +46,6 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Full-width sections below */}
-      <Card title="Recent Health Metrics" icon={<ChartIcon />}>
-        <DataTable
-          columns={[
-            { key: 'recorded_at', label: 'Date', render: (r) => fmtDate(r.recorded_at) },
-            { key: 'weight', label: 'Weight (kg)' },
-            { key: 'body_fat_pct', label: 'Body Fat %' },
-            { key: 'blood_pressure', label: 'BP' },
-            { key: 'heart_rate', label: 'HR' },
-          ]}
-          data={data.recent_metrics}
-        />
-      </Card>
     </div>
   );
 }

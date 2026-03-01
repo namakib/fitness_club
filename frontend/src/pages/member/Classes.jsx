@@ -6,8 +6,12 @@ import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import t from '../../theme';
 
-export default function Classes() {
-  const navigate = useNavigate();
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+export function ClassesBrowser({ onSuccess }) {
   const [classes, setClasses] = useState(null);
   const [enrolling, setEnrolling] = useState(null);
   const [confirmEnroll, setConfirmEnroll] = useState(null);
@@ -20,7 +24,7 @@ export default function Classes() {
     try {
       await api.post(`/member/classes/${classId}/enroll`);
       toast.success('Enrolled in class.');
-      navigate('/member/my-schedule');
+      onSuccess?.();
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -28,11 +32,10 @@ export default function Classes() {
     }
   }
 
-  if (classes === null) return <div className="animate-pulse space-y-6">{[...Array(3)].map((_, i) => <div key={i} className="h-40 rounded-xl bg-gray-200 dark:bg-gray-700" />)}</div>;
+  if (classes === null) return <div className="animate-pulse space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="h-16 rounded-lg bg-gray-200 dark:bg-gray-700" />)}</div>;
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Browse Classes</h1>
+    <div className="space-y-4">
       <p className="text-sm text-gray-500 dark:text-gray-400">
         Available upcoming classes you can enroll in. Classes shown have open spots.
       </p>
@@ -110,7 +113,12 @@ export default function Classes() {
   );
 }
 
-function fmtDate(d) {
-  if (!d) return '—';
-  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+export default function Classes() {
+  const navigate = useNavigate();
+  return (
+    <div className="space-y-8">
+      <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Browse Classes</h1>
+      <ClassesBrowser onSuccess={() => navigate('/member/schedule')} />
+    </div>
+  );
 }

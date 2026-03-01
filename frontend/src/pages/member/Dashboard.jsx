@@ -103,7 +103,7 @@ export default function Dashboard() {
       <div>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">Next Up</h2>
-          <Link to="/member/my-schedule" className="text-sm font-medium text-orange-600 dark:text-orange-400 hover:underline">View full schedule</Link>
+          <Link to="/member/schedule" className="text-sm font-medium text-orange-600 dark:text-orange-400 hover:underline">View full schedule</Link>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <NextUpCard

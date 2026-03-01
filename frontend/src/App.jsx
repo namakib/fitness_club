@@ -11,10 +11,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import MemberDashboard from './pages/member/Dashboard';
 import Profile from './pages/member/Profile';
-import HealthHistory from './pages/member/HealthHistory';
-import BookSession from './pages/member/BookSession';
-import MySchedule from './pages/member/MySchedule';
-import Classes from './pages/member/Classes';
+import MemberSchedule from './pages/member/Schedule';
 import Goals from './pages/member/Goals';
 import TrainerDashboard from './pages/trainer/Dashboard';
 import Schedule from './pages/trainer/Schedule';
@@ -43,10 +40,11 @@ export default function App() {
         <Route element={<Layout />}>
           <Route path="/member/dashboard" element={<ProtectedRoute role="member"><MemberDashboard /></ProtectedRoute>} />
           <Route path="/member/profile" element={<ProtectedRoute role="member"><Profile /></ProtectedRoute>} />
-          <Route path="/member/health-history" element={<ProtectedRoute role="member"><HealthHistory /></ProtectedRoute>} />
-          <Route path="/member/book-session" element={<ProtectedRoute role="member"><BookSession /></ProtectedRoute>} />
-          <Route path="/member/my-schedule" element={<ProtectedRoute role="member"><MySchedule /></ProtectedRoute>} />
-          <Route path="/member/classes" element={<ProtectedRoute role="member"><Classes /></ProtectedRoute>} />
+          <Route path="/member/health-history" element={<Navigate to="/member/goals" replace />} />
+          <Route path="/member/schedule" element={<ProtectedRoute role="member"><MemberSchedule /></ProtectedRoute>} />
+          <Route path="/member/book-session" element={<Navigate to="/member/schedule" replace />} />
+          <Route path="/member/my-schedule" element={<Navigate to="/member/schedule" replace />} />
+          <Route path="/member/classes" element={<Navigate to="/member/schedule" replace />} />
           <Route path="/member/goals" element={<ProtectedRoute role="member"><Goals /></ProtectedRoute>} />
           <Route path="/trainer/dashboard" element={<ProtectedRoute role="trainer"><TrainerDashboard /></ProtectedRoute>} />
           <Route path="/trainer/schedule" element={<ProtectedRoute role="trainer"><Schedule /></ProtectedRoute>} />
