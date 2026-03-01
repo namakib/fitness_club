@@ -5,6 +5,7 @@ import ProfileHeader from '../../components/ProfileHeader';
 import StatCard from '../../components/StatCard';
 import PhoneInput, { formatPhoneDisplay } from '../../components/PhoneInput';
 import { UserIcon, PhoneIcon, UsersIcon, TrainerIcon } from '../../components/Icons';
+import NavModeToggle from '../../components/NavModeToggle';
 import t from '../../theme';
 
 export default function AdminProfile() {
@@ -37,6 +38,7 @@ export default function AdminProfile() {
           <Card title="Edit Profile" icon={<UserIcon />}>
             <ProfileForm admin={admin} onSaved={load} />
           </Card>
+          <NavModeToggle />
 
           {stats && (
             <div className="grid gap-4 sm:grid-cols-2">

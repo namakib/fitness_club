@@ -6,6 +6,7 @@ import StatCard from '../../components/StatCard';
 import SelectDropdown from '../../components/SelectDropdown';
 import PhoneInput, { formatPhoneDisplay } from '../../components/PhoneInput';
 import { UserIcon, TagIcon, PhoneIcon, UsersIcon } from '../../components/Icons';
+import NavModeToggle from '../../components/NavModeToggle';
 import t from '../../theme';
 
 const SPECIALIZATIONS = [
@@ -49,6 +50,7 @@ export default function TrainerProfile() {
           <Card title="Edit Profile" icon={<UserIcon />}>
             <ProfileForm trainer={trainer} onSaved={load} />
           </Card>
+          <NavModeToggle />
 
           {stats && (
             <div className="grid gap-4 sm:grid-cols-2">

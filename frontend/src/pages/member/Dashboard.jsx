@@ -152,7 +152,7 @@ export default function Dashboard() {
             <ChartIcon className="h-5 w-5 text-emerald-500" />
             <h2 className="text-base font-semibold text-gray-800 dark:text-gray-200">Active Goals</h2>
           </div>
-          <Link to="/member/profile" className="text-sm font-medium text-orange-600 dark:text-orange-400 hover:underline">Manage goals</Link>
+          <Link to="/member/goals" className="text-sm font-medium text-orange-600 dark:text-orange-400 hover:underline">Manage goals</Link>
         </div>
         {active_goals?.length > 0 ? (
           <div className="flex flex-wrap gap-3">
@@ -176,7 +176,7 @@ export default function Dashboard() {
         ) : (
           <div className={`rounded-xl border ${t.cardBorder} ${t.cardBg} p-6 text-center`}>
             <p className={`text-sm ${t.pageTextMuted}`}>
-              No active goals. <Link to="/member/profile" className="text-orange-600 dark:text-orange-400 hover:underline">Set one in your profile.</Link>
+              No active goals. <Link to="/member/goals" className="text-orange-600 dark:text-orange-400 hover:underline">Add one now.</Link>
             </p>
           </div>
         )}

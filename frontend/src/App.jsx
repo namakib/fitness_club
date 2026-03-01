@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { NavModeProvider } from './context/NavModeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import t from './theme';
@@ -14,6 +15,7 @@ import HealthHistory from './pages/member/HealthHistory';
 import BookSession from './pages/member/BookSession';
 import MySchedule from './pages/member/MySchedule';
 import Classes from './pages/member/Classes';
+import Goals from './pages/member/Goals';
 import TrainerDashboard from './pages/trainer/Dashboard';
 import Schedule from './pages/trainer/Schedule';
 import Availability from './pages/trainer/Availability';
@@ -31,6 +33,7 @@ export default function App() {
 
   return (
     <AuthProvider>
+      <NavModeProvider>
       <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -44,6 +47,7 @@ export default function App() {
           <Route path="/member/book-session" element={<ProtectedRoute role="member"><BookSession /></ProtectedRoute>} />
           <Route path="/member/my-schedule" element={<ProtectedRoute role="member"><MySchedule /></ProtectedRoute>} />
           <Route path="/member/classes" element={<ProtectedRoute role="member"><Classes /></ProtectedRoute>} />
+          <Route path="/member/goals" element={<ProtectedRoute role="member"><Goals /></ProtectedRoute>} />
           <Route path="/trainer/dashboard" element={<ProtectedRoute role="trainer"><TrainerDashboard /></ProtectedRoute>} />
           <Route path="/trainer/schedule" element={<ProtectedRoute role="trainer"><Schedule /></ProtectedRoute>} />
           <Route path="/trainer/availability" element={<ProtectedRoute role="trainer"><Availability /></ProtectedRoute>} />
@@ -57,6 +61,7 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </NavModeProvider>
     </AuthProvider>
   );
 }
