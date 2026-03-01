@@ -4,7 +4,8 @@ import toast from 'react-hot-toast';
 import DataTable from '../../components/DataTable';
 import DatePicker from '../../components/DatePicker';
 import TimePicker from '../../components/TimePicker';
-import AvailabilityCalendar from '../../components/AvailabilityCalendar';
+import ScheduleCalendar from '../../components/ScheduleCalendar';
+import EventEditForm from '../../components/EventEditForm';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import t from '../../theme';
 
@@ -13,14 +14,31 @@ export default function Availability() {
   const [form, setForm] = useState({ available_date: '', start_time: '', end_time: '' });
   const [busy, setBusy] = useState(false);
   const [calendarKey, setCalendarKey] = useState(0);
-  const [deleteConfirm, setDeleteConfirm] = useState(null); // { id, busy }
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [rooms, setRooms] = useState([]);
 
   const load = useCallback(() => api.get('/trainer/availability').then(d => setSlots(d.slots)), []);
   useEffect(() => { load(); }, [load]);
 
   const refreshCalendar = useCallback(() => setCalendarKey((k) => k + 1), []);
 
-  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const loadRooms = useCallback(() => api.get('/trainer/rooms').then((d) => setRooms(d.rooms || [])), []);
+
+  const loadCalendarEvents = useCallback(async (weekStart) => {
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    const months = [[weekStart.getFullYear(), weekStart.getMonth() + 1]];
+    if (weekEnd.getMonth() !== weekStart.getMonth() || weekEnd.getFullYear() !== weekStart.getFullYear()) {
+      months.push([weekEnd.getFullYear(), weekEnd.getMonth() + 1]);
+    }
+    const results = await Promise.all(
+      months.map(([y, m]) => api.get(`/trainer/calendar?year=${y}&month=${m}`))
+    );
+    return {
+      sessions: results.flatMap((r) => r.sessions || []),
+      classes: results.flatMap((r) => r.classes || []),
+    };
+  }, []);
 
   async function handleAdd(e) {
     e.preventDefault();
@@ -50,6 +68,12 @@ export default function Availability() {
       throw err;
     }
   }
+
+  const trainerLegend = [
+    'Empty slots = available for booking',
+    <span key="s" className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-orange-500" />Session (booked)</span>,
+    <span key="c" className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-violet-500" />Class (booked)</span>,
+  ];
 
   return (
     <div className="space-y-8">
@@ -93,7 +117,20 @@ export default function Availability() {
         />
       )}
 
-      <AvailabilityCalendar refreshTrigger={calendarKey} onEventUpdated={refreshCalendar} />
+      <ScheduleCalendar
+        loadEvents={loadCalendarEvents}
+        refreshTrigger={calendarKey}
+        legend={trainerLegend}
+        renderEventModal={(event, onClose, onSaved) => (
+          <EventEditForm
+            event={event}
+            onClose={onClose}
+            onSaved={() => { onSaved(); load(); }}
+            rooms={rooms}
+            onRoomsLoad={loadRooms}
+          />
+        )}
+      />
 
       <ConfirmDialog
         open={!!deleteConfirm}

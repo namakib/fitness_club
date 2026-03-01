@@ -8,6 +8,7 @@ import t from '../theme';
 const navItems = {
   member: [
     { to: '/member/book-session', label: 'Book Session' },
+    { to: '/member/my-schedule', label: 'My Schedule' },
     { to: '/member/classes', label: 'Classes' },
     { to: '/member/health-history', label: 'Health History' },
   ],

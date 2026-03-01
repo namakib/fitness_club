@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api';
 import toast from 'react-hot-toast';
 import DatePicker from '../../components/DatePicker';
@@ -23,6 +24,7 @@ function timeToDisplay(t) {
 }
 
 export default function BookSession() {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [form, setForm] = useState({ trainer_id: '', room_id: '', session_date: '', start_time: '', end_time: '' });
   const [busy, setBusy] = useState(false);
@@ -60,6 +62,7 @@ export default function BookSession() {
       });
       toast.success('Session booked.');
       setForm({ trainer_id: '', room_id: '', session_date: '', start_time: '', end_time: '' });
+      navigate('/member/my-schedule');
     } catch (err) {
       toast.error(err.message);
     } finally {

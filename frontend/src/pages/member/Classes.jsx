@@ -1,12 +1,16 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api';
 import toast from 'react-hot-toast';
 import DataTable from '../../components/DataTable';
+import Modal from '../../components/Modal';
 import t from '../../theme';
 
 export default function Classes() {
+  const navigate = useNavigate();
   const [classes, setClasses] = useState(null);
   const [enrolling, setEnrolling] = useState(null);
+  const [confirmEnroll, setConfirmEnroll] = useState(null);
 
   const load = useCallback(() => api.get('/member/available-classes').then(d => setClasses(d.classes || [])), []);
   useEffect(() => { load(); }, [load]);
@@ -16,7 +20,7 @@ export default function Classes() {
     try {
       await api.post(`/member/classes/${classId}/enroll`);
       toast.success('Enrolled in class.');
-      load();
+      navigate('/member/my-schedule');
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -32,6 +36,50 @@ export default function Classes() {
       <p className="text-sm text-gray-500 dark:text-gray-400">
         Available upcoming classes you can enroll in. Classes shown have open spots.
       </p>
+      <Modal open={!!confirmEnroll} onClose={() => setConfirmEnroll(null)} title="Enroll in Class">
+        {confirmEnroll && (
+          <div className="space-y-5">
+            <p className={`text-sm ${t.pageTextMuted}`}>Do you want to enroll in this class?</p>
+            <div className={`rounded-lg border ${t.cardBorder} ${t.pageBg} p-4 space-y-3`}>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex rounded-full bg-violet-100 dark:bg-violet-900/50 px-2.5 py-0.5 text-xs font-medium text-violet-800 dark:text-violet-300">
+                  Group Class
+                </span>
+              </div>
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                <dt className="font-medium text-gray-500 dark:text-gray-400">Class</dt>
+                <dd className="text-gray-800 dark:text-gray-100">{confirmEnroll.class_name}</dd>
+                <dt className="font-medium text-gray-500 dark:text-gray-400">Date</dt>
+                <dd className="text-gray-800 dark:text-gray-100">{fmtDate(confirmEnroll.class_date)}</dd>
+                <dt className="font-medium text-gray-500 dark:text-gray-400">Time</dt>
+                <dd className="text-gray-800 dark:text-gray-100">{confirmEnroll.start_time} – {confirmEnroll.end_time}</dd>
+                <dt className="font-medium text-gray-500 dark:text-gray-400">Trainer</dt>
+                <dd className="text-gray-800 dark:text-gray-100">{confirmEnroll.trainer_name}</dd>
+                <dt className="font-medium text-gray-500 dark:text-gray-400">Room</dt>
+                <dd className="text-gray-800 dark:text-gray-100">{confirmEnroll.room_name}</dd>
+                <dt className="font-medium text-gray-500 dark:text-gray-400">Spots</dt>
+                <dd className="text-gray-800 dark:text-gray-100">{confirmEnroll.enrolled_count || 0} / {confirmEnroll.max_participants}</dd>
+              </dl>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={() => setConfirmEnroll(null)} disabled={!!enrolling} className={t.cancelButton}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!!enrolling}
+                className={t.btn}
+                onClick={async () => {
+                  await handleEnroll(confirmEnroll.class_id);
+                  setConfirmEnroll(null);
+                }}
+              >
+                {enrolling ? 'Enrolling...' : 'Enroll'}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
       <DataTable
         columns={[
           { key: 'class_name', label: 'Class', filter: 'enum' },
@@ -46,7 +94,7 @@ export default function Classes() {
             render: (r) => (
               <button
                 type="button"
-                onClick={() => handleEnroll(r.class_id)}
+                onClick={() => setConfirmEnroll(r)}
                 disabled={enrolling === r.class_id}
                 className={t.btnSmall}
               >

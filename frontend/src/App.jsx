@@ -12,6 +12,7 @@ import MemberDashboard from './pages/member/Dashboard';
 import Profile from './pages/member/Profile';
 import HealthHistory from './pages/member/HealthHistory';
 import BookSession from './pages/member/BookSession';
+import MySchedule from './pages/member/MySchedule';
 import Classes from './pages/member/Classes';
 import TrainerDashboard from './pages/trainer/Dashboard';
 import Schedule from './pages/trainer/Schedule';
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/member/profile" element={<ProtectedRoute role="member"><Profile /></ProtectedRoute>} />
           <Route path="/member/health-history" element={<ProtectedRoute role="member"><HealthHistory /></ProtectedRoute>} />
           <Route path="/member/book-session" element={<ProtectedRoute role="member"><BookSession /></ProtectedRoute>} />
+          <Route path="/member/my-schedule" element={<ProtectedRoute role="member"><MySchedule /></ProtectedRoute>} />
           <Route path="/member/classes" element={<ProtectedRoute role="member"><Classes /></ProtectedRoute>} />
           <Route path="/trainer/dashboard" element={<ProtectedRoute role="trainer"><TrainerDashboard /></ProtectedRoute>} />
           <Route path="/trainer/schedule" element={<ProtectedRoute role="trainer"><Schedule /></ProtectedRoute>} />
