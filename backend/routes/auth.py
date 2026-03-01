@@ -4,6 +4,20 @@ from flask import Blueprint, g, jsonify, request, session
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from ..db import apply_role, get_cursor, get_db, serialize_row
+from ..errors import (
+    AUTH_001,
+    AUTH_002,
+    AUTH_003,
+    AUTH_004,
+    AUTH_005,
+    AUTH_006,
+    VAL_001,
+    VAL_002,
+    VAL_003,
+    VAL_004,
+    VAL_005,
+    make_error,
+)
 
 bp = Blueprint('auth', __name__, url_prefix='/api')
 
@@ -12,7 +26,8 @@ def login_required(view):
     @functools.wraps(view)
     def wrapped(**kwargs):
         if g.user is None:
-            return jsonify(error='Authentication required.'), 401
+            body, status = make_error(AUTH_001)
+            return jsonify(body), status
         return view(**kwargs)
     return wrapped
 
@@ -22,9 +37,11 @@ def role_required(role):
         @functools.wraps(view)
         def wrapped(**kwargs):
             if g.user is None:
-                return jsonify(error='Authentication required.'), 401
+                body, status = make_error(AUTH_001)
+                return jsonify(body), status
             if session.get('role') != role:
-                return jsonify(error='Permission denied.'), 403
+                body, status = make_error(AUTH_002)
+                return jsonify(body), status
             return view(**kwargs)
         return wrapped
     return decorator
@@ -65,15 +82,20 @@ def register():
     password = data.get('password', '')
 
     if not name:
-        return jsonify(error='Name is required.'), 400
+        body, status = make_error(VAL_001)
+        return jsonify(body), status
     if not email:
-        return jsonify(error='Email is required.'), 400
+        body, status = make_error(VAL_002)
+        return jsonify(body), status
     if not dob:
-        return jsonify(error='Date of birth is required.'), 400
+        body, status = make_error(VAL_003)
+        return jsonify(body), status
     if not password:
-        return jsonify(error='Password is required.'), 400
+        body, status = make_error(VAL_004)
+        return jsonify(body), status
     if len(password) < 6:
-        return jsonify(error='Password must be at least 6 characters.'), 400
+        body, status = make_error(VAL_005)
+        return jsonify(body), status
 
     cur = get_cursor()
     try:
@@ -88,8 +110,10 @@ def register():
     except Exception as e:
         get_db().rollback()
         if 'unique' in str(e).lower():
-            return jsonify(error='An account with this email already exists.'), 409
-        return jsonify(error=f'Registration failed: {e}'), 500
+            body, status = make_error(AUTH_005)
+            return jsonify(body), status
+        body, status = make_error(AUTH_006)
+        return jsonify(body), status
     finally:
         cur.close()
 
@@ -108,7 +132,8 @@ def login():
     }
 
     if role not in table_map:
-        return jsonify(error='Invalid role selected.'), 400
+        body, status = make_error(AUTH_003)
+        return jsonify(body), status
 
     table, id_col = table_map[role]
     cur = get_cursor()
@@ -117,9 +142,11 @@ def login():
     cur.close()
 
     if user is None:
-        return jsonify(error='Invalid email or role.'), 401
+        body, status = make_error(AUTH_004)
+        return jsonify(body), status
     if not check_password_hash(user['password_hash'], password):
-        return jsonify(error='Incorrect password.'), 401
+        body, status = make_error(AUTH_004)
+        return jsonify(body), status
 
     session.clear()
     session['user_id'] = user[id_col]

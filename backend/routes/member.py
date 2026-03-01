@@ -1,6 +1,23 @@
 from flask import Blueprint, g, jsonify, request
 
 from ..db import get_cursor, get_db, serialize_row, serialize_rows
+from ..errors import (
+    BOOK_001,
+    BOOK_002,
+    BOOK_003,
+    BOOK_004,
+    CLASS_001,
+    CLASS_002,
+    ERR_001,
+    ERR_002,
+    RES_001,
+    RES_003,
+    VAL_006,
+    VAL_007,
+    VAL_009,
+    make_error,
+    parse_db_error,
+)
 from .auth import role_required
 
 bp = Blueprint('member', __name__, url_prefix='/api/member')
@@ -110,9 +127,10 @@ def update_profile():
         )
         get_db().commit()
         return jsonify(message='Profile updated.')
-    except Exception as e:
+    except Exception:
         get_db().rollback()
-        return jsonify(error=str(e)), 500
+        body, status = make_error(ERR_002)
+        return jsonify(body), status
     finally:
         cur.close()
 
@@ -135,9 +153,10 @@ def add_goal():
         )
         get_db().commit()
         return jsonify(message='Goal added.'), 201
-    except Exception as e:
+    except Exception:
         get_db().rollback()
-        return jsonify(error=str(e)), 500
+        body, status = make_error(ERR_001)
+        return jsonify(body), status
     finally:
         cur.close()
 
@@ -155,9 +174,10 @@ def update_goal(goal_id):
         )
         get_db().commit()
         return jsonify(message='Goal updated.')
-    except Exception as e:
+    except Exception:
         get_db().rollback()
-        return jsonify(error=str(e)), 500
+        body, status = make_error(ERR_001)
+        return jsonify(body), status
     finally:
         cur.close()
 
@@ -180,9 +200,10 @@ def add_metric():
         )
         get_db().commit()
         return jsonify(message='Health metric recorded.'), 201
-    except Exception as e:
+    except Exception:
         get_db().rollback()
-        return jsonify(error=str(e)), 500
+        body, status = make_error(ERR_001)
+        return jsonify(body), status
     finally:
         cur.close()
 
@@ -221,7 +242,8 @@ def booking_options():
 def trainer_availability():
     trainer_id = request.args.get('trainer_id')
     if not trainer_id:
-        return jsonify(error='trainer_id is required.'), 400
+        body, status = make_error(VAL_006, fields='trainer_id')
+        return jsonify(body), status
     cur = get_cursor()
     cur.execute(
         '''SELECT availability_id, available_date, start_time, end_time
@@ -245,9 +267,11 @@ def book_session():
     start_time = data.get('start_time', '').strip()
     end_time = data.get('end_time', '').strip()
     if not all([trainer_id, room_id, session_date, start_time, end_time]):
-        return jsonify(error='trainer_id, room_id, session_date, start_time, and end_time are required.'), 400
+        body, status = make_error(VAL_006, fields='trainer_id, room_id, session_date, start_time, and end_time')
+        return jsonify(body), status
     if start_time >= end_time:
-        return jsonify(error='End time must be after start time.'), 400
+        body, status = make_error(VAL_007)
+        return jsonify(body), status
 
     cur = get_cursor()
     try:
@@ -257,7 +281,8 @@ def book_session():
                  AND start_time < %s AND end_time > %s''',
             (trainer_id, session_date, end_time, start_time))
         if not cur.fetchone():
-            return jsonify(error='Trainer is not available at this time.'), 409
+            body, status = make_error(BOOK_004)
+            return jsonify(body), status
         cur.execute(
             '''INSERT INTO personal_session
                (member_id, trainer_id, room_id, session_date, start_time, end_time)
@@ -268,11 +293,17 @@ def book_session():
     except Exception as e:
         get_db().rollback()
         msg = str(e)
-        if 'already booked' in msg.lower():
-            return jsonify(error='Room is already booked for that time slot.'), 409
-        if 'overlapping session' in msg.lower():
-            return jsonify(error='You already have an overlapping session.'), 409
-        return jsonify(error=msg), 500
+        parsed = parse_db_error(msg)
+        if parsed:
+            code, params = parsed
+            body, status = make_error(code, **params)
+            return jsonify(body), status
+        if 'already booked' in msg.lower() or 'overlapping' in msg.lower() or 'Member already has' in msg:
+            code = BOOK_001 if ('overlapping' in msg.lower() or 'Member already has' in msg) else BOOK_003
+            body, status = make_error(code, date='this date')
+            return jsonify(body), status
+        body, status = make_error(ERR_001)
+        return jsonify(body), status
     finally:
         cur.close()
 
@@ -283,7 +314,8 @@ def cancel_session(session_id):
     data = request.get_json(silent=True) or {}
     status = data.get('status', 'cancelled')
     if status != 'cancelled':
-        return jsonify(error='Only cancellation is allowed.'), 400
+        body, status_code = make_error(VAL_009)
+        return jsonify(body), status_code
 
     cur = get_cursor()
     cur.execute(
@@ -293,7 +325,8 @@ def cancel_session(session_id):
     get_db().commit()
     if cur.rowcount == 0:
         cur.close()
-        return jsonify(error='Session not found.'), 404
+        body, status = make_error(RES_001)
+        return jsonify(body), status
     cur.close()
     return jsonify(message='Session cancelled.')
 
@@ -333,10 +366,13 @@ def enroll_in_class(class_id):
         get_db().rollback()
         msg = str(e)
         if 'unique' in msg.lower() or 'duplicate' in msg.lower():
-            return jsonify(error='Already enrolled in this class.'), 409
+            body, status = make_error(CLASS_001)
+            return jsonify(body), status
         if 'full' in msg.lower():
-            return jsonify(error='Class is full.'), 409
-        return jsonify(error=msg), 500
+            body, status = make_error(CLASS_002)
+            return jsonify(body), status
+        body, status = make_error(ERR_001)
+        return jsonify(body), status
     finally:
         cur.close()
 
@@ -351,6 +387,7 @@ def drop_class(class_id):
     get_db().commit()
     if cur.rowcount == 0:
         cur.close()
-        return jsonify(error='Enrollment not found.'), 404
+        body, status = make_error(RES_003)
+        return jsonify(body), status
     cur.close()
     return jsonify(message='Dropped from class.')

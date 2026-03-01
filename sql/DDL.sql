@@ -355,18 +355,21 @@ CREATE TRIGGER trg_prevent_room_double_booking_class
 -- ============================================================
 CREATE OR REPLACE FUNCTION fn_prevent_member_overlapping_sessions()
 RETURNS TRIGGER AS $$
+DECLARE
+    v_conflict RECORD;
 BEGIN
-    IF EXISTS (
-        SELECT 1 FROM personal_session
-        WHERE member_id = NEW.member_id
-          AND status != 'cancelled'
-          AND session_date = NEW.session_date
-          AND start_time < NEW.end_time
-          AND end_time > NEW.start_time
-          AND (TG_OP = 'INSERT' OR session_id != NEW.session_id)
-    ) THEN
-        RAISE EXCEPTION 'Member already has an overlapping session on %',
-            NEW.session_date;
+    SELECT session_date, start_time, end_time INTO v_conflict
+    FROM personal_session
+    WHERE member_id = NEW.member_id
+      AND status != 'cancelled'
+      AND session_date = NEW.session_date
+      AND start_time < NEW.end_time
+      AND end_time > NEW.start_time
+      AND (TG_OP = 'INSERT' OR session_id != NEW.session_id)
+    LIMIT 1;
+    IF FOUND THEN
+        RAISE EXCEPTION 'You already have a session on % from % to %. Please choose a different time or cancel that session first.',
+            v_conflict.session_date, v_conflict.start_time, v_conflict.end_time;
     END IF;
     RETURN NEW;
 END;

@@ -41,7 +41,11 @@ async function request(path, opts = {}) {
 
   console.groupEnd();
 
-  if (!res.ok) throw new Error(data.error || 'Request failed');
+  if (!res.ok) {
+    const err = new Error(data.error || 'Request failed');
+    err.code = data.error_code ?? null;
+    throw err;
+  }
   return data;
 }
 

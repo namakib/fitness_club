@@ -1,6 +1,18 @@
 from flask import Blueprint, g, jsonify, request
 
 from ..db import get_cursor, get_db, serialize_row, serialize_rows
+from ..errors import (
+    BOOK_003,
+    BOOK_006,
+    ERR_001,
+    ERR_002,
+    RES_001,
+    RES_002,
+    VAL_006,
+    VAL_007,
+    make_error,
+    parse_db_error,
+)
 from .auth import role_required
 
 bp = Blueprint('trainer', __name__, url_prefix='/api/trainer')
@@ -165,9 +177,10 @@ def update_profile():
         )
         get_db().commit()
         return jsonify(message='Profile updated.')
-    except Exception as e:
+    except Exception:
         get_db().rollback()
-        return jsonify(error=str(e)), 500
+        body, status = make_error(ERR_002)
+        return jsonify(body), status
     finally:
         cur.close()
 
@@ -255,7 +268,8 @@ def update_or_delete_session(session_id):
         (session_id, tid))
     if not cur.fetchone():
         cur.close()
-        return jsonify(error='Session not found.'), 404
+        body, status = make_error(RES_001)
+        return jsonify(body), status
 
     if request.method == 'DELETE':
         try:
@@ -265,10 +279,11 @@ def update_or_delete_session(session_id):
             get_db().commit()
             cur.close()
             return jsonify(message='Session deleted.')
-        except Exception as e:
+        except Exception:
             get_db().rollback()
             cur.close()
-            return jsonify(error=str(e)), 500
+            body, status = make_error(ERR_001)
+            return jsonify(body), status
 
     data = request.get_json(silent=True) or {}
     session_date = data.get('session_date', '').strip()
@@ -277,10 +292,12 @@ def update_or_delete_session(session_id):
     room_id = data.get('room_id')
     if not session_date or not start_time or not end_time:
         cur.close()
-        return jsonify(error='Date, start time, and end time are required.'), 400
+        body, status = make_error(VAL_006, fields='Date, start time, and end time')
+        return jsonify(body), status
     if start_time >= end_time:
         cur.close()
-        return jsonify(error='End time must be after start time.'), 400
+        body, status = make_error(VAL_007)
+        return jsonify(body), status
     try:
         cur.execute(
             '''UPDATE personal_session
@@ -292,9 +309,16 @@ def update_or_delete_session(session_id):
     except Exception as e:
         get_db().rollback()
         msg = str(e)
+        parsed = parse_db_error(msg)
+        if parsed:
+            code, params = parsed
+            body, status = make_error(code, **params)
+            return jsonify(body), status
         if 'already booked' in msg.lower():
-            return jsonify(error='Room is already booked for that time slot.'), 409
-        return jsonify(error=str(msg)), 500
+            body, status = make_error(BOOK_003, date='this date')
+            return jsonify(body), status
+        body, status = make_error(ERR_001)
+        return jsonify(body), status
     finally:
         cur.close()
 
@@ -309,7 +333,8 @@ def update_or_delete_class(class_id):
         (class_id, tid))
     if not cur.fetchone():
         cur.close()
-        return jsonify(error='Class not found.'), 404
+        body, status = make_error(RES_002)
+        return jsonify(body), status
 
     if request.method == 'DELETE':
         try:
@@ -319,10 +344,11 @@ def update_or_delete_class(class_id):
             get_db().commit()
             cur.close()
             return jsonify(message='Class deleted.')
-        except Exception as e:
+        except Exception:
             get_db().rollback()
             cur.close()
-            return jsonify(error=str(e)), 500
+            body, status = make_error(ERR_001)
+            return jsonify(body), status
 
     data = request.get_json(silent=True) or {}
     class_date = data.get('class_date', '').strip()
@@ -333,10 +359,12 @@ def update_or_delete_class(class_id):
     max_participants = data.get('max_participants')
     if not class_date or not start_time or not end_time:
         cur.close()
-        return jsonify(error='Date, start time, and end time are required.'), 400
+        body, status = make_error(VAL_006, fields='Date, start time, and end time')
+        return jsonify(body), status
     if start_time >= end_time:
         cur.close()
-        return jsonify(error='End time must be after start time.'), 400
+        body, status = make_error(VAL_007)
+        return jsonify(body), status
     try:
         cur.execute(
             '''UPDATE group_class
@@ -351,9 +379,16 @@ def update_or_delete_class(class_id):
     except Exception as e:
         get_db().rollback()
         msg = str(e)
+        parsed = parse_db_error(msg)
+        if parsed:
+            code, params = parsed
+            body, status = make_error(code, **params)
+            return jsonify(body), status
         if 'already booked' in msg.lower():
-            return jsonify(error='Room is already booked for that time slot.'), 409
-        return jsonify(error=str(msg)), 500
+            body, status = make_error(BOOK_003, date='this date')
+            return jsonify(body), status
+        body, status = make_error(ERR_001)
+        return jsonify(body), status
     finally:
         cur.close()
 
@@ -382,9 +417,11 @@ def add_availability():
     end_time = data.get('end_time', '')
 
     if not avail_date or not start_time or not end_time:
-        return jsonify(error='All fields are required.'), 400
+        body, status = make_error(VAL_006, fields='available_date, start_time, and end_time')
+        return jsonify(body), status
     if start_time >= end_time:
-        return jsonify(error='End time must be after start time.'), 400
+        body, status = make_error(VAL_007)
+        return jsonify(body), status
 
     cur = get_cursor()
     cur.execute(
@@ -394,7 +431,8 @@ def add_availability():
         (tid, avail_date, end_time, start_time))
     if cur.fetchone():
         cur.close()
-        return jsonify(error='This time slot overlaps with an existing slot.'), 409
+        body, status = make_error(BOOK_006)
+        return jsonify(body), status
 
     try:
         cur.execute(
@@ -404,9 +442,10 @@ def add_availability():
             (tid, avail_date, start_time, end_time))
         get_db().commit()
         return jsonify(message='Availability slot added.'), 201
-    except Exception as e:
+    except Exception:
         get_db().rollback()
-        return jsonify(error=str(e)), 500
+        body, status = make_error(ERR_001)
+        return jsonify(body), status
     finally:
         cur.close()
 
@@ -422,8 +461,9 @@ def delete_availability(avail_id):
             (avail_id, g.user['trainer_id']))
         get_db().commit()
         return jsonify(message='Availability slot removed.')
-    except Exception as e:
+    except Exception:
         get_db().rollback()
-        return jsonify(error=str(e)), 500
+        body, status = make_error(ERR_001)
+        return jsonify(body), status
     finally:
         cur.close()

@@ -3,6 +3,17 @@ from datetime import date
 from flask import Blueprint, g, jsonify, request
 
 from ..db import get_cursor, get_db, serialize_row, serialize_rows
+from ..errors import (
+    BOOK_001,
+    BOOK_003,
+    BOOK_004,
+    ERR_001,
+    ERR_002,
+    VAL_006,
+    VAL_008,
+    make_error,
+    parse_db_error,
+)
 from .auth import role_required
 
 bp = Blueprint('admin', __name__, url_prefix='/api/admin')
@@ -38,9 +49,10 @@ def update_profile():
         )
         get_db().commit()
         return jsonify(message='Profile updated.')
-    except Exception as e:
+    except Exception:
         get_db().rollback()
-        return jsonify(error=str(e)), 500
+        body, status = make_error(ERR_002)
+        return jsonify(body), status
     finally:
         cur.close()
 
@@ -191,7 +203,8 @@ def book_session():
                  AND start_time < %s AND end_time > %s''',
             (data['trainer_id'], data['session_date'], data['end_time'], data['start_time']))
         if not cur.fetchone():
-            return jsonify(error='Trainer is not available at this time.'), 409
+            body, status = make_error(BOOK_004)
+            return jsonify(body), status
         cur.execute(
             '''INSERT INTO personal_session
                (member_id, trainer_id, room_id, session_date, start_time, end_time)
@@ -203,11 +216,19 @@ def book_session():
     except Exception as e:
         get_db().rollback()
         msg = str(e)
+        parsed = parse_db_error(msg)
+        if parsed:
+            code, params = parsed
+            body, status = make_error(code, **params)
+            return jsonify(body), status
         if 'already booked' in msg.lower():
-            return jsonify(error='Room is already booked for that time slot.'), 409
-        if 'overlapping session' in msg.lower():
-            return jsonify(error='Member already has an overlapping session.'), 409
-        return jsonify(error=msg), 500
+            body, status = make_error(BOOK_003, date='this date')
+            return jsonify(body), status
+        if 'overlapping' in msg.lower() or 'Member already has' in msg:
+            body, status = make_error(BOOK_001, date='this date')
+            return jsonify(body), status
+        body, status = make_error(ERR_001)
+        return jsonify(body), status
     finally:
         cur.close()
 
@@ -231,9 +252,16 @@ def book_class():
     except Exception as e:
         get_db().rollback()
         msg = str(e)
+        parsed = parse_db_error(msg)
+        if parsed:
+            code, params = parsed
+            body, status = make_error(code, **params)
+            return jsonify(body), status
         if 'already booked' in msg.lower():
-            return jsonify(error='Room is already booked for that time slot.'), 409
-        return jsonify(error=msg), 500
+            body, status = make_error(BOOK_003, date='this date')
+            return jsonify(body), status
+        body, status = make_error(ERR_001)
+        return jsonify(body), status
     finally:
         cur.close()
 
@@ -273,7 +301,8 @@ def log_issue():
     data = request.get_json(silent=True) or {}
     issue_desc = data.get('issue_description', '').strip()
     if not issue_desc:
-        return jsonify(error='Issue description is required.'), 400
+        body, status = make_error(VAL_008)
+        return jsonify(body), status
 
     cur = get_cursor()
     try:
@@ -283,9 +312,10 @@ def log_issue():
             (data['equipment_id'], issue_desc))
         get_db().commit()
         return jsonify(message='Maintenance issue logged.'), 201
-    except Exception as e:
+    except Exception:
         get_db().rollback()
-        return jsonify(error=str(e)), 500
+        body, status = make_error(ERR_001)
+        return jsonify(body), status
     finally:
         cur.close()
 
@@ -301,9 +331,10 @@ def update_equipment_status(equipment_id):
             (data['status'], equipment_id))
         get_db().commit()
         return jsonify(message='Equipment status updated.')
-    except Exception as e:
+    except Exception:
         get_db().rollback()
-        return jsonify(error=str(e)), 500
+        body, status = make_error(ERR_001)
+        return jsonify(body), status
     finally:
         cur.close()
 
@@ -321,9 +352,10 @@ def update_maintenance(log_id):
             (data['status'], data.get('resolved_date') or None, log_id))
         get_db().commit()
         return jsonify(message='Maintenance log updated.')
-    except Exception as e:
+    except Exception:
         get_db().rollback()
-        return jsonify(error=str(e)), 500
+        body, status = make_error(ERR_001)
+        return jsonify(body), status
     finally:
         cur.close()
 
@@ -349,7 +381,8 @@ def create_payment():
     member_id = data.get('member_id')
     amount = data.get('amount')
     if member_id is None or amount is None:
-        return jsonify(error='member_id and amount are required.'), 400
+        body, status = make_error(VAL_006, fields='member_id and amount')
+        return jsonify(body), status
     cur = get_cursor()
     try:
         cur.execute(
@@ -361,8 +394,9 @@ def create_payment():
              (data.get('payment_method') or '').strip() or None))
         get_db().commit()
         return jsonify(message='Payment recorded.'), 201
-    except Exception as e:
+    except Exception:
         get_db().rollback()
-        return jsonify(error=str(e)), 500
+        body, status = make_error(ERR_001)
+        return jsonify(body), status
     finally:
         cur.close()
