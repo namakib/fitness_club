@@ -12,10 +12,24 @@ def get_db():
             host=current_app.config['DB_HOST'],
             port=current_app.config['DB_PORT'],
             dbname=current_app.config['DB_NAME'],
-            user=current_app.config['DB_USER'],
-            password=current_app.config['DB_PASSWORD'],
+            user=current_app.config.get('DB_APP_USER', current_app.config['DB_USER']),
+            password=current_app.config.get('DB_APP_PASSWORD', current_app.config['DB_PASSWORD']),
         )
     return g.db
+
+
+def apply_role(role, user_id):
+    """Set PostgreSQL role and session variable for RLS. Call after loading user."""
+    if role is None or user_id is None:
+        return
+    role_map = {'member': 'fc_member', 'trainer': 'fc_trainer', 'admin': 'fc_admin'}
+    pg_role = role_map.get(role)
+    if pg_role is None:
+        return
+    db = get_db()
+    with db.cursor() as cur:
+        cur.execute(f'SET ROLE {pg_role}')
+        cur.execute(f"SET app.current_user_id = '{int(user_id)}'") 
 
 
 def get_cursor():
@@ -26,6 +40,11 @@ def get_cursor():
 def close_db(e=None):
     db = g.pop('db', None)
     if db is not None:
+        try:
+            with db.cursor() as cur:
+                cur.execute('RESET ROLE')
+        except Exception:
+            pass
         db.close()
 
 

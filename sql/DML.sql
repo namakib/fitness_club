@@ -121,7 +121,10 @@ INSERT INTO trainer_availability (trainer_id, available_date, start_time, end_ti
 (2, '2026-02-25', '13:00', '17:00'),
 (3, '2026-02-23', '10:00', '14:00'),
 (3, '2026-02-24', '10:00', '14:00'),
-(3, '2026-02-25', '08:00', '12:00');
+(3, '2026-02-25', '08:00', '12:00'),
+(2, '2026-02-26', '07:00', '11:00'),
+(1, '2026-03-02', '08:00', '12:00'),
+(3, '2026-03-05', '10:00', '14:00');
 
 -- ============================================================
 -- Personal Sessions
@@ -250,3 +253,14 @@ INSERT INTO equipment_maintenance (equipment_id, issue_description, reported_dat
 (5, 'Safety catch not locking, potential hazard',                       '2026-02-01', NULL,         'reported'),
 (7, 'Seat rail sticking, hard to adjust',                               '2026-02-10', NULL,         'in_progress'),
 (8, 'Cable pulley squeaking loudly under load',                         '2025-12-20', '2026-01-10', 'resolved');
+
+-- ============================================================
+-- Payments (simulated billing)
+-- ============================================================
+INSERT INTO payment (member_id, amount, payment_status, payment_date, payment_method) VALUES
+(1, 49.99,  'completed', '2026-01-15', 'credit_card'),
+(1, 29.99,  'completed', '2026-02-01', 'debit'),
+(2, 49.99,  'completed', '2026-01-20', 'credit_card'),
+(3, 49.99,  'pending',   '2026-02-15', 'bank_transfer'),
+(4, 29.99,  'completed', '2026-02-10', 'credit_card'),
+(5, 49.99,  'completed', '2026-01-25', 'cash');

@@ -32,6 +32,7 @@ erDiagram
         SERIAL admin_id PK
         VARCHAR_100 name "NOT NULL"
         VARCHAR_150 email "UNIQUE NOT NULL"
+        VARCHAR_20 phone
         VARCHAR_255 password_hash "NOT NULL"
     }
 
@@ -116,6 +117,15 @@ erDiagram
         VARCHAR_20 status "CHECK reported in_progress resolved"
     }
 
+    payment {
+        SERIAL payment_id PK
+        INT member_id FK "NOT NULL REFERENCES member"
+        DECIMAL amount "NOT NULL CHECK >= 0"
+        VARCHAR_20 payment_status "CHECK pending completed failed refunded"
+        DATE payment_date "NOT NULL DEFAULT CURRENT_DATE"
+        VARCHAR_50 payment_method
+    }
+
     member ||--o{ fitness_goal : "member_id"
     member ||--o{ health_metric : "member_id"
     member ||--o{ personal_session : "member_id"
@@ -127,6 +137,7 @@ erDiagram
     room ||--o{ group_class : "room_id"
     group_class ||--o{ class_enrollment : "class_id"
     equipment ||--o{ equipment_maintenance : "equipment_id"
+    member ||--o{ payment : "member_id"
 ```
 
 ## Table Definitions
@@ -159,6 +170,7 @@ erDiagram
 | admin_id | SERIAL | PRIMARY KEY |
 | name | VARCHAR(100) | NOT NULL |
 | email | VARCHAR(150) | UNIQUE, NOT NULL |
+| phone | VARCHAR(20) | |
 | password_hash | VARCHAR(255) | NOT NULL |
 
 ### fitness_goal
@@ -254,6 +266,16 @@ erDiagram
 | reported_date | DATE | NOT NULL, DEFAULT CURRENT_DATE |
 | resolved_date | DATE | |
 | status | VARCHAR(20) | CHECK (status IN ('reported', 'in_progress', 'resolved')), DEFAULT 'reported' |
+
+### payment
+| Column | Type | Constraints |
+|--------|------|-------------|
+| payment_id | SERIAL | PRIMARY KEY |
+| member_id | INTEGER | NOT NULL, FK -> member(member_id) ON DELETE CASCADE |
+| amount | DECIMAL(10,2) | NOT NULL, CHECK (amount >= 0) |
+| payment_status | VARCHAR(20) | CHECK (payment_status IN ('pending', 'completed', 'failed', 'refunded')), DEFAULT 'pending' |
+| payment_date | DATE | NOT NULL, DEFAULT CURRENT_DATE |
+| payment_method | VARCHAR(50) | |
 
 ## Normalization to 3NF
 

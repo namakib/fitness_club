@@ -8,12 +8,32 @@
 -- ============================================================
 
 -- Drop existing objects in reverse dependency order
+DROP TRIGGER IF EXISTS trg_prevent_member_overlapping_sessions ON personal_session;
+DROP TRIGGER IF EXISTS trg_prevent_full_class_enrollment ON class_enrollment;
+DROP FUNCTION IF EXISTS fn_prevent_member_overlapping_sessions();
+DROP FUNCTION IF EXISTS fn_prevent_full_class_enrollment();
+
 DROP TRIGGER IF EXISTS trg_prevent_room_double_booking_session ON personal_session;
 DROP TRIGGER IF EXISTS trg_prevent_room_double_booking_class ON group_class;
 DROP FUNCTION IF EXISTS fn_prevent_room_double_booking();
 
+DROP TRIGGER IF EXISTS trg_prevent_trainer_double_booking_session ON personal_session;
+DROP TRIGGER IF EXISTS trg_prevent_trainer_double_booking_class ON group_class;
+DROP FUNCTION IF EXISTS fn_prevent_trainer_double_booking();
+
+DROP TRIGGER IF EXISTS trg_health_metric_no_update ON health_metric;
+DROP TRIGGER IF EXISTS trg_health_metric_no_delete ON health_metric;
+DROP FUNCTION IF EXISTS fn_health_metric_immutable();
+
+DROP TRIGGER IF EXISTS trg_prevent_trainer_availability_overlap ON trainer_availability;
+DROP FUNCTION IF EXISTS fn_prevent_trainer_availability_overlap();
+
+DROP TRIGGER IF EXISTS trg_verify_trainer_availability ON personal_session;
+DROP FUNCTION IF EXISTS fn_verify_trainer_availability();
+
 DROP VIEW IF EXISTS member_dashboard_view;
 
+DROP TABLE IF EXISTS payment CASCADE;
 DROP TABLE IF EXISTS equipment_maintenance CASCADE;
 DROP TABLE IF EXISTS class_enrollment CASCADE;
 DROP TABLE IF EXISTS group_class CASCADE;
@@ -183,10 +203,36 @@ CREATE TABLE equipment_maintenance (
 );
 
 -- ============================================================
+-- TABLE: payment
+-- Simulated billing: amount, status, date, payment method.
+-- ============================================================
+CREATE TABLE payment (
+    payment_id     SERIAL PRIMARY KEY,
+    member_id      INTEGER NOT NULL REFERENCES member(member_id) ON DELETE CASCADE,
+    amount         DECIMAL(10,2) NOT NULL CHECK (amount >= 0),
+    payment_status VARCHAR(20) DEFAULT 'pending'
+                   CHECK (payment_status IN ('pending', 'completed', 'failed', 'refunded')),
+    payment_date   DATE NOT NULL DEFAULT CURRENT_DATE,
+    payment_method VARCHAR(50)
+);
+
+-- ============================================================
 -- INDEX: speed up health history lookups by member + timestamp
 -- ============================================================
 CREATE INDEX idx_health_metric_member_recorded
     ON health_metric (member_id, recorded_at DESC);
+
+-- ============================================================
+-- INDEXES: common query patterns
+-- ============================================================
+CREATE INDEX idx_personal_session_trainer ON personal_session (trainer_id, session_date);
+CREATE INDEX idx_personal_session_member ON personal_session (member_id, session_date);
+CREATE INDEX idx_group_class_trainer ON group_class (trainer_id, class_date);
+CREATE INDEX idx_group_class_room ON group_class (room_id, class_date);
+CREATE INDEX idx_class_enrollment_class ON class_enrollment (class_id);
+CREATE INDEX idx_class_enrollment_member ON class_enrollment (member_id);
+CREATE INDEX idx_payment_member ON payment (member_id, payment_date DESC);
+CREATE INDEX idx_trainer_availability ON trainer_availability (trainer_id, available_date);
 
 -- ============================================================
 -- VIEW: member_dashboard_view
@@ -299,3 +345,190 @@ CREATE TRIGGER trg_prevent_room_double_booking_class
     BEFORE INSERT OR UPDATE ON group_class
     FOR EACH ROW
     EXECUTE FUNCTION fn_prevent_room_double_booking();
+
+-- ============================================================
+-- TRIGGER FUNCTION: prevent member overlapping sessions
+-- A member cannot have overlapping personal session bookings.
+-- ============================================================
+CREATE OR REPLACE FUNCTION fn_prevent_member_overlapping_sessions()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM personal_session
+        WHERE member_id = NEW.member_id
+          AND status != 'cancelled'
+          AND session_date = NEW.session_date
+          AND start_time < NEW.end_time
+          AND end_time > NEW.start_time
+          AND (TG_OP = 'INSERT' OR session_id != NEW.session_id)
+    ) THEN
+        RAISE EXCEPTION 'Member already has an overlapping session on %',
+            NEW.session_date;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_prevent_member_overlapping_sessions
+    BEFORE INSERT OR UPDATE ON personal_session
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_prevent_member_overlapping_sessions();
+
+-- ============================================================
+-- TRIGGER FUNCTION: prevent full-class enrollment
+-- A member cannot register for a class that is already full.
+-- ============================================================
+CREATE OR REPLACE FUNCTION fn_prevent_full_class_enrollment()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_current INTEGER;
+    v_max     INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO v_current FROM class_enrollment WHERE class_id = NEW.class_id;
+    SELECT max_participants INTO v_max FROM group_class WHERE class_id = NEW.class_id;
+    IF v_current >= v_max THEN
+        RAISE EXCEPTION 'Class % is full', NEW.class_id;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_prevent_full_class_enrollment
+    BEFORE INSERT ON class_enrollment
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_prevent_full_class_enrollment();
+
+-- ============================================================
+-- TRIGGER FUNCTION: prevent trainer double-booking
+-- A trainer cannot be assigned to overlapping sessions/classes.
+-- ============================================================
+CREATE OR REPLACE FUNCTION fn_prevent_trainer_double_booking()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_date DATE;
+    v_id   INTEGER;
+BEGIN
+    IF TG_TABLE_NAME = 'personal_session' THEN
+        v_date := NEW.session_date;
+        v_id   := NEW.session_id;
+    ELSE
+        v_date := NEW.class_date;
+        v_id   := NEW.class_id;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM personal_session
+        WHERE trainer_id = NEW.trainer_id
+          AND session_date = v_date
+          AND status != 'cancelled'
+          AND start_time < NEW.end_time
+          AND end_time > NEW.start_time
+          AND (TG_TABLE_NAME != 'personal_session' OR session_id != v_id)
+    ) THEN
+        RAISE EXCEPTION 'Trainer % is already booked for an overlapping session on %',
+            NEW.trainer_id, v_date;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM group_class
+        WHERE trainer_id = NEW.trainer_id
+          AND class_date = v_date
+          AND start_time < NEW.end_time
+          AND end_time > NEW.start_time
+          AND (TG_TABLE_NAME != 'group_class' OR class_id != v_id)
+    ) THEN
+        RAISE EXCEPTION 'Trainer % is already booked for an overlapping class on %',
+            NEW.trainer_id, v_date;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_prevent_trainer_double_booking_session
+    BEFORE INSERT OR UPDATE ON personal_session
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_prevent_trainer_double_booking();
+
+CREATE TRIGGER trg_prevent_trainer_double_booking_class
+    BEFORE INSERT OR UPDATE ON group_class
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_prevent_trainer_double_booking();
+
+-- ============================================================
+-- TRIGGER FUNCTION: prevent health_metric updates/deletes
+-- Health metrics are append-only (historical records).
+-- ============================================================
+CREATE OR REPLACE FUNCTION fn_health_metric_immutable()
+RETURNS TRIGGER AS $$
+BEGIN
+    RAISE EXCEPTION 'health_metric records are immutable: % is not allowed', TG_OP;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_health_metric_no_update
+    BEFORE UPDATE ON health_metric
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_health_metric_immutable();
+
+CREATE TRIGGER trg_health_metric_no_delete
+    BEFORE DELETE ON health_metric
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_health_metric_immutable();
+
+-- ============================================================
+-- TRIGGER FUNCTION: prevent overlapping trainer availability
+-- A trainer cannot have overlapping availability slots.
+-- ============================================================
+CREATE OR REPLACE FUNCTION fn_prevent_trainer_availability_overlap()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM trainer_availability
+        WHERE trainer_id = NEW.trainer_id
+          AND available_date = NEW.available_date
+          AND start_time < NEW.end_time
+          AND end_time > NEW.start_time
+          AND (TG_OP = 'INSERT' OR availability_id != NEW.availability_id)
+    ) THEN
+        RAISE EXCEPTION 'Trainer % already has an overlapping availability slot on %',
+            NEW.trainer_id, NEW.available_date;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_prevent_trainer_availability_overlap
+    BEFORE INSERT OR UPDATE ON trainer_availability
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_prevent_trainer_availability_overlap();
+
+-- ============================================================
+-- TRIGGER FUNCTION: verify trainer availability on session insert
+-- A personal session can only be booked when trainer is available.
+-- ============================================================
+CREATE OR REPLACE FUNCTION fn_verify_trainer_availability()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.status IN ('completed', 'cancelled') THEN
+        RETURN NEW;
+    END IF;
+    IF NOT EXISTS (
+        SELECT 1 FROM trainer_availability
+        WHERE trainer_id = NEW.trainer_id
+          AND available_date = NEW.session_date
+          AND start_time <= NEW.start_time
+          AND end_time >= NEW.end_time
+    ) THEN
+        RAISE EXCEPTION 'Trainer % is not available on % from % to %',
+            NEW.trainer_id, NEW.session_date, NEW.start_time, NEW.end_time;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_verify_trainer_availability
+    BEFORE INSERT ON personal_session
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_verify_trainer_availability();

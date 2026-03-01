@@ -4,10 +4,12 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
 import api from '../../api';
+import toast from 'react-hot-toast';
 import StatCard from '../../components/StatCard';
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
 import Modal from '../../components/Modal';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import RecordMetricForm from '../../components/RecordMetricForm';
 import { HeartIcon, ChartIcon, SessionIcon, ClassIcon } from '../../components/Icons';
 import { useTheme } from '../../context/ThemeContext';
@@ -17,6 +19,9 @@ export default function Dashboard() {
   const { isDark } = useTheme();
   const [data, setData] = useState(null);
   const [metricModalOpen, setMetricModalOpen] = useState(false);
+  const [cancelSession, setCancelSession] = useState(null);
+  const [dropClass, setDropClass] = useState(null);
+  const [busy, setBusy] = useState(false);
   const gridStroke = t.chartGridStroke[isDark ? 'dark' : 'light'];
   const tickFill = t.chartTickFill[isDark ? 'dark' : 'light'];
   const tt = t.chartTooltip[isDark ? 'dark' : 'light'];
@@ -56,6 +61,50 @@ export default function Dashboard() {
           onCancel={() => setMetricModalOpen(false)}
         />
       </Modal>
+
+      <ConfirmDialog
+        open={!!cancelSession}
+        onClose={() => setCancelSession(null)}
+        title="Cancel Session"
+        message={cancelSession ? `Cancel your session on ${fmtDate(cancelSession.session_date)} at ${cancelSession.start_time}?` : ''}
+        confirmLabel="Cancel Session"
+        variant="danger"
+        loading={busy}
+        onConfirm={async () => {
+          setBusy(true);
+          try {
+            await api.put(`/member/sessions/${cancelSession.session_id}`, { status: 'cancelled' });
+            toast.success('Session cancelled.');
+            load();
+          } catch (err) {
+            toast.error(err.message);
+          } finally {
+            setBusy(false);
+          }
+        }}
+      />
+
+      <ConfirmDialog
+        open={!!dropClass}
+        onClose={() => setDropClass(null)}
+        title="Drop Class"
+        message={dropClass ? `Drop from ${dropClass.class_name} on ${fmtDate(dropClass.class_date)}?` : ''}
+        confirmLabel="Drop"
+        variant="danger"
+        loading={busy}
+        onConfirm={async () => {
+          setBusy(true);
+          try {
+            await api.delete(`/member/classes/${dropClass.class_id}/enroll`);
+            toast.success('Dropped from class.');
+            load();
+          } catch (err) {
+            toast.error(err.message);
+          } finally {
+            setBusy(false);
+          }
+        }}
+      />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Latest Weight" value={summary?.latest_weight != null ? `${summary.latest_weight} kg` : null} icon="weight" color="orange" />
@@ -140,6 +189,11 @@ export default function Dashboard() {
               { key: 'time', label: 'Time', render: (r) => `${r.start_time} – ${r.end_time}` },
               { key: 'trainer_name', label: 'Trainer', filter: 'enum' },
               { key: 'room_name', label: 'Room', filter: 'enum' },
+              { key: 'actions', label: '', render: (r) => (
+                <button type="button" onClick={() => setCancelSession(r)} className={`text-sm ${t.dangerText} hover:underline`}>
+                  Cancel
+                </button>
+              ) },
             ]}
             data={upcoming_sessions}
             emptyMessage="No upcoming sessions."
@@ -153,6 +207,11 @@ export default function Dashboard() {
               { key: 'class_date', label: 'Date', filter: 'date', render: (r) => fmtDate(r.class_date) },
               { key: 'time', label: 'Time', render: (r) => `${r.start_time} – ${r.end_time}` },
               { key: 'room_name', label: 'Room', filter: 'enum' },
+              { key: 'actions', label: '', render: (r) => (
+                <button type="button" onClick={() => setDropClass(r)} className={`text-sm ${t.dangerText} hover:underline`}>
+                  Drop
+                </button>
+              ) },
             ]}
             data={upcoming_classes}
             emptyMessage="No upcoming classes."

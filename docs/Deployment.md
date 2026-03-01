@@ -54,11 +54,13 @@ gunicorn -w 4 -b 0.0.0.0:5001 "run:app"
 ### 4. Database
 
 - **Managed PostgreSQL**: Create a DB (e.g. Render PostgreSQL, Railway, Neon, Supabase) and set `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` (and `DB_PORT` if not 5432).
-- **Schema and data**: Run your SQL once against that DB:
+- **Schema and data**: Run your SQL once against that DB (as superuser or table owner):
   ```bash
   psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f sql/DDL.sql
+  psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f sql/RBAC.sql
   psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f sql/DML.sql
   ```
+  The app connects as `fc_app` (RBAC). Set `DB_APP_USER=fc_app` and `DB_APP_PASSWORD=fc_app_dev` (or override via env).
 
 ---
 
@@ -69,7 +71,7 @@ Good for: **Vercel/Netlify** (frontend) + **Render/Railway/Fly.io** (backend + D
 ### 1. Deploy the backend
 
 - Deploy the **Flask app** (e.g. as a Web Service on Render/Railway) and give it a URL like `https://your-api.example.com`.
-- Set **DB_*** and **SECRET_KEY** in that app’s environment.
+- Set **DB_***, **DB_APP_USER**, **DB_APP_PASSWORD** (for fc_app role), and **SECRET_KEY** in that app’s environment.
 - Do **not** set `SERVING_FRONTEND=1` (backend only serves API).
 
 ### 2. Build frontend with API base URL
@@ -117,7 +119,7 @@ CORS_ORIGINS=https://your-app.vercel.app,https://www.yourdomain.com
 ## Checklist before going live
 
 - [ ] **SECRET_KEY** is a long random value, not the default.
-- [ ] **DB_PASSWORD** and DB are not the dev defaults in production.
+- [ ] **DB_PASSWORD**, **DB_APP_USER**, **DB_APP_PASSWORD** and DB are not the dev defaults in production.
 - [ ] **HTTPS** in front of the app (via platform or Nginx/Caddy).
 - [ ] Sample users/passwords from `DML.sql` changed or removed if the DB is public.
 - [ ] `docs/Credentials.md` is not deployed or is excluded from public repos.

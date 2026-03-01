@@ -108,25 +108,28 @@ All sample users share the password: `password123`
 ## Project Structure
 
 ```
-DB_project/
-├── app/                    # Flask application
+fitness_club/
+├── backend/                # Flask API
 │   ├── __init__.py         # App factory
 │   ├── config.py           # Configuration
-│   ├── db.py               # Database connection
-│   ├── routes/
-│   │   ├── auth.py         # Login, register, logout, role decorators
-│   │   ├── member.py       # Operations 1-4
-│   │   ├── trainer.py      # Operations 5-6
-│   │   └── admin.py        # Operations 7-8
-│   ├── templates/          # Jinja2 HTML templates
-│   └── static/             # CSS
+│   ├── db.py               # Database connection (PostgreSQL)
+│   └── routes/
+│       ├── auth.py         # Login, register, logout, role decorators
+│       ├── member.py       # Member operations (1-4)
+│       ├── trainer.py      # Trainer operations (5-6)
+│       └── admin.py       # Admin operations (7-8)
+├── frontend/               # React (Vite) SPA
+│   └── src/
+│       ├── pages/          # Member, trainer, admin pages
+│       ├── components/
+│       └── ...
 ├── sql/
-│   ├── DDL.sql             # Schema definition
+│   ├── DDL.sql             # Schema, view, trigger, index
 │   └── DML.sql             # Sample data
 ├── docs/
 │   ├── ER_Diagram.md       # ER model with Mermaid diagram
-│   ├── Relational_Schema.md # Relational schema with Mermaid diagram
-│   └── Project_Report.md   # Design decisions and normalization
+│   ├── Relational_Schema.md
+│   └── Project_Report.md
 ├── requirements.txt
 ├── run.py                  # Flask entry point
 ├── start.sh                # One-click setup & launch script
@@ -137,7 +140,7 @@ DB_project/
 
 | # | Operation              | Role    | Route                  |
 |---|------------------------|---------|------------------------|
-| 1 | User Registration      | Public  | `/register`            |
+| 1 | User Registration      | Member  | `/register`            |
 | 2 | Profile Management     | Member  | `/member/profile`      |
 | 3 | Health History         | Member  | `/member/health-history` |
 | 4 | Dashboard              | Member  | `/member/dashboard`    |

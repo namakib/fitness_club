@@ -151,6 +151,10 @@ setup_database() {
     $psql_cmd -d "$DB_NAME" -f "$PROJECT_DIR/sql/DML.sql" -q
     success "Sample data loaded"
 
+    info "Running RBAC.sql (roles, grants, RLS policies)..."
+    $psql_cmd -d "$DB_NAME" -f "$PROJECT_DIR/sql/RBAC.sql" -q
+    success "RBAC configured"
+
     local table_count
     table_count=$($psql_cmd -d "$DB_NAME" -t -c \
         "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';" \
@@ -216,7 +220,7 @@ kill_existing_servers() {
         fi
     done
     # Give the OS a moment to release the ports before starting new servers
-    [ "$killed" = true ] && sleep 2
+    if [ "$killed" = true ]; then sleep 2; fi
 }
 
 # ── 9. Launch both servers ──────────────────────────────────────

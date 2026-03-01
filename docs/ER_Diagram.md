@@ -32,6 +32,7 @@ erDiagram
         int admin_id PK
         varchar name
         varchar email UK
+        varchar phone
         varchar password_hash
     }
 
@@ -116,6 +117,15 @@ erDiagram
         varchar status
     }
 
+    PAYMENT {
+        int payment_id PK
+        int member_id FK
+        decimal amount
+        varchar payment_status
+        date payment_date
+        varchar payment_method
+    }
+
     MEMBER ||--o{ FITNESS_GOAL : "sets"
     MEMBER ||--o{ HEALTH_METRIC : "records"
     MEMBER ||--o{ PERSONAL_SESSION : "books"
@@ -127,9 +137,10 @@ erDiagram
     ROOM ||--o{ GROUP_CLASS : "hosts"
     GROUP_CLASS ||--o{ CLASS_ENROLLMENT : "has"
     EQUIPMENT ||--o{ EQUIPMENT_MAINTENANCE : "has"
+    MEMBER ||--o{ PAYMENT : "makes"
 ```
 
-## Entities (12)
+## Entities (13)
 
 | # | Entity | Description |
 |---|--------|-------------|
@@ -145,8 +156,9 @@ erDiagram
 | 10 | GroupClass | Group fitness classes taught by a trainer |
 | 11 | ClassEnrollment | Junction entity for the many-to-many between Member and GroupClass |
 | 12 | EquipmentMaintenance | Maintenance logs for equipment |
+| 13 | Payment | Simulated billing records (amount, status, date, payment method) |
 
-## Relationships (11)
+## Relationships (12)
 
 | # | Relationship | Cardinality | Description |
 |---|-------------|-------------|-------------|
@@ -161,6 +173,7 @@ erDiagram
 | 9 | Room hosts GroupClass | 1:N | A room can host many group classes |
 | 10 | GroupClass has ClassEnrollment | 1:N | A group class has many enrollments |
 | 11 | Equipment has EquipmentMaintenance | 1:N | Equipment can have many maintenance logs |
+| 12 | Member makes Payment | 1:N | A member can have many payment records |
 
 ## Participation Constraints
 

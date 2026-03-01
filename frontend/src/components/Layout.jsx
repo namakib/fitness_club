@@ -7,6 +7,8 @@ import t from '../theme';
 
 const navItems = {
   member: [
+    { to: '/member/book-session', label: 'Book Session' },
+    { to: '/member/classes', label: 'Classes' },
     { to: '/member/health-history', label: 'Health History' },
   ],
   trainer: [
@@ -16,6 +18,7 @@ const navItems = {
   admin: [
     { to: '/admin/room-booking', label: 'Room Booking' },
     { to: '/admin/equipment', label: 'Equipment' },
+    { to: '/admin/payments', label: 'Payments' },
   ],
 };
 

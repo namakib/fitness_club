@@ -3,7 +3,7 @@ import functools
 from flask import Blueprint, g, jsonify, request, session
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from ..db import get_cursor, get_db, serialize_row
+from ..db import apply_role, get_cursor, get_db, serialize_row
 
 bp = Blueprint('auth', __name__, url_prefix='/api')
 
@@ -49,6 +49,9 @@ def load_logged_in_user():
     cur.execute(f'SELECT * FROM {table} WHERE {id_col} = %s', (user_id,))
     g.user = cur.fetchone()
     cur.close()
+
+    if g.user is not None:
+        apply_role(role, user_id)
 
 
 @bp.route('/register', methods=('POST',))

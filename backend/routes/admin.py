@@ -1,3 +1,5 @@
+from datetime import date
+
 from flask import Blueprint, g, jsonify, request
 
 from ..db import get_cursor, get_db, serialize_row, serialize_rows
@@ -184,6 +186,13 @@ def book_session():
     cur = get_cursor()
     try:
         cur.execute(
+            '''SELECT 1 FROM trainer_availability
+               WHERE trainer_id = %s AND available_date = %s
+                 AND start_time < %s AND end_time > %s''',
+            (data['trainer_id'], data['session_date'], data['end_time'], data['start_time']))
+        if not cur.fetchone():
+            return jsonify(error='Trainer is not available at this time.'), 409
+        cur.execute(
             '''INSERT INTO personal_session
                (member_id, trainer_id, room_id, session_date, start_time, end_time)
                VALUES (%s, %s, %s, %s, %s, %s)''',
@@ -196,6 +205,8 @@ def book_session():
         msg = str(e)
         if 'already booked' in msg.lower():
             return jsonify(error='Room is already booked for that time slot.'), 409
+        if 'overlapping session' in msg.lower():
+            return jsonify(error='Member already has an overlapping session.'), 409
         return jsonify(error=msg), 500
     finally:
         cur.close()
@@ -310,6 +321,46 @@ def update_maintenance(log_id):
             (data['status'], data.get('resolved_date') or None, log_id))
         get_db().commit()
         return jsonify(message='Maintenance log updated.')
+    except Exception as e:
+        get_db().rollback()
+        return jsonify(error=str(e)), 500
+    finally:
+        cur.close()
+
+
+@bp.route('/payments')
+@role_required('admin')
+def list_payments():
+    cur = get_cursor()
+    cur.execute(
+        '''SELECT p.*, m.name AS member_name, m.email AS member_email
+           FROM payment p
+           JOIN member m ON m.member_id = p.member_id
+           ORDER BY p.payment_date DESC, p.payment_id DESC''')
+    payments = cur.fetchall()
+    cur.close()
+    return jsonify(payments=serialize_rows(payments))
+
+
+@bp.route('/payments', methods=('POST',))
+@role_required('admin')
+def create_payment():
+    data = request.get_json(silent=True) or {}
+    member_id = data.get('member_id')
+    amount = data.get('amount')
+    if member_id is None or amount is None:
+        return jsonify(error='member_id and amount are required.'), 400
+    cur = get_cursor()
+    try:
+        cur.execute(
+            '''INSERT INTO payment (member_id, amount, payment_status, payment_date, payment_method)
+               VALUES (%s, %s, %s, %s, %s)''',
+            (member_id, amount,
+             data.get('payment_status') or 'pending',
+             data.get('payment_date') or date.today().isoformat(),
+             (data.get('payment_method') or '').strip() or None))
+        get_db().commit()
+        return jsonify(message='Payment recorded.'), 201
     except Exception as e:
         get_db().rollback()
         return jsonify(error=str(e)), 500
