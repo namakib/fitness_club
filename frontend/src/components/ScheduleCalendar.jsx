@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import DatePicker from './DatePicker';
 import Modal from './Modal';
 import { ChevronLeftIcon, ChevronRightIcon, CalendarIcon } from './Icons';
@@ -114,6 +114,28 @@ export default function ScheduleCalendar({
     return [...sessions, ...classes].map(parseEvent);
   }, [data]);
 
+  const prevKeysRef = useRef(null);
+  const [newEventKeys, setNewEventKeys] = useState(() => new Set());
+
+  useEffect(() => {
+    const currentKeys = new Set(
+      allEvents.map((ev) => `${ev.event_type}-${ev.session_id || ev.class_id || ev.availability_id}`),
+    );
+    if (prevKeysRef.current !== null) {
+      const added = new Set();
+      for (const k of currentKeys) {
+        if (!prevKeysRef.current.has(k)) added.add(k);
+      }
+      if (added.size > 0) {
+        setNewEventKeys(added);
+        const timer = setTimeout(() => setNewEventKeys(new Set()), 3000);
+        prevKeysRef.current = currentKeys;
+        return () => clearTimeout(timer);
+      }
+    }
+    prevKeysRef.current = currentKeys;
+  }, [allEvents]);
+
   const eventsByDay = useMemo(() => {
     const map = {};
     allEvents.forEach((ev) => {
@@ -172,6 +194,7 @@ export default function ScheduleCalendar({
 
   return (
     <>
+      <style>{`@keyframes highlight-pulse{0%,15%{box-shadow:0 0 12px 4px rgba(250,204,21,.6);transform:scale(1.04)}100%{box-shadow:0 0 0 0 transparent;transform:scale(1)}}`}</style>
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden">
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
@@ -257,12 +280,14 @@ export default function ScheduleCalendar({
                       {dayEvents.map((ev) => {
                         const style = getEventStyle(ev);
                         const color = EVENT_COLORS[ev.event_type] || EVENT_COLORS.session;
+                        const evKey = `${ev.event_type}-${ev.session_id || ev.class_id || ev.availability_id}`;
+                        const isNew = newEventKeys.has(evKey);
                         return (
                           <button
                             type="button"
                             key={`${ev.event_type}-${ev.availability_id || ev.session_id || ev.class_id}-${ev.start_time}`}
-                            className={`absolute left-0 right-0 rounded px-1.5 py-0.5 text-[10px] font-medium text-white truncate border cursor-pointer hover:opacity-90 transition text-left ${color}`}
-                            style={{ ...style, minHeight: 20 }}
+                            className={`absolute left-0 right-0 rounded px-1.5 py-0.5 text-[10px] font-medium text-white truncate border cursor-pointer hover:opacity-90 transition text-left ${color}${isNew ? ' z-20 ring-2 ring-yellow-400 dark:ring-yellow-300' : ''}`}
+                            style={{ ...style, minHeight: 20, animation: isNew ? 'highlight-pulse 3s ease-out forwards' : undefined }}
                             title={`${ev.title}${ev.location || ev.room_name ? ` · ${ev.location || ev.room_name}` : ''} ${ev.start_time}–${ev.end_time}`}
                             onClick={() => handleEventClick(ev)}
                           >

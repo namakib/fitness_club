@@ -5,6 +5,7 @@
 # Usage:  ./start.sh
 #   --reset   Drop and recreate the database from scratch
 #   --skip-db Skip database setup (just start the app)
+#   --split   Run backend and frontend in two separate terminal windows
 # ============================================================
 
 set -e
@@ -27,11 +28,13 @@ VITE_PORT="${VITE_PORT:-5173}"
 
 RESET=false
 SKIP_DB=false
+SPLIT_TERMINALS=false
 
 for arg in "$@"; do
     case $arg in
         --reset)   RESET=true ;;
         --skip-db) SKIP_DB=true ;;
+        --split)   SPLIT_TERMINALS=true ;;
     esac
 done
 
@@ -152,7 +155,9 @@ setup_database() {
     success "Sample data loaded"
 
     info "Running migrations..."
-    $psql_cmd -d "$DB_NAME" -f "$PROJECT_DIR/sql/migrations/001_add_equipment_room.sql" -q
+    for m in "$PROJECT_DIR/sql/migrations/"*.sql; do
+        [ -f "$m" ] && $psql_cmd -d "$DB_NAME" -f "$m" -q
+    done
     success "Migrations applied"
 
     info "Running RBAC.sql (roles, grants, RLS policies)..."
@@ -209,6 +214,8 @@ configure_env() {
     export FLASK_APP=run.py
     export FLASK_ENV=development
     export SECRET_KEY="${SECRET_KEY:-dev-secret-key-$(date +%s)}"
+    # API debug: print request/response (set DEBUG_API=0 to disable)
+    export DEBUG_API="${DEBUG_API:1}"
 }
 
 # ── 8. Kill any existing servers on our ports ───────────────────
@@ -236,8 +243,6 @@ cleanup() {
 }
 
 launch_app() {
-    trap cleanup SIGINT SIGTERM
-
     echo ""
     echo -e "${GREEN}========================================${NC}"
     echo -e "${GREEN} Fitness Club Management System${NC}"
@@ -259,6 +264,35 @@ launch_app() {
     echo -e "    Trainer: frank@example.com"
     echo -e "    Admin:   ivy@example.com"
     echo ""
+
+    if [ "$SPLIT_TERMINALS" = true ]; then
+        echo -e "  Opening two terminal windows (backend + frontend)..."
+        echo ""
+        local env_file
+        env_file=$(mktemp)
+        {
+            echo "export DB_HOST=\"$DB_HOST\" DB_PORT=\"$DB_PORT\" DB_NAME=\"$DB_NAME\" DB_USER=\"$DB_USER\" DB_PASSWORD=\"$DB_PASSWORD\""
+            echo "export FLASK_APP=\"$FLASK_APP\" FLASK_ENV=\"$FLASK_ENV\" SECRET_KEY=\"$SECRET_KEY\" DEBUG_API=\"${DEBUG_API:-1}\""
+            echo "export FLASK_PORT=\"$FLASK_PORT\" VITE_PORT=\"$VITE_PORT\""
+        } > "$env_file"
+        if [[ "$(uname)" == "Darwin" ]]; then
+            osascript -e "tell application \"Terminal\" to do script \"source \\\"$env_file\\\" && cd \\\"$PROJECT_DIR\\\" && source venv/bin/activate && python run.py\""
+            osascript -e "tell application \"Terminal\" to do script \"source \\\"$env_file\\\" && cd \\\"$PROJECT_DIR/frontend\\\" && npx vite --port \\\"$VITE_PORT\\\"\""
+        elif command -v gnome-terminal &>/dev/null; then
+            gnome-terminal --tab --title="Backend" -- bash -c "source \"$env_file\" && cd \"$PROJECT_DIR\" && source venv/bin/activate && python run.py; exec bash"
+            gnome-terminal --tab --title="Frontend" -- bash -c "source \"$env_file\" && cd \"$PROJECT_DIR/frontend\" && npx vite --port \"$VITE_PORT\"; exec bash"
+        else
+            warn "Cannot open new terminals on this system. Use: ./start.sh (without --split)"
+            SPLIT_TERMINALS=false
+        fi
+        rm -f "$env_file"
+        if [ "$SPLIT_TERMINALS" = true ]; then
+            success "Backend and frontend started in separate terminals"
+            return
+        fi
+    fi
+
+    trap cleanup SIGINT SIGTERM
     echo -e "  Press ${RED}Ctrl+C${NC} to stop both servers."
     echo ""
 

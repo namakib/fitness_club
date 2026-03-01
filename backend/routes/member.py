@@ -246,11 +246,8 @@ def trainer_availability():
         return jsonify(body), status
     cur = get_cursor()
     cur.execute(
-        '''SELECT availability_id, available_date, start_time, end_time
-           FROM trainer_availability
-           WHERE trainer_id = %s AND available_date >= CURRENT_DATE
-           ORDER BY available_date, start_time''',
-        (trainer_id,),
+        '''SELECT * FROM fn_trainer_slot_booking_status(%s, %s)''',
+        (trainer_id, g.user['member_id']),
     )
     slots = cur.fetchall()
     cur.close()

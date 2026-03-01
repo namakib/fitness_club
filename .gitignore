@@ -18,6 +18,8 @@ env/
 # IDE
 .vscode/
 .idea/
+.cursor/
+.cureos/
 
 # OS
 .DS_Store

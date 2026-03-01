@@ -538,3 +538,52 @@ CREATE TRIGGER trg_verify_trainer_availability
     BEFORE INSERT ON personal_session
     FOR EACH ROW
     EXECUTE FUNCTION fn_verify_trainer_availability();
+
+-- ============================================================
+-- FUNCTION: trainer slot booking status (for member availability view)
+-- Returns availability slots with is_booked / booked_by_me flags.
+-- SECURITY DEFINER needed because fc_member cannot see other members' sessions.
+-- ============================================================
+CREATE OR REPLACE FUNCTION fn_trainer_slot_booking_status(
+    p_trainer_id INTEGER,
+    p_member_id  INTEGER
+)
+RETURNS TABLE (
+    availability_id INTEGER,
+    available_date  DATE,
+    start_time      TIME,
+    end_time        TIME,
+    is_booked       BOOLEAN,
+    booked_by_me    BOOLEAN
+) SECURITY DEFINER
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        ta.availability_id,
+        ta.available_date,
+        ta.start_time,
+        ta.end_time,
+        EXISTS (
+            SELECT 1 FROM personal_session ps
+            WHERE ps.trainer_id  = p_trainer_id
+              AND ps.session_date = ta.available_date
+              AND ps.status      != 'cancelled'
+              AND ps.start_time  <  ta.end_time
+              AND ps.end_time    >  ta.start_time
+        ) AS is_booked,
+        EXISTS (
+            SELECT 1 FROM personal_session ps
+            WHERE ps.trainer_id  = p_trainer_id
+              AND ps.member_id   = p_member_id
+              AND ps.session_date = ta.available_date
+              AND ps.status      != 'cancelled'
+              AND ps.start_time  <  ta.end_time
+              AND ps.end_time    >  ta.start_time
+        ) AS booked_by_me
+    FROM trainer_availability ta
+    WHERE ta.trainer_id    = p_trainer_id
+      AND ta.available_date >= CURRENT_DATE
+    ORDER BY ta.available_date, ta.start_time;
+END;
+$$ LANGUAGE plpgsql;

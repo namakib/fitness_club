@@ -12,3 +12,5 @@ class Config:
     # RBAC: app connects as fc_app role (set after running sql/RBAC.sql)
     DB_APP_USER = os.environ.get('DB_APP_USER', 'fc_app')
     DB_APP_PASSWORD = os.environ.get('DB_APP_PASSWORD', 'fc_app_dev')
+    # Debug: log API request/response (set DEBUG_API=1 to enable)
+    DEBUG_API_LOGGING = os.environ.get('DEBUG_API', '0') == '1'

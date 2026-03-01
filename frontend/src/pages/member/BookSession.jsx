@@ -149,6 +149,13 @@ export function BookSessionForm({ onSuccess }) {
                         <ChevronRightIcon className="w-4 h-4" />
                       </button>
                     </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <span className="inline-block w-2.5 h-2.5 rounded-sm bg-green-500/90 align-middle mr-0.5" /> available
+                      <span className="mx-2">|</span>
+                      <span className="inline-block w-2.5 h-2.5 rounded-sm bg-indigo-400/80 align-middle mr-0.5" /> your booking
+                      <span className="mx-2">|</span>
+                      <span className="inline-block w-2.5 h-2.5 rounded-sm bg-gray-400/80 align-middle mr-0.5" /> taken
+                    </p>
                     <div className="grid grid-cols-7 gap-1 text-xs">
                       {weekDates.map((d) => {
                         const ymd = toYMD(d);
@@ -160,16 +167,33 @@ export function BookSessionForm({ onSuccess }) {
                               {WEEKDAYS[d.getDay()]} {d.getDate()}
                             </div>
                             <div className="space-y-1">
-                              {slots.map((slot) => (
-                                <button
-                                  key={slot.availability_id}
-                                  type="button"
-                                  onClick={() => setForm({ ...form, session_date: slot.available_date, start_time: timeToDisplay(slot.start_time), end_time: timeToDisplay(slot.end_time) })}
-                                  className="w-full text-left px-1.5 py-0.5 rounded bg-green-500/90 hover:bg-green-600 text-white border border-green-600 dark:border-green-500"
-                                >
-                                  {timeToDisplay(slot.start_time)}–{timeToDisplay(slot.end_time)}
-                                </button>
-                              ))}
+                              {slots.map((slot) => {
+                                const isBooked = Boolean(slot.is_booked);
+                                const bookedByMe = Boolean(slot.booked_by_me);
+                                const disabled = isBooked;
+                                const title = bookedByMe
+                                  ? "You've already booked this slot"
+                                  : isBooked
+                                    ? 'This slot is taken'
+                                    : undefined;
+                                const cn = disabled
+                                  ? bookedByMe
+                                    ? 'w-full text-left px-1.5 py-0.5 rounded bg-indigo-400/80 text-white border border-indigo-500 cursor-not-allowed'
+                                    : 'w-full text-left px-1.5 py-0.5 rounded bg-gray-400/80 text-white border border-gray-500 cursor-not-allowed'
+                                  : 'w-full text-left px-1.5 py-0.5 rounded bg-green-500/90 hover:bg-green-600 text-white border border-green-600 dark:border-green-500';
+                                return (
+                                  <button
+                                    key={slot.availability_id}
+                                    type="button"
+                                    disabled={disabled}
+                                    title={title}
+                                    onClick={disabled ? undefined : () => setForm({ ...form, session_date: slot.available_date, start_time: timeToDisplay(slot.start_time), end_time: timeToDisplay(slot.end_time) })}
+                                    className={cn}
+                                  >
+                                    {timeToDisplay(slot.start_time)}–{timeToDisplay(slot.end_time)}
+                                  </button>
+                                );
+                              })}
                             </div>
                           </div>
                         );
