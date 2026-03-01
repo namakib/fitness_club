@@ -38,6 +38,7 @@ GRANT SELECT ON trainer, room, group_class TO fc_member;
 GRANT SELECT, INSERT, DELETE ON class_enrollment TO fc_member;
 GRANT SELECT, INSERT ON personal_session TO fc_member;
 GRANT UPDATE (status) ON personal_session TO fc_member;
+GRANT SELECT ON trainer_availability TO fc_member;
 GRANT SELECT ON member_dashboard_view TO fc_member;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO fc_member;
 
@@ -85,6 +86,7 @@ DROP POLICY IF EXISTS metric_insert_owner ON health_metric;
 DROP POLICY IF EXISTS session_member ON personal_session;
 DROP POLICY IF EXISTS enrollment_member ON personal_session;
 DROP POLICY IF EXISTS availability_trainer ON trainer_availability;
+DROP POLICY IF EXISTS member_availability_select ON trainer_availability;
 DROP POLICY IF EXISTS trainer_self ON trainer;
 DROP POLICY IF EXISTS admin_self ON admin;
 DROP POLICY IF EXISTS payment_admin ON payment;
@@ -93,6 +95,7 @@ DROP POLICY IF EXISTS session_trainer ON personal_session;
 DROP POLICY IF EXISTS class_trainer ON group_class;
 DROP POLICY IF EXISTS member_trainer_read ON member;
 DROP POLICY IF EXISTS admin_member_read ON member;
+DROP POLICY IF EXISTS member_trainer_select ON trainer;
 DROP POLICY IF EXISTS admin_trainer_read ON trainer;
 DROP POLICY IF EXISTS admin_class_all ON group_class;
 DROP POLICY IF EXISTS admin_session_all ON personal_session;
@@ -140,6 +143,9 @@ CREATE POLICY availability_trainer ON trainer_availability
     USING (trainer_id = current_setting('app.current_user_id', true)::int)
     WITH CHECK (trainer_id = current_setting('app.current_user_id', true)::int);
 
+CREATE POLICY member_availability_select ON trainer_availability
+    FOR SELECT TO fc_member USING (true);
+
 CREATE POLICY metric_trainer_read ON health_metric
     FOR SELECT TO fc_trainer
     USING (member_id IN (
@@ -172,6 +178,10 @@ CREATE POLICY admin_self ON admin
 
 CREATE POLICY admin_member_read ON member
     FOR SELECT TO fc_admin USING (true);
+
+-- Members need to see all trainers for the booking dropdown
+CREATE POLICY member_trainer_select ON trainer
+    FOR SELECT TO fc_member USING (true);
 
 CREATE POLICY admin_trainer_read ON trainer
     FOR SELECT TO fc_admin USING (true);

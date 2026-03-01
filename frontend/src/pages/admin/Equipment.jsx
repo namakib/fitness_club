@@ -85,7 +85,6 @@ export default function Equipment() {
             { key: 'type', label: 'Type', filter: 'enum' },
             { key: 'status', label: 'Status', filter: 'enum', render: (r) => <StatusBadge status={r.status} /> },
             { key: 'purchase_date', label: 'Purchased', filter: 'date', render: (r) => fmtDate(r.purchase_date) },
-            { key: 'last_maintenance_date', label: 'Last Maint.', render: (r) => fmtDate(r.last_maintenance_date) },
             { key: 'action', label: 'Action', render: (r) => (
               <SelectDropdown
                 value={r.status}

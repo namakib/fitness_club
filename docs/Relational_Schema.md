@@ -74,9 +74,9 @@ erDiagram
         SERIAL equipment_id PK
         VARCHAR_100 name "NOT NULL"
         VARCHAR_50 type "NOT NULL"
+        INT room_id FK "NOT NULL REFERENCES room"
         VARCHAR_20 status "CHECK operational under_repair out_of_service"
         DATE purchase_date
-        DATE last_maintenance_date
     }
 
     personal_session {
@@ -135,6 +135,7 @@ erDiagram
     trainer ||--o{ group_class : "trainer_id"
     room ||--o{ personal_session : "room_id"
     room ||--o{ group_class : "room_id"
+    room ||--o{ equipment : "room_id"
     group_class ||--o{ class_enrollment : "class_id"
     equipment ||--o{ equipment_maintenance : "equipment_id"
     member ||--o{ payment : "member_id"
@@ -218,9 +219,9 @@ erDiagram
 | equipment_id | SERIAL | PRIMARY KEY |
 | name | VARCHAR(100) | NOT NULL |
 | type | VARCHAR(50) | NOT NULL |
+| room_id | INTEGER | NOT NULL, FK -> room(room_id) ON DELETE RESTRICT |
 | status | VARCHAR(20) | CHECK (status IN ('operational', 'under_repair', 'out_of_service')), DEFAULT 'operational' |
 | purchase_date | DATE | |
-| last_maintenance_date | DATE | |
 
 ### personal_session
 | Column | Type | Constraints |
@@ -290,7 +291,7 @@ No transitive dependencies exist:
 - **member**: name, email, dob, gender, phone, password_hash, created_at all depend directly on member_id
 - **fitness_goal**: goal attributes depend on goal_id; member_id is a foreign key, not a transitive dependency
 - **health_metric**: metric values depend on metric_id; member_id is a foreign key
-- **equipment**: status is the *current* status of the equipment, not derivable from maintenance logs (which track history)
+- **equipment**: name, type, room_id, status, purchase_date all depend directly on equipment_id; room_id is a foreign key; status is the *current* status, not derivable from maintenance logs (which track history)
 - **equipment_maintenance**: maintenance details depend on log_id; equipment_id is a foreign key
 - No derived/computed attributes are stored (e.g., age is not stored — computed from dob; total classes attended is computed via COUNT query)
 

@@ -74,9 +74,9 @@ erDiagram
         int equipment_id PK
         varchar name
         varchar type
+        int room_id FK
         varchar status
         date purchase_date
-        date last_maintenance_date
     }
 
     PERSONAL_SESSION {
@@ -135,6 +135,7 @@ erDiagram
     TRAINER ||--o{ GROUP_CLASS : "teaches"
     ROOM ||--o{ PERSONAL_SESSION : "hosts"
     ROOM ||--o{ GROUP_CLASS : "hosts"
+    ROOM ||--o{ EQUIPMENT : "contains"
     GROUP_CLASS ||--o{ CLASS_ENROLLMENT : "has"
     EQUIPMENT ||--o{ EQUIPMENT_MAINTENANCE : "has"
     MEMBER ||--o{ PAYMENT : "makes"
@@ -158,7 +159,7 @@ erDiagram
 | 12 | EquipmentMaintenance | Maintenance logs for equipment |
 | 13 | Payment | Simulated billing records (amount, status, date, payment method) |
 
-## Relationships (12)
+## Relationships (13)
 
 | # | Relationship | Cardinality | Description |
 |---|-------------|-------------|-------------|
@@ -171,9 +172,10 @@ erDiagram
 | 7 | Trainer teaches GroupClass | 1:N | A trainer can teach many group classes |
 | 8 | Room hosts PersonalSession | 1:N | A room can host many personal sessions |
 | 9 | Room hosts GroupClass | 1:N | A room can host many group classes |
-| 10 | GroupClass has ClassEnrollment | 1:N | A group class has many enrollments |
-| 11 | Equipment has EquipmentMaintenance | 1:N | Equipment can have many maintenance logs |
-| 12 | Member makes Payment | 1:N | A member can have many payment records |
+| 10 | Room contains Equipment | 1:N | A room contains many equipment items |
+| 11 | GroupClass has ClassEnrollment | 1:N | A group class has many enrollments |
+| 12 | Equipment has EquipmentMaintenance | 1:N | Equipment can have many maintenance logs |
+| 13 | Member makes Payment | 1:N | A member can have many payment records |
 
 ## Participation Constraints
 
@@ -183,5 +185,6 @@ erDiagram
 - Every GroupClass must have exactly one Trainer and one Room (total participation)
 - Every ClassEnrollment must reference exactly one GroupClass and one Member (total participation)
 - Every EquipmentMaintenance must reference exactly one Equipment (total participation)
+- Every Equipment must be associated with exactly one Room (total participation)
 - A Member may have zero or more FitnessGoals, HealthMetrics, PersonalSessions, ClassEnrollments (partial participation)
 - A Trainer may have zero or more Availability slots, PersonalSessions, GroupClasses (partial participation)

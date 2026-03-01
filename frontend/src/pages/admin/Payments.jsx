@@ -3,6 +3,7 @@ import api from '../../api';
 import toast from 'react-hot-toast';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
+import NumberInput from '../../components/NumberInput';
 import SelectDropdown from '../../components/SelectDropdown';
 import t from '../../theme';
 
@@ -64,10 +65,16 @@ export default function Payments() {
             placeholder="Select member"
             searchable={members.length > 5}
           />
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
-            <input type="number" step="0.01" min="0" required className={t.input} value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
-          </div>
+          <NumberInput
+            label="Amount"
+            value={form.amount}
+            onChange={(e) => setForm({ ...form, amount: e.target.value })}
+            step={0.01}
+            min={0}
+            placeholder="0.00"
+            required
+            fullWidth
+          />
           <SelectDropdown
             label="Status"
             value={form.payment_status}
@@ -81,10 +88,20 @@ export default function Payments() {
             placeholder="Select status"
             searchable={false}
           />
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Payment Method (optional)</label>
-            <input type="text" className={t.input} placeholder="e.g. credit_card, cash" value={form.payment_method} onChange={(e) => setForm({ ...form, payment_method: e.target.value })} />
-          </div>
+          <SelectDropdown
+            label="Payment Method (optional)"
+            value={form.payment_method}
+            onChange={(val) => setForm({ ...form, payment_method: val })}
+            options={[
+              { value: '', label: '—' },
+              { value: 'credit_card', label: 'Credit Card' },
+              { value: 'debit', label: 'Debit' },
+              { value: 'bank_transfer', label: 'Bank Transfer' },
+              { value: 'cash', label: 'Cash' },
+            ]}
+            placeholder="Select method"
+            searchable={false}
+          />
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setModalOpen(false)} className={t.cancelButton}>Cancel</button>
             <button type="submit" disabled={busy} className={t.btn}>{busy ? 'Saving...' : 'Save'}</button>

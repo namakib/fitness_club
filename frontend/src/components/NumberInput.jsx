@@ -11,6 +11,7 @@ export default function NumberInput({
   placeholder,
   helperText,
   required,
+  fullWidth,
   ...props
 }) {
   const num = parseFloat(value);
@@ -39,7 +40,7 @@ export default function NumberInput({
           {required && <span className={`${t.requiredAsterisk} ml-0.5`}>*</span>}
         </label>
       )}
-      <div className={`inline-flex overflow-hidden ${t.numberInputWrap}`}>
+      <div className={`overflow-hidden ${fullWidth ? 'w-full flex' : 'inline-flex'} ${t.numberInputWrap}`}>
         <input
           type="number"
           value={displayValue}
@@ -48,7 +49,7 @@ export default function NumberInput({
           min={min}
           max={max}
           placeholder={placeholder}
-          className={`w-20 min-w-0 border-0 bg-transparent px-3 py-2 text-center text-sm ${t.pageText} [appearance:textfield] focus:ring-0 focus:outline-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+          className={`min-w-0 flex-1 border-0 bg-transparent px-3 py-2 ${fullWidth ? 'text-left' : 'w-20 text-center'} text-sm ${t.pageText} [appearance:textfield] focus:ring-0 focus:outline-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
           aria-label={label}
           {...props}
         />

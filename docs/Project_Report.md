@@ -9,7 +9,7 @@
 
 This report documents the design and implementation of a Health and Fitness Club Management System. The system enables members to register, track health metrics and fitness goals; trainers to manage availability and view schedules; and administrators to manage room bookings and equipment maintenance.
 
-The system is backed by PostgreSQL and accessed through a Python Flask web application with Bootstrap 5 for the user interface.
+The system is backed by PostgreSQL and accessed through a Python Flask web application with a React (Vite) frontend and Tailwind CSS for the user interface.
 
 ---
 
@@ -74,7 +74,7 @@ All tables satisfy 3NF — no transitive dependencies exist:
 | `health_metric` | member_id, weight, body_fat_pct, blood_pressure, heart_rate, recorded_at | All depend on metric_id |
 | `trainer_availability` | trainer_id, available_date, start_time, end_time | All depend on availability_id |
 | `room` | room_name, capacity | All depend on room_id |
-| `equipment` | name, type, status, purchase_date, last_maintenance_date | All depend on equipment_id. `status` is the current status, not derived from maintenance logs |
+| `equipment` | name, type, room_id, status, purchase_date | All depend on equipment_id; room_id is a FK; `status` is the current status, not derived from maintenance logs |
 | `personal_session` | member_id, trainer_id, room_id, session_date, start_time, end_time, status | All depend on session_id |
 | `group_class` | class_name, trainer_id, room_id, class_date, start_time, end_time, max_participants | All depend on class_id |
 | `class_enrollment` | class_id, member_id, enrolled_at | All depend on enrollment_id |
@@ -84,8 +84,10 @@ All tables satisfy 3NF — no transitive dependencies exist:
 
 No computed or derived attributes are stored:
 - **Age** is computed from `dob` at query time, not stored
-- **Total classes attended** is computed via `COUNT(*)` on `class_enrollment`
+- **Total classes attended** is computed via `COUNT(*)` on `class_enrollment` joined with `group_class` where `class_date < CURRENT_DATE`
 - **Upcoming sessions count** is computed via query on `personal_session`
+
+**Health metric design**: The `health_metric` table uses a wide-table design (columns for weight, body_fat_pct, blood_pressure, heart_rate) rather than an EAV pattern (metric_type + metric_value). This was chosen because: (1) the set of metric types is fixed and known; (2) each record naturally captures multiple measurements at one timestamp; (3) it simplifies queries for dashboard aggregation and avoids repeated self-joins.
 
 ---
 
@@ -96,7 +98,7 @@ No computed or derived attributes are stored:
 Combines data from `member`, `health_metric`, `fitness_goal`, `class_enrollment`, and `personal_session` using LATERAL joins to provide:
 - Latest health metric per member
 - Count of active fitness goals
-- Total classes enrolled
+- Total classes attended (past classes only)
 - Count of upcoming scheduled sessions
 
 ### 4.2 Trigger: `fn_prevent_room_double_booking`
@@ -114,12 +116,12 @@ A composite index on `health_metric(member_id, recorded_at DESC)` to optimize th
 ### 5.1 Architecture
 
 The application follows a standard Flask blueprint architecture:
-- `app/__init__.py` — application factory
-- `app/db.py` — database connection management using psycopg2
-- `app/routes/auth.py` — authentication, login, registration, role decorators
-- `app/routes/member.py` — member operations (1-4)
-- `app/routes/trainer.py` — trainer operations (5-6)
-- `app/routes/admin.py` — admin operations (7-8)
+- `backend/__init__.py` — application factory
+- `backend/db.py` — database connection management using psycopg2
+- `backend/routes/auth.py` — authentication, login, registration, role decorators
+- `backend/routes/member.py` — member operations (1-4)
+- `backend/routes/trainer.py` — trainer operations (5-6)
+- `backend/routes/admin.py` — admin operations (7-8)
 
 ### 5.2 Role-Based Access Control
 
@@ -157,4 +159,4 @@ All database interactions use parameterized SQL queries via psycopg2 (no ORM). T
 
 ## 7. Conclusion
 
-The system meets all specified requirements: 12 entities in 3NF, 11 relationships, 8 fully functional operations, role-based access control, database-level constraint enforcement, and a clean web interface. All SQL is parameterized and executed directly against PostgreSQL without an ORM.
+The system meets all specified requirements: 13 entities in 3NF, 13 relationships, 8 fully functional operations, role-based access control, database-level constraint enforcement, and a clean web interface. All SQL is parameterized and executed directly against PostgreSQL without an ORM.

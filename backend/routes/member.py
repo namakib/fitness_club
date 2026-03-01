@@ -216,6 +216,25 @@ def booking_options():
     )
 
 
+@bp.route('/trainer-availability')
+@role_required('member')
+def trainer_availability():
+    trainer_id = request.args.get('trainer_id')
+    if not trainer_id:
+        return jsonify(error='trainer_id is required.'), 400
+    cur = get_cursor()
+    cur.execute(
+        '''SELECT availability_id, available_date, start_time, end_time
+           FROM trainer_availability
+           WHERE trainer_id = %s AND available_date >= CURRENT_DATE
+           ORDER BY available_date, start_time''',
+        (trainer_id,),
+    )
+    slots = cur.fetchall()
+    cur.close()
+    return jsonify(slots=serialize_rows(slots))
+
+
 @bp.route('/sessions', methods=('POST',))
 @role_required('member')
 def book_session():

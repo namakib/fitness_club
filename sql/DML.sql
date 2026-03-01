@@ -97,16 +97,17 @@ INSERT INTO room (room_name, capacity) VALUES
 
 -- ============================================================
 -- Equipment (8)
+-- room 1 = Main Gym Floor, 2 = Yoga Studio, 3 = Cardio Room, 4 = Private Training Room
 -- ============================================================
-INSERT INTO equipment (name, type, status, purchase_date, last_maintenance_date) VALUES
-('Treadmill #1',       'Cardio',    'operational',     '2023-06-15', '2025-12-01'),
-('Treadmill #2',       'Cardio',    'operational',     '2023-06-15', '2025-12-01'),
-('Stationary Bike #1', 'Cardio',    'under_repair',    '2022-03-10', '2025-11-15'),
-('Bench Press',        'Strength',  'operational',     '2021-01-20', '2025-10-01'),
-('Squat Rack',         'Strength',  'operational',     '2021-01-20', '2025-10-01'),
-('Leg Press Machine',  'Strength',  'out_of_service',  '2020-08-05', '2025-08-01'),
-('Rowing Machine',     'Cardio',    'operational',     '2024-02-14', '2026-01-15'),
-('Cable Machine',      'Strength',  'operational',     '2022-11-01', '2025-09-20');
+INSERT INTO equipment (name, type, room_id, status, purchase_date) VALUES
+('Treadmill #1',       'Cardio',    3, 'operational',     '2023-06-15'),
+('Treadmill #2',       'Cardio',    3, 'operational',     '2023-06-15'),
+('Stationary Bike #1', 'Cardio',    3, 'under_repair',    '2022-03-10'),
+('Bench Press',        'Strength',  1, 'operational',     '2021-01-20'),
+('Squat Rack',         'Strength',  1, 'operational',     '2021-01-20'),
+('Leg Press Machine',  'Strength',  1, 'out_of_service',  '2020-08-05'),
+('Rowing Machine',     'Cardio',    3, 'operational',     '2024-02-14'),
+('Cable Machine',      'Strength',  1, 'operational',     '2022-11-01');
 
 -- ============================================================
 -- Trainer Availability
@@ -124,7 +125,14 @@ INSERT INTO trainer_availability (trainer_id, available_date, start_time, end_ti
 (3, '2026-02-25', '08:00', '12:00'),
 (2, '2026-02-26', '07:00', '11:00'),
 (1, '2026-03-02', '08:00', '12:00'),
-(3, '2026-03-05', '10:00', '14:00');
+(3, '2026-03-05', '10:00', '14:00'),
+-- Grace Chen (trainer 2): future availability so Book Session and Schedule show data
+(2, '2026-03-01', '09:00', '12:00'),
+(2, '2026-03-01', '14:00', '17:00'),
+(2, '2026-03-02', '09:00', '12:00'),
+(2, '2026-03-03', '07:00', '11:00'),
+(2, '2026-03-04', '09:00', '13:00'),
+(2, '2026-03-05', '14:00', '18:00');
 
 -- ============================================================
 -- Personal Sessions
@@ -203,7 +211,11 @@ INSERT INTO group_class (class_name, trainer_id, room_id, class_date, start_time
 ('Cardio Kickboxing',  3, 3, '2026-02-25', '13:00', '14:00', 20),
 ('Morning Yoga',       2, 2, '2026-02-27', '09:30', '10:30', 15),
 ('HIIT Blast',         3, 1, '2026-03-02', '11:00', '12:00', 25),
-('Cardio Kickboxing',  3, 3, '2026-03-04', '13:00', '14:00', 20);
+('Cardio Kickboxing',  3, 3, '2026-03-04', '13:00', '14:00', 20),
+-- Grace Chen (trainer 2): future classes so Browse Classes and trainer schedule show data
+('Morning Yoga',       2, 2, '2026-03-01', '09:30', '10:30', 15),
+('Evening Yoga',       2, 2, '2026-03-03', '17:00', '18:00', 15),
+('Morning Yoga',       2, 2, '2026-03-05', '09:30', '10:30', 15);
 
 -- ============================================================
 -- Class Enrollments

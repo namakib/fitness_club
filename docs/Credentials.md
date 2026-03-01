@@ -57,6 +57,6 @@ export DB_PASSWORD=
 
 ## Other
 
-- **Flask port**: `FLASK_PORT=5000` (default)
+- **Flask port**: `FLASK_PORT=5001` (default)
 - **Frontend dev**: typically http://localhost:5173 (Vite)
-- **Backend API**: http://localhost:5000
+- **Backend API**: http://localhost:5001

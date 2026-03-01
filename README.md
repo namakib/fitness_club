@@ -1,6 +1,6 @@
 # Health and Fitness Club Management System
 
-A PostgreSQL-backed web application for managing a small fitness club, built with Python Flask and Bootstrap 5.
+A PostgreSQL-backed web application for managing a small fitness club, built with Python Flask and React (Tailwind CSS).
 
 ## Features
 

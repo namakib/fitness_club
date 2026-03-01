@@ -140,10 +140,10 @@ CREATE TABLE equipment (
     equipment_id        SERIAL PRIMARY KEY,
     name                VARCHAR(100) NOT NULL,
     type                VARCHAR(50) NOT NULL,
+    room_id             INTEGER NOT NULL REFERENCES room(room_id) ON DELETE RESTRICT,
     status              VARCHAR(20) DEFAULT 'operational'
                         CHECK (status IN ('operational', 'under_repair', 'out_of_service')),
-    purchase_date       DATE,
-    last_maintenance_date DATE
+    purchase_date       DATE
 );
 
 -- ============================================================
@@ -213,7 +213,8 @@ CREATE TABLE payment (
     payment_status VARCHAR(20) DEFAULT 'pending'
                    CHECK (payment_status IN ('pending', 'completed', 'failed', 'refunded')),
     payment_date   DATE NOT NULL DEFAULT CURRENT_DATE,
-    payment_method VARCHAR(50)
+    payment_method VARCHAR(20)
+                   CHECK (payment_method IS NULL OR payment_method IN ('credit_card', 'debit', 'bank_transfer', 'cash'))
 );
 
 -- ============================================================
@@ -272,8 +273,10 @@ LEFT JOIN LATERAL (
 ) ag ON true
 LEFT JOIN LATERAL (
     SELECT COUNT(*) AS classes_attended
-    FROM class_enrollment
-    WHERE member_id = m.member_id
+    FROM class_enrollment ce_inner
+    JOIN group_class gc ON gc.class_id = ce_inner.class_id
+    WHERE ce_inner.member_id = m.member_id
+      AND gc.class_date < CURRENT_DATE
 ) ce ON true
 LEFT JOIN LATERAL (
     SELECT COUNT(*) AS upcoming_sessions
