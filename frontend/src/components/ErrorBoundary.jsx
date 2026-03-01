@@ -1,4 +1,5 @@
 import { Component } from 'react';
+import t from '../theme';
 
 export default class ErrorBoundary extends Component {
   state = { hasError: false, error: null };
@@ -15,18 +16,18 @@ export default class ErrorBoundary extends Component {
     if (this.state.hasError) {
       const error = this.state.error;
       return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center p-6 text-gray-900 dark:text-gray-100">
-          <div className="max-w-md w-full rounded-xl bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h1 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">
+        <div className={`min-h-screen flex flex-col items-center justify-center p-6 ${t.pageBg} ${t.pageText}`}>
+          <div className={`max-w-md w-full rounded-xl shadow-lg border p-6 ${t.cardBg} ${t.cardBorder}`}>
+            <h1 className={`text-lg font-semibold mb-2 ${t.dangerText}`}>
               Something went wrong
             </h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 font-mono break-all">
+            <p className={`text-sm mb-4 font-mono break-all ${t.pageTextMuted}`}>
               {error?.message || String(error)}
             </p>
             <button
               type="button"
               onClick={() => this.setState({ hasError: false, error: null })}
-              className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-500"
+              className={t.btn}
             >
               Try again
             </button>

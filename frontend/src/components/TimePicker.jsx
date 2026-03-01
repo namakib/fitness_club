@@ -126,7 +126,7 @@ export default function TimePicker({ label, value, onChange, placeholder = 'Sele
                   <button type="button" onClick={() => stepHour(1)} className="p-1.5 w-full flex justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
                     <ChevronUpIcon />
                   </button>
-                  <span className="px-2 py-1 text-lg font-semibold text-gray-900 dark:text-gray-100 tabular-nums text-center w-full">
+                  <span className="px-2 py-1 text-lg font-semibold text-gray-800 dark:text-gray-100 tabular-nums text-center w-full">
                     {hour12}
                   </span>
                   <button type="button" onClick={() => stepHour(-1)} className="p-1.5 w-full flex justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
@@ -138,7 +138,7 @@ export default function TimePicker({ label, value, onChange, placeholder = 'Sele
                   <button type="button" onClick={() => stepMinute(1)} className="p-1.5 w-full flex justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
                     <ChevronUpIcon />
                   </button>
-                  <span className="px-2 py-1 text-lg font-semibold text-gray-900 dark:text-gray-100 tabular-nums text-center w-full">
+                  <span className="px-2 py-1 text-lg font-semibold text-gray-800 dark:text-gray-100 tabular-nums text-center w-full">
                     {String(minute).padStart(2, '0')}
                   </span>
                   <button type="button" onClick={() => stepMinute(-1)} className="p-1.5 w-full flex justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition">

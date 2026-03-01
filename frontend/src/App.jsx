@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
+import t from './theme';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -19,6 +21,10 @@ import Equipment from './pages/admin/Equipment';
 import AdminProfile from './pages/admin/Profile';
 
 export default function App() {
+  useEffect(() => {
+    document.body.className = t.body;
+  }, []);
+
   return (
     <AuthProvider>
       <Toaster position="top-right" toastOptions={{ duration: 3000 }} />

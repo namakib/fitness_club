@@ -38,6 +38,7 @@ import {
   faBuilding,
 } from '@fortawesome/free-solid-svg-icons';
 import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
+import t from '../theme';
 
 // Set to 'svg' to use inline SVGs; 'fa' for Font Awesome.
 export const DEFAULT_ICON_VARIANT = 'fa';
@@ -109,10 +110,10 @@ export const ChevronDoubleRightIcon = (props) => <ChevronDoubleIcon direction="r
 // ─── UI ──────────────────────────────────────────────────────────────────
 export function CheckIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') {
-    return <FaIcon icon={faCheck} className={cn('h-4 w-4 text-orange-600 dark:text-orange-400', className)} {...props} />;
+    return <FaIcon icon={faCheck} className={cn('h-4 w-4', t.iconAccent, className)} {...props} />;
   }
   return (
-    <svg className={cn('h-4 w-4 shrink-0 text-orange-600 dark:text-orange-400', className)} fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" {...props}>
+    <svg className={cn('h-4 w-4 shrink-0', t.iconAccent, className)} fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" {...props}>
       <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
     </svg>
   );
@@ -131,10 +132,10 @@ export function CloseIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props 
 
 export function SearchIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
   if (variant === 'fa') {
-    return <FaIcon icon={faMagnifyingGlass} className={cn('h-4 w-4 text-gray-400 dark:text-gray-500', className)} {...props} />;
+    return <FaIcon icon={faMagnifyingGlass} className={cn('h-4 w-4', t.iconMuted, className)} {...props} />;
   }
   return (
-    <svg className={cn('h-4 w-4 text-gray-400 dark:text-gray-500', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <svg className={cn('h-4 w-4', t.iconMuted, className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
       <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
     </svg>
   );
@@ -197,18 +198,18 @@ export function DashboardIcon({ variant = DEFAULT_ICON_VARIANT, className, ...pr
 
 // ─── Content ─────────────────────────────────────────────────────────────
 export function CalendarIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
-  if (variant === 'fa') return <FaIcon icon={faCalendarDays} className={cn('h-4 w-4 text-gray-400 dark:text-gray-500', className)} {...props} />;
+  if (variant === 'fa') return <FaIcon icon={faCalendarDays} className={cn('h-4 w-4', t.iconMuted, className)} {...props} />;
   return (
-    <svg className={cn('h-4 w-4 text-gray-400 dark:text-gray-500', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <svg className={cn('h-4 w-4', t.iconMuted, className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
     </svg>
   );
 }
 
 export function ClockIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
-  if (variant === 'fa') return <FaIcon icon={faClock} className={cn('h-4 w-4 text-gray-400 dark:text-gray-500', className)} {...props} />;
+  if (variant === 'fa') return <FaIcon icon={faClock} className={cn('h-4 w-4', t.iconMuted, className)} {...props} />;
   return (
-    <svg className={cn('h-4 w-4 text-gray-400 dark:text-gray-500', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <svg className={cn('h-4 w-4', t.iconMuted, className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
     </svg>
   );
@@ -242,27 +243,27 @@ export function PhoneIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props 
 }
 
 export function HeartIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
-  if (variant === 'fa') return <FaIcon icon={faHeart} className={cn('h-5 w-5 text-gray-400 dark:text-gray-500', className)} {...props} />;
+  if (variant === 'fa') return <FaIcon icon={faHeart} className={cn('h-5 w-5', t.iconMuted, className)} {...props} />;
   return (
-    <svg className={cn('h-5 w-5 text-gray-400 dark:text-gray-500', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <svg className={cn('h-5 w-5', t.iconMuted, className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
     </svg>
   );
 }
 
 export function ChartIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
-  if (variant === 'fa') return <FaIcon icon={faChartColumn} className={cn('h-5 w-5 text-gray-400 dark:text-gray-500', className)} {...props} />;
+  if (variant === 'fa') return <FaIcon icon={faChartColumn} className={cn('h-5 w-5', t.iconMuted, className)} {...props} />;
   return (
-    <svg className={cn('h-5 w-5 text-gray-400 dark:text-gray-500', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <svg className={cn('h-5 w-5', t.iconMuted, className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
     </svg>
   );
 }
 
 export function TargetIcon({ variant = DEFAULT_ICON_VARIANT, className, ...props }) {
-  if (variant === 'fa') return <FaIcon icon={faBullseye} className={cn('h-5 w-5 text-gray-400 dark:text-gray-500', className)} {...props} />;
+  if (variant === 'fa') return <FaIcon icon={faBullseye} className={cn('h-5 w-5', t.iconMuted, className)} {...props} />;
   return (
-    <svg className={cn('h-5 w-5 text-gray-400 dark:text-gray-500', className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <svg className={cn('h-5 w-5', t.iconMuted, className)} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5" />
     </svg>
   );

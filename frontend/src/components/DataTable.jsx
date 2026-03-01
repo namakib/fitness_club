@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import SearchInput from './SearchInput';
 import FilterDropdown from './FilterDropdown';
 import { CloseIcon } from './Icons';
+import t from '../theme';
 
 function fmtDateLabel(d) {
   if (!d) return '';
@@ -102,7 +103,7 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
 
   if (!data || data.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-8 text-center text-sm text-gray-400 dark:text-gray-500">
+      <div className={`rounded-xl border p-8 text-center text-sm ${t.cardBorder} ${t.cardBg} ${t.pageTextMuted}`}>
         {emptyMessage}
       </div>
     );
@@ -120,9 +121,9 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+    <div className={`rounded-xl border ${t.cardBorder} ${t.cardBg}`}>
       {hasToolbar && (
-        <div className="flex flex-wrap items-center gap-3 border-b border-gray-100 dark:border-gray-700/50 px-4 py-3">
+        <div className={`flex flex-wrap items-center gap-3 border-b px-4 py-3 ${t.cardBorderMuted}`}>
           {searchable && (
             <div className="w-full max-w-xs sm:w-auto">
               <SearchInput value={query} onChange={v => { setQuery(v); setPage(0); }} placeholder="Search..." />
@@ -145,7 +146,7 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
 
           {activeCount > 0 && (
             <button onClick={clearFilters}
-              className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition">
+              className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${t.clearFiltersBtn}`}>
               <CloseIcon />
               Clear filters
             </button>
@@ -154,23 +155,23 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
       )}
 
       {/* Mobile: card layout */}
-      <div className="divide-y divide-gray-100 dark:divide-gray-700/50 md:hidden">
+      <div className={`divide-y md:hidden ${t.tableDivider}`}>
         {paged.length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+          <div className={`px-4 py-8 text-center text-sm ${t.pageTextMuted}`}>
             No matching results.
           </div>
         ) : (
           paged.map((row, i) => (
             <div
               key={row.id || safePage * pageSize + i}
-              className="px-4 py-3 space-y-1.5 bg-white dark:bg-gray-800"
+              className={`px-4 py-3 space-y-1.5 ${t.cardBg}`}
             >
               {columns.map(col => (
                 <div key={col.key} className="flex justify-between gap-3 text-sm">
-                  <span className="shrink-0 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <span className={`shrink-0 text-xs font-medium uppercase tracking-wider ${t.pageTextMuted}`}>
                     {col.label}
                   </span>
-                  <span className="text-right text-gray-700 dark:text-gray-300 break-words min-w-0">
+                  <span className={`text-right break-words min-w-0 ${t.pageTextSecondary}`}>
                     {col.render ? col.render(row) : row[col.key]}
                   </span>
                 </div>
@@ -184,26 +185,26 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm min-w-[600px]">
           <thead>
-            <tr className="border-b border-gray-100 dark:border-gray-700/50 bg-gray-50/60 dark:bg-gray-700/30">
+            <tr className={`border-b ${t.cardBorderMuted} ${t.tableHeadBg}`}>
               {columns.map(col => (
-                <th key={col.key} className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-500 dark:text-gray-400 uppercase">
+                <th key={col.key} className={`px-4 py-3 text-left text-xs font-semibold tracking-wider uppercase ${t.pageTextMuted}`}>
                   {col.label}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
+          <tbody className={`divide-y ${t.tableDivider}`}>
             {paged.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                <td colSpan={columns.length} className={`px-4 py-8 text-center text-sm ${t.pageTextMuted}`}>
                   No matching results.
                 </td>
               </tr>
             ) : (
               paged.map((row, i) => (
-                <tr key={row.id || safePage * pageSize + i} className="transition hover:bg-gray-50/50 dark:hover:bg-gray-700/30">
+                <tr key={row.id || safePage * pageSize + i} className={`transition ${t.tableRowHover}`}>
                   {columns.map(col => (
-                    <td key={col.key} className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
+                    <td key={col.key} className={`px-4 py-3 whitespace-nowrap ${t.pageTextSecondary}`}>
                       {col.render ? col.render(row) : row[col.key]}
                     </td>
                   ))}
@@ -222,19 +223,17 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
           </p>
           <div className="flex flex-wrap items-center gap-1 order-1 md:order-2">
             <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={safePage === 0}
-              className="rounded-md px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition">
+              className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition disabled:opacity-40 disabled:cursor-not-allowed ${t.paginationBtn}`}>
               Prev
             </button>
             {Array.from({ length: totalPages }, (_, i) => (
               <button key={i} onClick={() => setPage(i)}
-                className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition ${
-                  i === safePage ? 'bg-orange-600 text-white shadow-sm dark:bg-orange-500' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}>
+                className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition ${i === safePage ? t.paginationBtnActive : t.paginationBtn}`}>
                 {i + 1}
               </button>
             ))}
             <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={safePage >= totalPages - 1}
-              className="rounded-md px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition">
+              className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition disabled:opacity-40 disabled:cursor-not-allowed ${t.paginationBtn}`}>
               Next
             </button>
           </div>

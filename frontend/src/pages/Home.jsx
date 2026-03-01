@@ -12,7 +12,7 @@ export default function Home() {
       <main className="flex flex-1 flex-col items-center justify-center px-4 py-12">
         <div className="flex flex-col items-center text-center">
           <img src="/logo.png" alt="Fitness Club" className="mb-6 h-32 w-auto drop-shadow-sm dark:[filter:drop-shadow(0_0_1px_white)_drop-shadow(0_0_2px_white)]" />
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-5xl">
+          <h1 className="text-4xl font-bold tracking-tight text-gray-800 dark:text-gray-100 sm:text-5xl">
             Fitness Club
           </h1>
           <p className="mt-3 max-w-md text-lg text-gray-600 dark:text-gray-400">

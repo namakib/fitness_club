@@ -49,7 +49,7 @@ export default function HealthHistory() {
     <div className="space-y-8">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Health History</h1>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Health History</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Track your metrics over time.</p>
         </div>
         <button onClick={() => setMetricModalOpen(true)} className={t.btnSmall}>

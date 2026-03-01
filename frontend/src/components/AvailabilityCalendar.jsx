@@ -115,7 +115,7 @@ function EventEditForm({ event, form, setForm, rooms, onRoomsLoad, busy, setBusy
       {event.event_type === 'session' && (
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Member</label>
-          <p className="text-gray-900 dark:text-gray-100">{event.title}</p>
+          <p className="text-gray-800 dark:text-gray-100">{event.title}</p>
         </div>
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -317,7 +317,7 @@ export default function AvailabilityCalendar({ onSlotClick, refreshTrigger, onEv
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
         <div className="flex items-center gap-2">
           <CalendarIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Calendar</h2>
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Calendar</h2>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="w-44 shrink-0">

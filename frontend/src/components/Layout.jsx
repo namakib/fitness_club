@@ -80,8 +80,8 @@ export default function Layout() {
     .slice(0, 2);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      <nav className="sticky top-0 z-30 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
+    <div className={`min-h-screen transition-colors duration-200 ${t.pageBg}`}>
+      <nav className={`sticky top-0 z-30 ${t.navBar}`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-8">
             <button
@@ -112,9 +112,9 @@ export default function Layout() {
               <button
                 type="button"
                 onClick={() => setMenuOpen(prev => !prev)}
-                className="inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none transition"
+                className={`inline-flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium transition ${t.focusRing} ${t.navDropdownItem}`}
               >
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/40 text-xs font-bold text-orange-700 dark:text-orange-400">
+                <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${t.avatarCircle}`}>
                   {initials}
                 </span>
                 <span className="hidden sm:block max-w-[120px] truncate">{user?.name}</span>
@@ -123,16 +123,16 @@ export default function Layout() {
               </button>
 
               {menuOpen && (
-                <div className="absolute right-0 z-50 mt-1.5 w-56 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 py-1 shadow-lg ring-1 ring-black/5 dark:ring-white/5">
-                  <div className="border-b border-gray-100 dark:border-gray-700 px-4 py-3">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user?.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+                <div className={`absolute right-0 z-50 mt-1.5 w-56 rounded-xl border py-1 shadow-lg ring-1 ring-black/5 dark:ring-white/5 ${t.cardBorder} ${t.cardBg}`}>
+                  <div className={`border-b px-4 py-3 ${t.dropdownDivider}`}>
+                    <p className={`text-sm font-medium truncate ${t.pageText}`}>{user?.name}</p>
+                    <p className={`text-xs truncate ${t.pageTextMuted}`}>{user?.email}</p>
                   </div>
 
                   <button
                     type="button"
                     onClick={handleDashboard}
-                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition ${isOnDashboard ? t.navActive : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition ${isOnDashboard ? t.navActive : t.navDropdownItem}`}
                   >
                     <DashboardIcon />
                     Dashboard
@@ -141,7 +141,7 @@ export default function Layout() {
                   <button
                     type="button"
                     onClick={handleProfile}
-                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition ${isOnProfile ? t.navActive : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition ${isOnProfile ? t.navActive : t.navDropdownItem}`}
                   >
                     <UserIcon />
                     Profile
@@ -150,7 +150,7 @@ export default function Layout() {
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
+                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition ${t.dangerText} ${t.dangerHover}`}
                   >
                     <SignOutIcon />
                     Sign Out
@@ -161,11 +161,11 @@ export default function Layout() {
           </div>
         </div>
 
-        <div className="flex gap-1 overflow-x-auto border-t border-gray-100 dark:border-gray-700/50 px-4 py-2 sm:hidden">
+        <div className={`flex gap-1 overflow-x-auto border-t px-4 py-2 sm:hidden ${t.mobileNavBorder}`}>
           {items.map(({ to, label }) => (
             <NavLink key={to} to={to}
               className={({ isActive }) =>
-                `shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition ${isActive ? t.navActive : 'text-gray-500 dark:text-gray-400'}`
+                `shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition ${isActive ? t.navActive : t.pageTextSubtle}`
               }>
               {label}
             </NavLink>

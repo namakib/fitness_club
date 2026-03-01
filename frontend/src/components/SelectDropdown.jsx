@@ -33,12 +33,12 @@ export default function SelectDropdown({ label, value, options, onChange, placeh
       setMounted(true);
     } else if (mounted) {
       setExiting(true);
-      const t = setTimeout(() => {
+      const timeout = setTimeout(() => {
         setExiting(false);
         setMounted(false);
         setQuery('');
       }, DURATION_MS);
-      return () => clearTimeout(t);
+      return () => clearTimeout(timeout);
     }
   }, [open]);
 
@@ -126,14 +126,14 @@ export default function SelectDropdown({ label, value, options, onChange, placeh
 
   return (
     <div>
-      {label && <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>}
+      {label && <label className={`mb-1 block text-sm font-medium ${t.label}`}>{label}</label>}
 
       <div className="relative" ref={ref}>
         <button
           ref={triggerRef}
           type="button"
           onClick={() => setOpen(prev => !prev)}
-          className={`${t.input} flex items-center justify-between gap-4 text-left ${!selected ? 'text-gray-400 dark:text-gray-500' : ''}`}
+          className={`${t.input} flex items-center justify-between gap-4 text-left ${!selected ? t.dropdownPlaceholder : ''}`}
         >
           <span className="truncate">{selected ? selected.label : placeholder}</span>
           <ChevronUpDownIcon open={open} />
@@ -157,13 +157,13 @@ export default function SelectDropdown({ label, value, options, onChange, placeh
           const panelContent = (
             <div
               ref={floating ? panelRef : undefined}
-              className={`rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black/5 dark:ring-white/5 duration-150 ease-out ${
+              className={`rounded-xl border shadow-lg ring-1 ring-black/5 dark:ring-white/5 duration-150 ease-out ${t.cardBorder} ${t.cardBg} ${
                 floating ? `transition-opacity transition-transform ${floatingAnimClass}` : `transition-all ${inlineAnimClass}`
               }`}
               style={floating ? floatingStyle : {}}
             >
               {searchable && (
-                <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-700 px-3 py-2">
+                <div className={`flex items-center gap-2 border-b px-3 py-2 ${t.dropdownDivider}`}>
                   <SearchIcon />
                   <input
                     ref={searchRef}
@@ -171,14 +171,14 @@ export default function SelectDropdown({ label, value, options, onChange, placeh
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                     placeholder="Search…"
-                    className="w-full bg-transparent text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 outline-none"
+                    className={`w-full bg-transparent text-sm outline-none ${t.dropdownInput}`}
                   />
                 </div>
               )}
 
               <div className="max-h-52 overflow-auto py-1">
                 {filtered.length === 0 ? (
-                  <p className="px-3 py-2 text-sm text-gray-400 dark:text-gray-500">No results</p>
+                  <p className={`px-3 py-2 text-sm ${t.pageTextMuted}`}>No results</p>
                 ) : (
                   filtered.map(opt => {
                     const active = opt.value === value;
@@ -189,9 +189,7 @@ export default function SelectDropdown({ label, value, options, onChange, placeh
                         onClick={() => { onChange(opt.value); setOpen(false); }}
                         className={`
                           flex w-full items-center justify-between px-3 py-2 text-left text-sm transition
-                          ${active
-                            ? 'bg-orange-50 text-orange-700 font-medium dark:bg-orange-900/30 dark:text-orange-400'
-                            : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'}
+                          ${active ? t.dropdownOptionActive : t.dropdownOptionInactive}
                         `}
                       >
                         <span className="truncate pr-2">{opt.label}</span>

@@ -1,4 +1,5 @@
 import { PlusIcon, MinusIcon } from './Icons';
+import t from '../theme';
 
 export default function NumberInput({
   label,
@@ -33,12 +34,12 @@ export default function NumberInput({
   return (
     <div>
       {label && (
-        <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className={`mb-1 block text-sm font-medium ${t.label}`}>
           {label}
-          {required && <span className="text-red-500 ml-0.5">*</span>}
+          {required && <span className={`${t.requiredAsterisk} ml-0.5`}>*</span>}
         </label>
       )}
-      <div className="inline-flex overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm ring-1 ring-gray-900/5 dark:ring-gray-700">
+      <div className={`inline-flex overflow-hidden ${t.numberInputWrap}`}>
         <input
           type="number"
           value={displayValue}
@@ -47,16 +48,16 @@ export default function NumberInput({
           min={min}
           max={max}
           placeholder={placeholder}
-          className="w-20 min-w-0 border-0 bg-transparent px-3 py-2 text-center text-sm text-gray-900 dark:text-gray-100 [appearance:textfield] focus:ring-0 focus:outline-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          className={`w-20 min-w-0 border-0 bg-transparent px-3 py-2 text-center text-sm ${t.pageText} [appearance:textfield] focus:ring-0 focus:outline-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
           aria-label={label}
           {...props}
         />
-        <div className="flex border-l border-gray-200 dark:border-gray-600">
+        <div className={`flex border-l ${t.numberInputBorder}`}>
           <button
             type="button"
             onClick={decrement}
             disabled={min != null && (Number.isNaN(num) ? min : num) <= min}
-            className="flex h-full min-w-[2.5rem] items-center justify-center border-0 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-gray-700 dark:hover:text-gray-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent transition"
+            className={`flex h-full min-w-[2.5rem] items-center justify-center border-0 ${t.cardBg} ${t.numberInputButton} transition`}
             aria-label="Decrement"
           >
             <MinusIcon className="h-4 w-4" />
@@ -65,7 +66,7 @@ export default function NumberInput({
             type="button"
             onClick={increment}
             disabled={max != null && (Number.isNaN(num) ? max : num) >= max}
-            className="flex h-full min-w-[2.5rem] items-center justify-center border-0 border-l border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 hover:text-gray-800 dark:hover:bg-gray-700 dark:hover:text-gray-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent transition"
+            className={`flex h-full min-w-[2.5rem] items-center justify-center border-0 border-l ${t.numberInputBorder} ${t.cardBg} ${t.numberInputButton} transition`}
             aria-label="Increment"
           >
             <PlusIcon className="h-4 w-4" />
@@ -73,7 +74,7 @@ export default function NumberInput({
         </div>
       </div>
       {(helperText || showMaxHelper) && (
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        <p className={`mt-1 text-xs ${t.pageTextMuted}`}>
           {helperText ?? (showMaxHelper ? `Maximum of ${max}` : null)}
         </p>
       )}

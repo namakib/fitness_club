@@ -11,7 +11,7 @@ export default function Schedule() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Schedule</h1>
+      <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Schedule</h1>
 
       <Section title="Upcoming Personal Sessions">
         <DataTable
