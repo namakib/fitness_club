@@ -33,6 +33,8 @@ export default function Schedule() {
   const [dropClass, setDropClass] = useState(null);
   const [busy, setBusy] = useState(false);
   const [showBookModal, setShowBookModal] = useState(false);
+  const [jumpToDate, setJumpToDate] = useState(null);
+  const [browseRefresh, setBrowseRefresh] = useState(0);
 
   const load = useCallback(() => api.get('/member/dashboard').then(setData), []);
   useEffect(() => { load(); }, [load]);
@@ -97,7 +99,8 @@ export default function Schedule() {
           try {
             await api.delete(`/member/classes/${dropClass.class_id}/enroll`);
             toast.success('Dropped from class.');
-            load();
+            await load();
+            setBrowseRefresh(n => n + 1);
           } catch (err) {
             toast.error(err.message);
           } finally {
@@ -108,6 +111,7 @@ export default function Schedule() {
 
       <ScheduleCalendar
         events={{ sessions: upcoming_sessions || [], classes: upcoming_classes || [] }}
+        jumpToDate={jumpToDate}
         onEventClick={(ev) => {
           if (ev.event_type === 'session') setCancelSession(ev);
           else setDropClass(ev);
@@ -144,6 +148,7 @@ export default function Schedule() {
               { key: 'class_name', label: 'Class', filter: 'enum' },
               { key: 'class_date', label: 'Date', filter: 'date', render: (r) => fmtDate(r.class_date) },
               { key: 'time', label: 'Time', render: (r) => `${r.start_time} – ${r.end_time}` },
+              { key: 'spots', label: 'Spots', render: (r) => `${r.enrolled_count ?? 0} / ${r.max_participants}` },
               { key: 'room_name', label: 'Room', filter: 'enum' },
               { key: 'actions', label: '', render: (r) => (
                 <button type="button" onClick={() => setDropClass(r)} className={`text-sm ${t.dangerText} hover:underline`}>
@@ -159,7 +164,10 @@ export default function Schedule() {
 
       <div className={`rounded-xl border ${t.cardBorder} ${t.cardBg} p-6 shadow-sm`}>
         <Section title="Browse Classes" icon={<ClassIcon className="h-5 w-5 text-emerald-500" />}>
-          <ClassesBrowser onSuccess={load} />
+          <ClassesBrowser refreshTrigger={browseRefresh} onSuccess={(enrolledClass) => {
+            if (enrolledClass?.class_date) setJumpToDate(enrolledClass.class_date);
+            return load();
+          }} />
         </Section>
       </div>
     </div>

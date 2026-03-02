@@ -8,9 +8,11 @@ from ..errors import (
     BOOK_004,
     CLASS_001,
     CLASS_002,
+    CLASS_003,
     ERR_001,
     ERR_002,
     RES_001,
+    RES_002,
     RES_003,
     VAL_006,
     VAL_007,
@@ -61,7 +63,8 @@ def dashboard():
     upcoming_sessions = cur.fetchall()
 
     cur.execute(
-        '''SELECT gc.*, t.name AS trainer_name, r.room_name
+        '''SELECT gc.*, t.name AS trainer_name, r.room_name,
+                  (SELECT COUNT(*) FROM class_enrollment ce2 WHERE ce2.class_id = gc.class_id) AS enrolled_count
            FROM class_enrollment ce
            JOIN group_class gc ON gc.class_id = ce.class_id
            JOIN trainer t ON t.trainer_id = gc.trainer_id
@@ -342,7 +345,8 @@ def available_classes():
            FROM group_class gc
            JOIN trainer t ON t.trainer_id = gc.trainer_id
            JOIN room r ON r.room_id = gc.room_id
-           WHERE gc.class_date >= CURRENT_DATE
+           WHERE (gc.class_date > CURRENT_DATE
+                  OR (gc.class_date = CURRENT_DATE AND gc.end_time > LOCALTIME))
              AND NOT EXISTS (SELECT 1 FROM class_enrollment ce WHERE ce.class_id = gc.class_id AND ce.member_id = %s)
              AND (SELECT COUNT(*) FROM class_enrollment ce WHERE ce.class_id = gc.class_id) < gc.max_participants
            ORDER BY gc.class_date, gc.start_time''',
@@ -356,6 +360,20 @@ def available_classes():
 @role_required('member')
 def enroll_in_class(class_id):
     cur = get_cursor()
+    cur.execute('SELECT 1 FROM group_class WHERE class_id = %s', (class_id,))
+    if not cur.fetchone():
+        cur.close()
+        body, status = make_error(RES_002)
+        return jsonify(body), status
+    cur.execute('''
+        SELECT 1 FROM group_class
+        WHERE class_id = %s
+          AND (class_date > CURRENT_DATE OR (class_date = CURRENT_DATE AND end_time > LOCALTIME))
+    ''', (class_id,))
+    if not cur.fetchone():
+        cur.close()
+        body, status = make_error(CLASS_003)
+        return jsonify(body), status
     try:
         cur.execute(
             'INSERT INTO class_enrollment (class_id, member_id) VALUES (%s, %s)',

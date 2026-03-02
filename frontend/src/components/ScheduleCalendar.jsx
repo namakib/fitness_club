@@ -10,6 +10,11 @@ function toYMD(d) {
   return `${y}-${m}-${day}`;
 }
 
+function toDateKey(d) {
+  if (!d) return null;
+  return toYMD(d instanceof Date ? d : new Date(d + 'T12:00:00'));
+}
+
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
@@ -73,6 +78,7 @@ export default function ScheduleCalendar({
   title = 'Calendar',
   legend,
   refreshTrigger,
+  jumpToDate,
 }) {
   const [viewDate, setViewDate] = useState(() => new Date());
   const [data, setData] = useState(loadEvents ? null : eventsProp);
@@ -82,6 +88,7 @@ export default function ScheduleCalendar({
   const weekStart = useMemo(() => {
     const d = new Date(viewDate);
     d.setDate(d.getDate() - d.getDay());
+    d.setHours(12, 0, 0, 0);
     return d;
   }, [viewDate]);
 
@@ -99,20 +106,23 @@ export default function ScheduleCalendar({
 
   useEffect(() => { if (!loadEvents) setData(eventsProp); }, [eventsProp, loadEvents]);
 
+  useEffect(() => {
+    if (jumpToDate) setViewDate(new Date(jumpToDate + 'T12:00:00'));
+  }, [jumpToDate]);
+
+  const resolvedData = loadEvents ? data : (eventsProp ?? { sessions: [], classes: [] });
+
   const weekDays = useMemo(() => {
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(weekStart);
-      d.setDate(d.getDate() + i);
-      return d;
-    });
+    const [y, m, day] = [weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate()];
+    return Array.from({ length: 7 }, (_, i) => new Date(y, m, day + i, 12, 0, 0));
   }, [weekStart]);
 
   const allEvents = useMemo(() => {
-    if (!data) return [];
-    const sessions = (data.sessions || []).map(normalizeSession);
-    const classes = (data.classes || []).map(normalizeClass);
+    if (!resolvedData) return [];
+    const sessions = (resolvedData.sessions || []).map(normalizeSession);
+    const classes = (resolvedData.classes || []).map(normalizeClass);
     return [...sessions, ...classes].map(parseEvent);
-  }, [data]);
+  }, [resolvedData]);
 
   const prevKeysRef = useRef(null);
   const [newEventKeys, setNewEventKeys] = useState(() => new Set());
@@ -139,8 +149,9 @@ export default function ScheduleCalendar({
   const eventsByDay = useMemo(() => {
     const map = {};
     allEvents.forEach((ev) => {
-      if (!ev.date) return;
-      const key = ev.date.toISOString().slice(0, 10);
+      const raw = typeof ev.event_date === 'string' ? ev.event_date.slice(0, 10) : null;
+      const key = (raw && /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : null) || toDateKey(ev.date);
+      if (!key) return;
       if (!map[key]) map[key] = [];
       map[key].push(ev);
     });
@@ -257,7 +268,7 @@ export default function ScheduleCalendar({
             {/* Day columns */}
             <div className="flex-1 grid grid-cols-7">
               {weekDays.map((d) => {
-                const key = d.toISOString().slice(0, 10);
+                const key = toDateKey(d);
                 const dayEvents = eventsByDay[key] || [];
                 const today = new Date();
                 const isToday = d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();

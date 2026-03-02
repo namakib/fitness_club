@@ -8,23 +8,25 @@ import t from '../../theme';
 
 function fmtDate(d) {
   if (!d) return '—';
-  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export function ClassesBrowser({ onSuccess }) {
+export function ClassesBrowser({ onSuccess, refreshTrigger }) {
   const [classes, setClasses] = useState(null);
   const [enrolling, setEnrolling] = useState(null);
   const [confirmEnroll, setConfirmEnroll] = useState(null);
 
   const load = useCallback(() => api.get('/member/available-classes').then(d => setClasses(d.classes || [])), []);
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); }, [load, refreshTrigger]);
 
-  async function handleEnroll(classId) {
+  async function handleEnroll(classObj) {
+    const classId = classObj?.class_id;
     setEnrolling(classId);
     try {
       await api.post(`/member/classes/${classId}/enroll`);
       toast.success('Enrolled in class.');
-      onSuccess?.();
+      await load();
+      await onSuccess?.(classObj);
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -73,7 +75,7 @@ export function ClassesBrowser({ onSuccess }) {
                 disabled={!!enrolling}
                 className={t.btn}
                 onClick={async () => {
-                  await handleEnroll(confirmEnroll.class_id);
+                  await handleEnroll(confirmEnroll);
                   setConfirmEnroll(null);
                 }}
               >

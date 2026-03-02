@@ -40,6 +40,7 @@ BOOK_006 = 'BOOK_006'  # Availability slot overlap
 # CLASS -- Class enrollment
 CLASS_001 = 'CLASS_001'  # Already enrolled
 CLASS_002 = 'CLASS_002'  # Class full
+CLASS_003 = 'CLASS_003'  # Class has passed
 
 # RES -- Resource not found
 RES_001 = 'RES_001'  # Session not found
@@ -92,6 +93,7 @@ ERROR_MESSAGES = {
     BOOK_006: 'This time slot overlaps with an existing availability slot.',
     CLASS_001: 'You are already enrolled in this class.',
     CLASS_002: 'This class is full. No spots available.',
+    CLASS_003: 'This class has already passed. Enrollment is closed.',
     RES_001: 'Session not found.',
     RES_002: 'Class not found.',
     RES_003: 'Enrollment not found.',
@@ -124,6 +126,7 @@ CODE_HTTP_STATUS = {
     BOOK_006: 409,
     CLASS_001: 409,
     CLASS_002: 409,
+    CLASS_003: 400,
     RES_001: 404,
     RES_002: 404,
     RES_003: 404,
