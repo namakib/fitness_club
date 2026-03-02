@@ -283,7 +283,8 @@ LEFT JOIN LATERAL (
     FROM personal_session
     WHERE member_id = m.member_id
       AND status = 'scheduled'
-      AND session_date >= CURRENT_DATE
+      AND (session_date > CURRENT_DATE
+           OR (session_date = CURRENT_DATE AND end_time > LOCALTIME))
 ) us ON true;
 
 -- ============================================================

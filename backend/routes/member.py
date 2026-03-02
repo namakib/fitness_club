@@ -55,7 +55,8 @@ def dashboard():
            JOIN trainer t ON t.trainer_id = ps.trainer_id
            JOIN room r ON r.room_id = ps.room_id
            WHERE ps.member_id = %s AND ps.status = 'scheduled'
-             AND ps.session_date >= CURRENT_DATE
+             AND (ps.session_date > CURRENT_DATE
+                  OR (ps.session_date = CURRENT_DATE AND ps.end_time > LOCALTIME))
            ORDER BY ps.session_date, ps.start_time''', (mid,))
     upcoming_sessions = cur.fetchall()
 
@@ -65,7 +66,9 @@ def dashboard():
            JOIN group_class gc ON gc.class_id = ce.class_id
            JOIN trainer t ON t.trainer_id = gc.trainer_id
            JOIN room r ON r.room_id = gc.room_id
-           WHERE ce.member_id = %s AND gc.class_date >= CURRENT_DATE
+           WHERE ce.member_id = %s
+             AND (gc.class_date > CURRENT_DATE
+                  OR (gc.class_date = CURRENT_DATE AND gc.end_time > LOCALTIME))
            ORDER BY gc.class_date, gc.start_time''', (mid,))
     upcoming_classes = cur.fetchall()
 

@@ -77,7 +77,7 @@ if [ "$CODE" = "200" ]; then
     if [ "$SLOT_COUNT" -gt 1 ]; then
       ok "Trainer availability: $SLOT_COUNT slots for Frank Miller"
     else
-      fail "Trainer availability: only $SLOT_COUNT slot(s). Run migration 003?"
+      fail "Trainer availability: only $SLOT_COUNT slot(s). Ensure DML has trainer_availability data."
     fi
   else
     fail "Trainer availability missing slots array"

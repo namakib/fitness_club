@@ -154,12 +154,6 @@ setup_database() {
     $psql_cmd -d "$DB_NAME" -f "$PROJECT_DIR/sql/DML.sql" -q
     success "Sample data loaded"
 
-    info "Running migrations..."
-    for m in "$PROJECT_DIR/sql/migrations/"*.sql; do
-        [ -f "$m" ] && $psql_cmd -d "$DB_NAME" -f "$m" -q
-    done
-    success "Migrations applied"
-
     info "Running RBAC.sql (roles, grants, RLS policies)..."
     $psql_cmd -d "$DB_NAME" -f "$PROJECT_DIR/sql/RBAC.sql" -q
     success "RBAC configured"

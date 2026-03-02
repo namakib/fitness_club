@@ -6,7 +6,7 @@ import t from '../theme';
 
 function fmtDateLabel(d) {
   if (!d) return '';
-  const dt = new Date(d);
+  const dt = (typeof d === 'string' && d.length === 10) ? new Date(d + 'T12:00:00') : new Date(d);
   if (isNaN(dt)) return String(d);
   return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
