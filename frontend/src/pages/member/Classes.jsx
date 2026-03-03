@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api';
-import toast from 'react-hot-toast';
+import { toastError, toastSuccess } from '../../toastUtil';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import t from '../../theme';
@@ -24,11 +24,11 @@ export function ClassesBrowser({ onSuccess, refreshTrigger }) {
     setEnrolling(classId);
     try {
       await api.post(`/member/classes/${classId}/enroll`);
-      toast.success('Enrolled in class.');
+      toastSuccess('Enrolled in class.');
       await load();
       await onSuccess?.(classObj);
     } catch (err) {
-      toast.error(err.message);
+      toastError(err.message, err.details);
     } finally {
       setEnrolling(null);
     }

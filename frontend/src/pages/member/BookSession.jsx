@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api';
-import toast from 'react-hot-toast';
+import { toastError, toastSuccess } from '../../toastUtil';
 import DatePicker from '../../components/DatePicker';
 import SelectDropdown from '../../components/SelectDropdown';
 import TimePicker from '../../components/TimePicker';
@@ -59,11 +59,11 @@ export function BookSessionForm({ onSuccess }) {
         start_time: form.start_time,
         end_time: form.end_time,
       });
-      toast.success('Session booked.');
+      toastSuccess('Session booked.');
       setForm({ trainer_id: '', room_id: '', session_date: '', start_time: '', end_time: '' });
       onSuccess?.();
     } catch (err) {
-      toast.error(err.message);
+      toastError(err.message, err.details);
     } finally {
       setBusy(false);
     }

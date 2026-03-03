@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import api from '../../api';
-import toast from 'react-hot-toast';
+import { toastError, toastSuccess } from '../../toastUtil';
 import DataTable from '../../components/DataTable';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import ScheduleCalendar from '../../components/ScheduleCalendar';
@@ -76,10 +76,10 @@ export default function Schedule() {
           setBusy(true);
           try {
             await api.put(`/member/sessions/${cancelSession.session_id}`, { status: 'cancelled' });
-            toast.success('Session cancelled.');
+            toastSuccess('Session cancelled.');
             load();
           } catch (err) {
-            toast.error(err.message);
+            toastError(err.message, err.details);
           } finally {
             setBusy(false);
           }
@@ -98,11 +98,11 @@ export default function Schedule() {
           setBusy(true);
           try {
             await api.delete(`/member/classes/${dropClass.class_id}/enroll`);
-            toast.success('Dropped from class.');
+            toastSuccess('Dropped from class.');
             await load();
             setBrowseRefresh(n => n + 1);
           } catch (err) {
-            toast.error(err.message);
+            toastError(err.message, err.details);
           } finally {
             setBusy(false);
           }

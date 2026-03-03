@@ -37,6 +37,8 @@ const MERIDIEM = ['am', 'pm'];
 export default function TimePicker({ label, value, onChange, placeholder = 'Select time', required }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const [hourDraft, setHourDraft] = useState(null);
+  const [minuteDraft, setMinuteDraft] = useState(null);
 
   const parsed = parseValue(value);
   const hour12 = value ? parsed.hour12 : 12;
@@ -126,9 +128,22 @@ export default function TimePicker({ label, value, onChange, placeholder = 'Sele
                   <button type="button" onClick={() => stepHour(1)} className="p-1.5 w-full flex justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
                     <ChevronUpIcon />
                   </button>
-                  <span className="px-2 py-1 text-lg font-semibold text-gray-800 dark:text-gray-100 tabular-nums text-center w-full">
-                    {hour12}
-                  </span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={12}
+                    value={hourDraft !== null ? hourDraft : hour12}
+                    onFocus={() => setHourDraft(String(hour12))}
+                    onChange={(e) => setHourDraft(e.target.value)}
+                    onBlur={(e) => {
+                      const v = parseInt(e.target.value, 10);
+                      if (isNaN(v) || v < 1) applyTime(1, minute, meridiem);
+                      else if (v > 12) applyTime(12, minute, meridiem);
+                      else applyTime(v, minute, meridiem);
+                      setHourDraft(null);
+                    }}
+                    className="px-2 py-1 text-lg font-semibold text-gray-800 dark:text-gray-100 tabular-nums text-center w-full bg-transparent border-0 focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
                   <button type="button" onClick={() => stepHour(-1)} className="p-1.5 w-full flex justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
                     <ChevronDownIcon />
                   </button>
@@ -138,9 +153,22 @@ export default function TimePicker({ label, value, onChange, placeholder = 'Sele
                   <button type="button" onClick={() => stepMinute(1)} className="p-1.5 w-full flex justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
                     <ChevronUpIcon />
                   </button>
-                  <span className="px-2 py-1 text-lg font-semibold text-gray-800 dark:text-gray-100 tabular-nums text-center w-full">
-                    {String(minute).padStart(2, '0')}
-                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={59}
+                    value={minuteDraft !== null ? minuteDraft : String(minute).padStart(2, '0')}
+                    onFocus={() => setMinuteDraft(String(minute).padStart(2, '0'))}
+                    onChange={(e) => setMinuteDraft(e.target.value)}
+                    onBlur={(e) => {
+                      const v = parseInt(e.target.value, 10);
+                      if (isNaN(v) || v < 0) applyTime(hour12, 0, meridiem);
+                      else if (v > 59) applyTime(hour12, 59, meridiem);
+                      else applyTime(hour12, v, meridiem);
+                      setMinuteDraft(null);
+                    }}
+                    className="px-2 py-1 text-lg font-semibold text-gray-800 dark:text-gray-100 tabular-nums text-center w-full bg-transparent border-0 focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
                   <button type="button" onClick={() => stepMinute(-1)} className="p-1.5 w-full flex justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition">
                     <ChevronDownIcon />
                   </button>

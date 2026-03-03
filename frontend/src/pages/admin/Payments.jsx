@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import api from '../../api';
-import toast from 'react-hot-toast';
+import { toastError, toastSuccess } from '../../toastUtil';
 import DataTable from '../../components/DataTable';
 import Modal from '../../components/Modal';
 import NumberInput from '../../components/NumberInput';
@@ -30,12 +30,12 @@ export default function Payments() {
         payment_status: form.payment_status || 'pending',
         payment_method: form.payment_method || null,
       });
-      toast.success('Payment recorded.');
+      toastSuccess('Payment recorded.');
       setModalOpen(false);
       setForm({ member_id: '', amount: '', payment_status: 'pending', payment_method: '' });
       load();
     } catch (err) {
-      toast.error(err.message);
+      toastError(err.message, err.details);
     } finally {
       setBusy(false);
     }

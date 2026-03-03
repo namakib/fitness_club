@@ -4,7 +4,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
 import api from '../../api';
-import toast from 'react-hot-toast';
+import { toastError, toastSuccess } from '../../toastUtil';
 import DataTable from '../../components/DataTable';
 import StatusBadge from '../../components/StatusBadge';
 import SelectDropdown from '../../components/SelectDropdown';
@@ -49,11 +49,11 @@ export default function Goals() {
     setBusy(true);
     try {
       await api.post('/member/goals', form);
-      toast.success('Goal added.');
+      toastSuccess('Goal added.');
       setGoalModalOpen(false);
       setForm({ goal_type: 'weight_loss', target_value: '', start_date: '', end_date: '' });
       loadProfile();
-    } catch (err) { toast.error(err.message); }
+    } catch (err) { toastError(err.message, err.details); }
     finally { setBusy(false); }
   }
 
@@ -269,8 +269,8 @@ export default function Goals() {
 
 function GoalStatusSelect({ goal, onSaved }) {
   async function handleChange(val) {
-    try { await api.put(`/member/goals/${goal.goal_id}`, { status: val }); toast.success('Goal updated.'); onSaved(); }
-    catch (err) { toast.error(err.message); }
+    try { await api.put(`/member/goals/${goal.goal_id}`, { status: val }); toastSuccess('Goal updated.'); onSaved(); }
+    catch (err) { toastError(err.message, err.details); }
   }
   return (
     <SelectDropdown

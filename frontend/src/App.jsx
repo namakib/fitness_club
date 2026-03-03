@@ -31,7 +31,7 @@ export default function App() {
   return (
     <AuthProvider>
       <NavModeProvider>
-      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+      <Toaster position="top-right" containerStyle={{ zIndex: 99999 }} toastOptions={{ style: { maxWidth: 420 } }} />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />

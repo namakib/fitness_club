@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import api from '../api';
-import toast from 'react-hot-toast';
+import { toastError, toastSuccess } from '../toastUtil';
 import t from '../theme';
 import NumberInput from './NumberInput';
 
@@ -21,11 +21,11 @@ export default function RecordMetricForm({ onSaved, onCancel }) {
         heart_rate: form.heart_rate || null,
       };
       await api.post('/member/metrics', payload);
-      toast.success('Metric recorded.');
+      toastSuccess('Metric recorded.');
       setForm({ weight: '', body_fat_pct: '', systolic: '', diastolic: '', heart_rate: '' });
       onSaved();
     } catch (err) {
-      toast.error(err.message);
+      toastError(err.message, err.details);
     } finally {
       setBusy(false);
     }

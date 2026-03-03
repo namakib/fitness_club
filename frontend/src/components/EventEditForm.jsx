@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../api';
-import toast from 'react-hot-toast';
+import { toastError, toastSuccess } from '../toastUtil';
 import DatePicker from './DatePicker';
 import TimePicker from './TimePicker';
 import SelectDropdown from './SelectDropdown';
@@ -40,14 +40,14 @@ export default function EventEditForm({ event, onClose, onSaved, rooms, onRoomsL
     try {
       if (event.event_type === 'session') {
         await api.delete(`/trainer/sessions/${event.session_id}`);
-        toast.success('Session deleted.');
+        toastSuccess('Session deleted.');
       } else {
         await api.delete(`/trainer/classes/${event.class_id}`);
-        toast.success('Class deleted.');
+        toastSuccess('Class deleted.');
       }
       onSaved();
     } catch (err) {
-      toast.error(err.message);
+      toastError(err.message, err.details);
       throw err;
     } finally {
       setConfirmDeleteBusy(false);
@@ -65,7 +65,7 @@ export default function EventEditForm({ event, onClose, onSaved, rooms, onRoomsL
           end_time: form.end_time,
           room_id: form.room_id || undefined,
         });
-        toast.success('Session updated.');
+        toastSuccess('Session updated.');
       } else {
         await api.put(`/trainer/classes/${event.class_id}`, {
           class_date: form.event_date,
@@ -75,11 +75,11 @@ export default function EventEditForm({ event, onClose, onSaved, rooms, onRoomsL
           class_name: form.class_name || undefined,
           max_participants: form.max_participants ? Number(form.max_participants) : undefined,
         });
-        toast.success('Class updated.');
+        toastSuccess('Class updated.');
       }
       onSaved();
     } catch (err) {
-      toast.error(err.message);
+      toastError(err.message, err.details);
     } finally {
       setBusy(false);
     }

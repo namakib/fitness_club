@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import api from '../../api';
-import toast from 'react-hot-toast';
+import { toastError, toastSuccess } from '../../toastUtil';
 import DataTable from '../../components/DataTable';
 import DatePicker from '../../components/DatePicker';
 import SelectDropdown from '../../components/SelectDropdown';
@@ -67,8 +67,8 @@ function SessionForm({ rooms, members, trainers, onSaved }) {
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
-    try { await api.post('/admin/room-booking/session', form); toast.success('Session booked.'); onSaved(); }
-    catch (err) { toast.error(err.message); }
+    try { await api.post('/admin/room-booking/session', form); toastSuccess('Session booked.'); onSaved(); }
+    catch (err) { toastError(err.message, err.details); }
     finally { setBusy(false); }
   }
 
@@ -95,8 +95,8 @@ function ClassForm({ rooms, trainers, onSaved }) {
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
-    try { await api.post('/admin/room-booking/class', form); toast.success('Class scheduled.'); onSaved(); }
-    catch (err) { toast.error(err.message); }
+    try { await api.post('/admin/room-booking/class', form); toastSuccess('Class scheduled.'); onSaved(); }
+    catch (err) { toastError(err.message, err.details); }
     finally { setBusy(false); }
   }
 

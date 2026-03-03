@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import api from '../../api';
-import toast from 'react-hot-toast';
+import { toastError, toastSuccess } from '../../toastUtil';
 import DataTable from '../../components/DataTable';
 import DatePicker from '../../components/DatePicker';
 import TimePicker from '../../components/TimePicker';
@@ -45,11 +45,11 @@ export default function Availability() {
     setBusy(true);
     try {
       await api.post('/trainer/availability', form);
-      toast.success('Slot added.');
+      toastSuccess('Slot added.');
       setForm({ available_date: '', start_time: '', end_time: '' });
       load();
       refreshCalendar();
-    } catch (err) { toast.error(err.message); }
+    } catch (err) { toastError(err.message, err.details); }
     finally { setBusy(false); }
   }
 
@@ -58,12 +58,12 @@ export default function Availability() {
     setDeleteConfirm((prev) => ({ ...prev, busy: true }));
     try {
       await api.delete(`/trainer/availability/${deleteConfirm.id}`);
-      toast.success('Slot removed.');
+      toastSuccess('Slot removed.');
       setDeleteConfirm(null);
       load();
       refreshCalendar();
     } catch (err) {
-      toast.error(err.message);
+      toastError(err.message, err.details);
       setDeleteConfirm((prev) => ({ ...prev, busy: false }));
       throw err;
     }

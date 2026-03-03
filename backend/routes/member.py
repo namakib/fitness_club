@@ -6,6 +6,7 @@ from ..errors import (
     BOOK_002,
     BOOK_003,
     BOOK_004,
+    BOOK_005,
     CLASS_001,
     CLASS_002,
     CLASS_003,
@@ -17,12 +18,23 @@ from ..errors import (
     VAL_006,
     VAL_007,
     VAL_009,
+    _format_date,
+    _format_time,
     make_error,
     parse_db_error,
 )
 from .auth import role_required
 
 bp = Blueprint('member', __name__, url_prefix='/api/member')
+
+
+def _parse_detail_times(detail):
+    """Parse 'from HH:MM:SS to HH:MM:SS' detail string into formatted (start, end) tuple."""
+    if ' to ' not in detail:
+        return None
+    start_raw = detail.split(' to ')[0].replace('from ', '').strip()
+    end_raw = detail.split(' to ')[1].strip()
+    return (_format_time(start_raw), _format_time(end_raw))
 
 
 @bp.route('/dashboard')
@@ -269,8 +281,14 @@ def book_session():
     session_date = data.get('session_date', '').strip()
     start_time = data.get('start_time', '').strip()
     end_time = data.get('end_time', '').strip()
-    if not all([trainer_id, room_id, session_date, start_time, end_time]):
-        body, status = make_error(VAL_006, fields='trainer_id, room_id, session_date, start_time, and end_time')
+    missing = []
+    if not trainer_id: missing.append('Trainer')
+    if not room_id: missing.append('Room')
+    if not session_date: missing.append('Date')
+    if not start_time: missing.append('Start Time')
+    if not end_time: missing.append('End Time')
+    if missing:
+        body, status = make_error(VAL_006, fields=', '.join(missing))
         return jsonify(body), status
     if start_time >= end_time:
         body, status = make_error(VAL_007)
@@ -281,11 +299,49 @@ def book_session():
         cur.execute(
             '''SELECT 1 FROM trainer_availability
                WHERE trainer_id = %s AND available_date = %s
-                 AND start_time < %s AND end_time > %s''',
-            (trainer_id, session_date, end_time, start_time))
+                 AND start_time <= %s AND end_time >= %s''',
+            (trainer_id, session_date, start_time, end_time))
         if not cur.fetchone():
             body, status = make_error(BOOK_004)
             return jsonify(body), status
+        cur.execute(
+            '''SELECT * FROM fn_check_booking_conflicts(
+                %s, %s, %s, %s, %s::time, %s::time)''',
+            (g.user['member_id'], trainer_id, room_id, session_date, start_time, end_time))
+        conflicts = cur.fetchall()
+        if conflicts:
+            messages = []
+            primary_code = None
+            fmt_date = _format_date(session_date)
+            for c in conflicts:
+                ctype = c['conflict_type']
+                detail = c['detail'] or ''
+                times = _parse_detail_times(detail)
+                if ctype == 'member':
+                    primary_code = primary_code or BOOK_002
+                    messages.append(
+                        f'You already have a session on {fmt_date}'
+                        + (f' from {times[0]} to {times[1]}' if times else '')
+                        + '.')
+                elif ctype == 'trainer':
+                    primary_code = primary_code or BOOK_005
+                    messages.append(
+                        f'The trainer is already booked on {fmt_date}'
+                        + (f' from {times[0]} to {times[1]}' if times else '')
+                        + '.')
+                else:
+                    primary_code = primary_code or BOOK_003
+                    messages.append(
+                        f'The room is already booked on {fmt_date}'
+                        + (f' from {times[0]} to {times[1]}' if times else '')
+                        + '.')
+            messages.append('Please choose a different time.')
+            body = {
+                'error': ' '.join(messages),
+                'error_code': primary_code,
+                'details': messages,
+            }
+            return jsonify(body), 409
         cur.execute(
             '''INSERT INTO personal_session
                (member_id, trainer_id, room_id, session_date, start_time, end_time)
@@ -296,13 +352,14 @@ def book_session():
     except Exception as e:
         get_db().rollback()
         msg = str(e)
+        import sys; print(f'[book_session] DB error: {msg}', file=sys.stderr)
         parsed = parse_db_error(msg)
         if parsed:
             code, params = parsed
             body, status = make_error(code, **params)
             return jsonify(body), status
-        if 'already booked' in msg.lower() or 'overlapping' in msg.lower() or 'Member already has' in msg:
-            code = BOOK_001 if ('overlapping' in msg.lower() or 'Member already has' in msg) else BOOK_003
+        if 'already booked' in msg.lower() or 'overlapping' in msg.lower() or 'already have a session' in msg.lower():
+            code = BOOK_001 if ('overlapping' in msg.lower() or 'already have a session' in msg.lower()) else BOOK_003
             body, status = make_error(code, date='this date')
             return jsonify(body), status
         body, status = make_error(ERR_001)

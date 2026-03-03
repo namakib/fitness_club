@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import api from '../../api';
-import toast from 'react-hot-toast';
+import { toastError, toastSuccess } from '../../toastUtil';
 import ProfileHeader from '../../components/ProfileHeader';
 import StatCard from '../../components/StatCard';
 import PhoneInput, { formatPhoneDisplay } from '../../components/PhoneInput';
@@ -67,10 +67,10 @@ function ProfileForm({ admin, onSaved }) {
     setBusy(true);
     try {
       await api.put('/admin/profile', form);
-      toast.success('Profile updated.');
+      toastSuccess('Profile updated.');
       onSaved();
     } catch (err) {
-      toast.error(err.message);
+      toastError(err.message, err.details);
     } finally {
       setBusy(false);
     }

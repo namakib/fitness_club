@@ -42,6 +42,7 @@ GRANT SELECT ON trainer_availability TO fc_member;
 GRANT SELECT ON member_dashboard_view TO fc_member;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO fc_member;
 GRANT EXECUTE ON FUNCTION fn_trainer_slot_booking_status(INTEGER, INTEGER) TO fc_member;
+GRANT EXECUTE ON FUNCTION fn_check_booking_conflicts(INTEGER, INTEGER, INTEGER, DATE, TIME, TIME) TO fc_member;
 
 -- ============================================================
 -- fc_trainer grants

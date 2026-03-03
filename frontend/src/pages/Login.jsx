@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import toast from 'react-hot-toast';
+import { toastError } from '../toastUtil';
 import ThemeToggle from '../components/ThemeToggle';
 import SelectDropdown from '../components/SelectDropdown';
 import { EyeIcon, EyeSlashIcon } from '../components/Icons';
@@ -29,7 +29,7 @@ export default function Login() {
       await login(form.email, form.password, form.role);
       navigate(dest[form.role]);
     } catch (err) {
-      toast.error(err.message);
+      toastError(err.message, err.details);
     } finally {
       setBusy(false);
     }

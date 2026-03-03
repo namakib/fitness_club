@@ -53,6 +53,7 @@ def create_app():
             if qs:
                 parts.append(f"?{qs}")
             _log_api(">>> REQUEST: " + "".join(parts))
+            _log_api(">>> HEADERS:", dict(request.headers))
             if request.method in ('POST', 'PUT', 'PATCH') and request.get_data():
                 try:
                     body = request.get_json(silent=True) or request.get_data(as_text=True)
@@ -63,6 +64,7 @@ def create_app():
         @app.after_request
         def _log_response(res):
             _log_api(f"<<< RESPONSE: {res.status_code}")
+            _log_api("<<< HEADERS:", dict(res.headers))
             try:
                 body = res.get_data(as_text=True)
                 if body and 'application/json' in (res.content_type or ''):

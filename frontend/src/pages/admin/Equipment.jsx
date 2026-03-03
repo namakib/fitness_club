@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import api from '../../api';
-import toast from 'react-hot-toast';
+import { toastError, toastSuccess } from '../../toastUtil';
 import DataTable from '../../components/DataTable';
 import SelectDropdown from '../../components/SelectDropdown';
 import StatusBadge from '../../components/StatusBadge';
@@ -31,23 +31,23 @@ export default function Equipment() {
     setBusy(true);
     try {
       await api.post('/admin/equipment/issue', issueForm);
-      toast.success('Issue logged.');
+      toastSuccess('Issue logged.');
       setIssueForm({ equipment_id: '', issue_description: '' });
       load();
-    } catch (err) { toast.error(err.message); }
+    } catch (err) { toastError(err.message, err.details); }
     finally { setBusy(false); }
   }
 
   async function updateStatus(equipmentId, status) {
-    try { await api.put(`/admin/equipment/${equipmentId}/status`, { status }); toast.success('Status updated.'); load(); }
-    catch (err) { toast.error(err.message); }
+    try { await api.put(`/admin/equipment/${equipmentId}/status`, { status }); toastSuccess('Status updated.'); load(); }
+    catch (err) { toastError(err.message, err.details); }
   }
 
   async function updateMaintenance(logId, status) {
     const body = { status };
     if (status === 'resolved') body.resolved_date = new Date().toISOString().split('T')[0];
-    try { await api.put(`/admin/equipment/maintenance/${logId}`, body); toast.success('Log updated.'); load(); }
-    catch (err) { toast.error(err.message); }
+    try { await api.put(`/admin/equipment/maintenance/${logId}`, body); toastSuccess('Log updated.'); load(); }
+    catch (err) { toastError(err.message, err.details); }
   }
 
   if (!data) return <div className="animate-pulse space-y-6">{[...Array(3)].map((_, i) => <div key={i} className="h-40 rounded-xl bg-gray-200 dark:bg-gray-700" />)}</div>;

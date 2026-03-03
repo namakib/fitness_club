@@ -3,11 +3,23 @@
 # Run backend only (Flask API)
 # ============================================================
 # Usage:  ./run-backend.sh
+#   --skip-db   Skip database reset (just start the app)
 # Run this in one terminal; run ./run-frontend.sh in another.
+# Each run drops and recreates the database from scratch
+# so you always start with fresh schema + seed data.
 # ============================================================
+
+set -e
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$PROJECT_DIR"
+
+SKIP_DB=false
+for arg in "$@"; do
+    case $arg in
+        --skip-db) SKIP_DB=true ;;
+    esac
+done
 
 # Env (match start.sh)
 export DB_HOST="${DB_HOST:-localhost}"
@@ -32,6 +44,30 @@ for dir in /opt/homebrew/opt/postgresql@*/bin /opt/homebrew/opt/postgresql/bin /
         break
     fi
 done
+
+# ── Fresh database setup ──────────────────────────────────────
+if [ "$SKIP_DB" = false ]; then
+    PSQL="psql -h $DB_HOST -p $DB_PORT -U $DB_USER"
+    [ -n "$DB_PASSWORD" ] && export PGPASSWORD="$DB_PASSWORD"
+
+    echo "[DB] Dropping existing database '$DB_NAME'..."
+    $PSQL -c "DROP DATABASE IF EXISTS $DB_NAME;" postgres 2>/dev/null || true
+
+    echo "[DB] Creating database '$DB_NAME'..."
+    $PSQL -c "CREATE DATABASE $DB_NAME;" postgres
+
+    echo "[DB] Running DDL.sql (schema, views, triggers)..."
+    $PSQL -d "$DB_NAME" -f "$PROJECT_DIR/sql/DDL.sql" -q
+
+    echo "[DB] Running DML.sql (seed data)..."
+    $PSQL -d "$DB_NAME" -f "$PROJECT_DIR/sql/DML.sql" -q
+
+    echo "[DB] Running RBAC.sql (roles, grants, RLS)..."
+    $PSQL -d "$DB_NAME" -f "$PROJECT_DIR/sql/RBAC.sql" -q
+
+    echo "[DB] Fresh database ready."
+    echo ""
+fi
 
 echo "Starting backend at http://localhost:${FLASK_PORT:-5001} ..."
 python run.py

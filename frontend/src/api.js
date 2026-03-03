@@ -44,6 +44,7 @@ async function request(path, opts = {}) {
   if (!res.ok) {
     const err = new Error(data.error || 'Request failed');
     err.code = data.error_code ?? null;
+    err.details = data.details ?? null;
     throw err;
   }
   return data;

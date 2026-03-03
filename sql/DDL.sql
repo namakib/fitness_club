@@ -31,6 +31,8 @@ DROP FUNCTION IF EXISTS fn_prevent_trainer_availability_overlap();
 DROP TRIGGER IF EXISTS trg_verify_trainer_availability ON personal_session;
 DROP FUNCTION IF EXISTS fn_verify_trainer_availability();
 
+DROP FUNCTION IF EXISTS fn_check_booking_conflicts(INTEGER, INTEGER, INTEGER, DATE, TIME, TIME);
+
 DROP VIEW IF EXISTS member_dashboard_view;
 
 DROP TABLE IF EXISTS payment CASCADE;
@@ -293,7 +295,7 @@ LEFT JOIN LATERAL (
 -- ensure no overlapping room bookings on the same date.
 -- ============================================================
 CREATE OR REPLACE FUNCTION fn_prevent_room_double_booking()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER SECURITY DEFINER AS $$
 DECLARE
     v_date DATE;
     v_id   INTEGER;
@@ -355,7 +357,7 @@ CREATE TRIGGER trg_prevent_room_double_booking_class
 -- A member cannot have overlapping personal session bookings.
 -- ============================================================
 CREATE OR REPLACE FUNCTION fn_prevent_member_overlapping_sessions()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER SECURITY DEFINER AS $$
 DECLARE
     v_conflict RECORD;
 BEGIN
@@ -410,7 +412,7 @@ CREATE TRIGGER trg_prevent_full_class_enrollment
 -- A trainer cannot be assigned to overlapping sessions/classes.
 -- ============================================================
 CREATE OR REPLACE FUNCTION fn_prevent_trainer_double_booking()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER SECURITY DEFINER AS $$
 DECLARE
     v_date DATE;
     v_id   INTEGER;
@@ -586,5 +588,86 @@ BEGIN
     WHERE ta.trainer_id    = p_trainer_id
       AND ta.available_date >= CURRENT_DATE
     ORDER BY ta.available_date, ta.start_time;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ============================================================
+-- FUNCTION: check all booking conflicts before inserting a session.
+-- SECURITY DEFINER bypasses RLS so it can see ALL members' sessions.
+-- Returns one row per conflict category found (member, trainer, room).
+-- ============================================================
+CREATE OR REPLACE FUNCTION fn_check_booking_conflicts(
+    p_member_id   INTEGER,
+    p_trainer_id  INTEGER,
+    p_room_id     INTEGER,
+    p_date        DATE,
+    p_start_time  TIME,
+    p_end_time    TIME
+)
+RETURNS TABLE (conflict_type TEXT, detail TEXT)
+SECURITY DEFINER
+AS $$
+BEGIN
+    -- 1. Member already has an overlapping session
+    RETURN QUERY
+    SELECT 'member'::TEXT,
+           ('from ' || ps.start_time::TEXT || ' to ' || ps.end_time::TEXT)
+    FROM personal_session ps
+    WHERE ps.member_id = p_member_id
+      AND ps.session_date = p_date
+      AND ps.status != 'cancelled'
+      AND ps.start_time < p_end_time
+      AND ps.end_time > p_start_time
+    LIMIT 1;
+
+    -- 2. Trainer has an overlapping personal session
+    RETURN QUERY
+    SELECT 'trainer'::TEXT,
+           ('from ' || ps.start_time::TEXT || ' to ' || ps.end_time::TEXT)
+    FROM personal_session ps
+    WHERE ps.trainer_id = p_trainer_id
+      AND ps.session_date = p_date
+      AND ps.status != 'cancelled'
+      AND ps.start_time < p_end_time
+      AND ps.end_time > p_start_time
+    LIMIT 1;
+
+    -- 3. Trainer has an overlapping group class
+    IF NOT FOUND THEN
+        RETURN QUERY
+        SELECT 'trainer'::TEXT,
+               ('from ' || gc.start_time::TEXT || ' to ' || gc.end_time::TEXT)
+        FROM group_class gc
+        WHERE gc.trainer_id = p_trainer_id
+          AND gc.class_date = p_date
+          AND gc.start_time < p_end_time
+          AND gc.end_time > p_start_time
+        LIMIT 1;
+    END IF;
+
+    -- 4. Room is already booked (session)
+    RETURN QUERY
+    SELECT 'room'::TEXT,
+           ('from ' || ps.start_time::TEXT || ' to ' || ps.end_time::TEXT)
+    FROM personal_session ps
+    WHERE ps.room_id = p_room_id
+      AND ps.session_date = p_date
+      AND ps.status != 'cancelled'
+      AND ps.start_time < p_end_time
+      AND ps.end_time > p_start_time
+    LIMIT 1;
+
+    -- 5. Room is already booked (class)
+    IF NOT FOUND THEN
+        RETURN QUERY
+        SELECT 'room'::TEXT,
+               ('from ' || gc.start_time::TEXT || ' to ' || gc.end_time::TEXT)
+        FROM group_class gc
+        WHERE gc.room_id = p_room_id
+          AND gc.class_date = p_date
+          AND gc.start_time < p_end_time
+          AND gc.end_time > p_start_time
+        LIMIT 1;
+    END IF;
 END;
 $$ LANGUAGE plpgsql;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api';
-import toast from 'react-hot-toast';
+import { toastError, toastSuccess } from '../toastUtil';
 import ThemeToggle from '../components/ThemeToggle';
 import SelectDropdown from '../components/SelectDropdown';
 import DatePicker from '../components/DatePicker';
@@ -28,10 +28,10 @@ export default function Register() {
     setBusy(true);
     try {
       await api.post('/register', form);
-      toast.success('Registration successful! Please log in.');
+      toastSuccess('Registration successful! Please log in.');
       navigate('/login');
     } catch (err) {
-      toast.error(err.message);
+      toastError(err.message, err.details);
     } finally {
       setBusy(false);
     }
