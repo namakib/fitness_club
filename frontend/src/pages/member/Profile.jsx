@@ -24,6 +24,7 @@ export default function Profile() {
   if (!data) return <Skeleton />;
 
   const { member } = data;
+  if (!member) return <p className="py-12 text-center text-gray-500">Unable to load profile.</p>;
 
   const meta = [
     { icon: <CalendarIcon />, label: 'Date of Birth', value: member.dob ? fmtDate(member.dob) : null },
