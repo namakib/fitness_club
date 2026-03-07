@@ -30,7 +30,7 @@ export default function MySchedule() {
   const [dropClass, setDropClass] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  const load = useCallback(() => api.get('/member/dashboard').then(setData), []);
+  const load = useCallback(() => api.get('/member/dashboard').then(setData).catch(() => setData({ summary: null, active_goals: [], recent_metrics: [], all_metrics: [], upcoming_sessions: [], upcoming_classes: [] })), []);
   useEffect(() => { load(); }, [load]);
 
   if (!data) return <div className="animate-pulse space-y-6">{[...Array(3)].map((_, i) => <div key={i} className="h-40 rounded-xl bg-gray-200 dark:bg-gray-700" />)}</div>;

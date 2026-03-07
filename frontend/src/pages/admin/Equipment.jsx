@@ -23,7 +23,7 @@ export default function Equipment() {
   const [issueForm, setIssueForm] = useState({ equipment_id: '', issue_description: '' });
   const [busy, setBusy] = useState(false);
 
-  const load = useCallback(() => api.get('/admin/equipment').then(setData), []);
+  const load = useCallback(() => api.get('/admin/equipment').then(setData).catch(() => setData({ equipment_list: [], maintenance_logs: [], status_filter: '' })), []);
   useEffect(() => { load(); }, [load]);
 
   async function logIssue(e) {

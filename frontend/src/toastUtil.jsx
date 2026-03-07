@@ -10,7 +10,7 @@ function calcDuration(text) {
 }
 
 export function toastError(msgOrJsx, details) {
-  if (details && details.length > 1) {
+  if (details && details.length >= 1) {
     const fullText = details.join(' ');
     toast.error(
       () => (

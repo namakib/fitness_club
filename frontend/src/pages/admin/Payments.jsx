@@ -15,8 +15,8 @@ export default function Payments() {
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(() => {
-    api.get('/admin/payments').then(d => setData(d.payments || []));
-    api.get('/admin/room-booking').then(d => setMembers(d.members || []));
+    api.get('/admin/payments').then(d => setData(d.payments || [])).catch(() => setData([]));
+    api.get('/admin/room-booking').then(d => setMembers(d.members || [])).catch(() => setMembers([]));
   }, []);
   useEffect(() => { load(); }, [load]);
 

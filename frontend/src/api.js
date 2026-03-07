@@ -17,9 +17,11 @@ async function request(path, opts = {}) {
     }
   }
 
+  const headers = { ...opts.headers };
+  if (opts.body) headers['Content-Type'] = 'application/json';
   const res = await fetch(url, {
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...opts.headers },
+    headers,
     ...opts,
   });
 

@@ -16,7 +16,7 @@ export function ClassesBrowser({ onSuccess, refreshTrigger }) {
   const [enrolling, setEnrolling] = useState(null);
   const [confirmEnroll, setConfirmEnroll] = useState(null);
 
-  const load = useCallback(() => api.get('/member/available-classes').then(d => setClasses(d.classes || [])), []);
+  const load = useCallback(() => api.get('/member/available-classes').then(d => setClasses(d.classes || [])).catch(() => setClasses([])), []);
   useEffect(() => { load(); }, [load, refreshTrigger]);
 
   async function handleEnroll(classObj) {

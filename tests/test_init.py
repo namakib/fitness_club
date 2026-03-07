@@ -2,7 +2,7 @@
 
 import os
 from io import StringIO
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
@@ -85,4 +85,9 @@ class TestCorsOrigins:
         from backend import create_app
         with patch.dict(os.environ, {'CORS_ORIGINS': 'http://extra:3000, http://other:4000'}):
             app = create_app()
-        assert app is not None
+        app.config['TESTING'] = True
+        client = app.test_client()
+        resp = client.get('/api/me', headers={'Origin': 'http://extra:3000'})
+        assert resp.headers.get('Access-Control-Allow-Origin') == 'http://extra:3000'
+        resp2 = client.get('/api/me', headers={'Origin': 'http://other:4000'})
+        assert resp2.headers.get('Access-Control-Allow-Origin') == 'http://other:4000'

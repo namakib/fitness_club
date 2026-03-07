@@ -23,7 +23,7 @@ export default function Dashboard() {
   const tooltipLabelStyle = tt.label;
   const tooltipItemStyle = tt.item;
 
-  const load = useCallback(() => api.get('/member/dashboard').then(setData), []);
+  const load = useCallback(() => api.get('/member/dashboard').then(setData).catch(() => setData({ summary: null, active_goals: [], recent_metrics: [], all_metrics: [], upcoming_sessions: [], upcoming_classes: [] })), []);
   useEffect(() => { load(); }, [load]);
 
   if (!data) return <Skeleton />;

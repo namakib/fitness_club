@@ -28,6 +28,8 @@ VAL_006 = 'VAL_006'  # Required fields (template: {fields})
 VAL_007 = 'VAL_007'  # End time after start time
 VAL_008 = 'VAL_008'  # Issue description required
 VAL_009 = 'VAL_009'  # Only cancellation allowed
+VAL_010 = 'VAL_010'  # Amount must be positive
+VAL_011 = 'VAL_011'  # Invalid email format
 
 # BOOK -- Booking / Scheduling
 BOOK_001 = 'BOOK_001'  # Member overlapping session (date only)
@@ -46,6 +48,7 @@ CLASS_003 = 'CLASS_003'  # Class has passed
 RES_001 = 'RES_001'  # Session not found
 RES_002 = 'RES_002'  # Class not found
 RES_003 = 'RES_003'  # Enrollment not found
+RES_004 = 'RES_004'  # Availability slot not found
 
 # ERR -- Generic / Internal
 ERR_001 = 'ERR_001'  # Something went wrong
@@ -70,6 +73,8 @@ ERROR_MESSAGES = {
     VAL_007: 'End time must be after start time.',
     VAL_008: 'Issue description is required.',
     VAL_009: 'Only cancellation is allowed.',
+    VAL_010: 'Amount must be a positive number.',
+    VAL_011: 'Please enter a valid email address.',
     BOOK_001: (
         'You already have a session on {date}. '
         'Please choose a different time or cancel that session first.'
@@ -97,6 +102,7 @@ ERROR_MESSAGES = {
     RES_001: 'Session not found.',
     RES_002: 'Class not found.',
     RES_003: 'Enrollment not found.',
+    RES_004: 'Availability slot not found.',
     ERR_001: 'Something went wrong. Please try again.',
     ERR_002: 'Failed to update profile. Please try again.',
 }
@@ -118,6 +124,8 @@ CODE_HTTP_STATUS = {
     VAL_007: 400,
     VAL_008: 400,
     VAL_009: 400,
+    VAL_010: 400,
+    VAL_011: 400,
     BOOK_001: 409,
     BOOK_002: 409,
     BOOK_003: 409,
@@ -130,6 +138,7 @@ CODE_HTTP_STATUS = {
     RES_001: 404,
     RES_002: 404,
     RES_003: 404,
+    RES_004: 404,
     ERR_001: 500,
     ERR_002: 500,
 }
@@ -138,6 +147,19 @@ CODE_HTTP_STATUS = {
 # ---------------------------------------------------------------------------
 # Format helpers (for DB message parsing and message templates)
 # ---------------------------------------------------------------------------
+
+def _normalize_time(tstr):
+    """Normalize time string to HH:MM for reliable comparison (e.g. '9:00' -> '09:00')."""
+    if not tstr:
+        return tstr
+    parts = str(tstr).strip().split(':')
+    try:
+        h = int(parts[0]) if parts else 0
+        m = int(parts[1]) if len(parts) > 1 else 0
+        return f'{h:02d}:{m:02d}'
+    except (ValueError, IndexError):
+        return tstr
+
 
 def _format_time(tstr):
     """Format time string (e.g. 08:00:00 or 08:00) to 8:00 AM."""

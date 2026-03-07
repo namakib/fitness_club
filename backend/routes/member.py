@@ -15,11 +15,13 @@ from ..errors import (
     RES_001,
     RES_002,
     RES_003,
+    VAL_001,
     VAL_006,
     VAL_007,
     VAL_009,
     _format_date,
     _format_time,
+    _normalize_time,
     make_error,
     parse_db_error,
 )
@@ -135,6 +137,9 @@ def update_profile():
     name = data.get('name', '').strip()
     phone = data.get('phone', '').strip()
     gender = data.get('gender', '')
+    if not name:
+        body, status = make_error(VAL_001)
+        return jsonify(body), status
 
     cur = get_cursor()
     try:
@@ -157,6 +162,19 @@ def update_profile():
 @role_required('member')
 def add_goal():
     data = request.get_json(silent=True) or {}
+    goal_type = (data.get('goal_type') or '').strip()
+    target_value = (data.get('target_value') or '').strip()
+    start_date = data.get('start_date')
+    if not goal_type or not target_value or not start_date:
+        missing = []
+        if not goal_type:
+            missing.append('goal_type')
+        if not target_value:
+            missing.append('target_value')
+        if not start_date:
+            missing.append('start_date')
+        body, status = make_error(VAL_006, fields=', '.join(missing))
+        return jsonify(body), status
     cur = get_cursor()
     try:
         cur.execute(
@@ -164,9 +182,9 @@ def add_goal():
                (member_id, goal_type, target_value, start_date, end_date)
                VALUES (%s, %s, %s, %s, %s)''',
             (g.user['member_id'],
-             data.get('goal_type', '').strip(),
-             data.get('target_value', '').strip(),
-             data.get('start_date'),
+             goal_type,
+             target_value,
+             start_date,
              data.get('end_date') or None),
         )
         get_db().commit()
@@ -179,16 +197,23 @@ def add_goal():
         cur.close()
 
 
+ALLOWED_GOAL_STATUSES = {'in_progress', 'achieved', 'cancelled', 'active'}
+
+
 @bp.route('/goals/<int:goal_id>', methods=('PUT',))
 @role_required('member')
 def update_goal(goal_id):
     data = request.get_json(silent=True) or {}
+    status_val = (data.get('status') or '').strip().lower()
+    if not status_val or status_val not in ALLOWED_GOAL_STATUSES:
+        body, status = make_error(VAL_006, fields='status (in_progress, achieved, cancelled, or active)')
+        return jsonify(body), status
     cur = get_cursor()
     try:
         cur.execute(
             '''UPDATE fitness_goal SET status = %s
                WHERE goal_id = %s AND member_id = %s''',
-            (data.get('status'), goal_id, g.user['member_id']),
+            (status_val, goal_id, g.user['member_id']),
         )
         get_db().commit()
         return jsonify(message='Goal updated.')
@@ -204,6 +229,19 @@ def update_goal(goal_id):
 @role_required('member')
 def add_metric():
     data = request.get_json(silent=True) or {}
+    weight = data.get('weight')
+    body_fat_pct = data.get('body_fat_pct')
+    blood_pressure = (data.get('blood_pressure') or '').strip()
+    heart_rate = data.get('heart_rate')
+    has_any = (
+        weight is not None and weight != '' or
+        body_fat_pct is not None and body_fat_pct != '' or
+        blood_pressure or
+        heart_rate is not None and heart_rate != ''
+    )
+    if not has_any:
+        body, status = make_error(VAL_006, fields='at least one of weight, body_fat_pct, blood_pressure, heart_rate')
+        return jsonify(body), status
     cur = get_cursor()
     try:
         cur.execute(
@@ -211,10 +249,10 @@ def add_metric():
                (member_id, weight, body_fat_pct, blood_pressure, heart_rate)
                VALUES (%s, %s, %s, %s, %s)''',
             (g.user['member_id'],
-             data.get('weight') or None,
-             data.get('body_fat_pct') or None,
-             data.get('blood_pressure', '').strip() or None,
-             data.get('heart_rate') or None),
+             weight if weight not in (None, '') else None,
+             body_fat_pct if body_fat_pct not in (None, '') else None,
+             blood_pressure or None,
+             heart_rate if heart_rate not in (None, '') else None),
         )
         get_db().commit()
         return jsonify(message='Health metric recorded.'), 201
@@ -290,7 +328,7 @@ def book_session():
     if missing:
         body, status = make_error(VAL_006, fields=', '.join(missing))
         return jsonify(body), status
-    if start_time >= end_time:
+    if _normalize_time(start_time) >= _normalize_time(end_time):
         body, status = make_error(VAL_007)
         return jsonify(body), status
 
@@ -352,7 +390,6 @@ def book_session():
     except Exception as e:
         get_db().rollback()
         msg = str(e)
-        import sys; print(f'[book_session] DB error: {msg}', file=sys.stderr)
         parsed = parse_db_error(msg)
         if parsed:
             code, params = parsed
@@ -378,17 +415,23 @@ def cancel_session(session_id):
         return jsonify(body), status_code
 
     cur = get_cursor()
-    cur.execute(
-        '''UPDATE personal_session SET status = 'cancelled'
-           WHERE session_id = %s AND member_id = %s''',
-        (session_id, g.user['member_id']))
-    get_db().commit()
-    if cur.rowcount == 0:
+    try:
+        cur.execute(
+            '''UPDATE personal_session SET status = 'cancelled'
+               WHERE session_id = %s AND member_id = %s''',
+            (session_id, g.user['member_id']))
+        get_db().commit()
+        if cur.rowcount == 0:
+            cur.close()
+            body, status = make_error(RES_001)
+            return jsonify(body), status
         cur.close()
-        body, status = make_error(RES_001)
+        return jsonify(message='Session cancelled.')
+    except Exception:
+        get_db().rollback()
+        cur.close()
+        body, status = make_error(ERR_001)
         return jsonify(body), status
-    cur.close()
-    return jsonify(message='Session cancelled.')
 
 
 @bp.route('/available-classes')
@@ -456,13 +499,19 @@ def enroll_in_class(class_id):
 @role_required('member')
 def drop_class(class_id):
     cur = get_cursor()
-    cur.execute(
-        'DELETE FROM class_enrollment WHERE class_id = %s AND member_id = %s',
-        (class_id, g.user['member_id']))
-    get_db().commit()
-    if cur.rowcount == 0:
+    try:
+        cur.execute(
+            'DELETE FROM class_enrollment WHERE class_id = %s AND member_id = %s',
+            (class_id, g.user['member_id']))
+        get_db().commit()
+        if cur.rowcount == 0:
+            cur.close()
+            body, status = make_error(RES_003)
+            return jsonify(body), status
         cur.close()
-        body, status = make_error(RES_003)
+        return jsonify(message='Dropped from class.')
+    except Exception:
+        get_db().rollback()
+        cur.close()
+        body, status = make_error(ERR_001)
         return jsonify(body), status
-    cur.close()
-    return jsonify(message='Dropped from class.')

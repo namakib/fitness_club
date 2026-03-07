@@ -79,44 +79,45 @@ def create_app():
                 pass
             return res
 
-    # #region agent log
-    @app.before_request
-    def _debug_request():  # pragma: no cover
-        g._req_start = time.time()
-        qs = request.query_string.decode() if request.query_string else None
-        req_data = {'method': request.method, 'path': request.path}
-        if qs:
-            req_data['query'] = qs
-        if request.method in ('POST', 'PUT', 'PATCH') and request.get_data():
-            try:
-                body = request.get_json(silent=True)
-                req_data['body'] = body if body is not None else request.get_data(as_text=True)[:500]
-            except Exception:
-                req_data['body'] = '(parse error)'
-        _debug_log('API REQUEST', req_data, 'H-request')
-
-    @app.after_request
-    def _debug_response(res):  # pragma: no cover
-        try:
-            body = res.get_data(as_text=True)
-            if body and len(body) < 2000 and 'application/json' in (res.content_type or ''):
+    # #region agent log (only when DEBUG_API_LOGGING enabled)
+    if app.config.get('DEBUG_API_LOGGING'):
+        @app.before_request
+        def _debug_request():  # pragma: no cover
+            g._req_start = time.time()
+            qs = request.query_string.decode() if request.query_string else None
+            req_data = {'method': request.method, 'path': request.path}
+            if qs:
+                req_data['query'] = qs
+            if request.method in ('POST', 'PUT', 'PATCH') and request.get_data():
                 try:
-                    body = json.loads(body)
+                    body = request.get_json(silent=True)
+                    req_data['body'] = body if body is not None else request.get_data(as_text=True)[:500]
                 except Exception:
-                    body = body[:500]
-            else:
-                body = f'<{len(body) if body else 0} bytes>' if body else None
-        except Exception:
-            body = None
-        resp_data = {
-            'status': res.status_code,
-            'path': request.path,
-            'duration_ms': round((time.time() - getattr(g, '_req_start', 0)) * 1000),
-        }
-        if body is not None:
-            resp_data['body'] = body
-        _debug_log('API RESPONSE', resp_data, 'H-response')
-        return res
+                    req_data['body'] = '(parse error)'
+            _debug_log('API REQUEST', req_data, 'H-request')
+
+        @app.after_request
+        def _debug_response(res):  # pragma: no cover
+            try:
+                body = res.get_data(as_text=True)
+                if body and len(body) < 2000 and 'application/json' in (res.content_type or ''):
+                    try:
+                        body = json.loads(body)
+                    except Exception:
+                        body = body[:500]
+                else:
+                    body = f'<{len(body) if body else 0} bytes>' if body else None
+            except Exception:
+                body = None
+            resp_data = {
+                'status': res.status_code,
+                'path': request.path,
+                'duration_ms': round((time.time() - getattr(g, '_req_start', 0)) * 1000),
+            }
+            if body is not None:
+                resp_data['body'] = body
+            _debug_log('API RESPONSE', resp_data, 'H-response')
+            return res
     # #endregion
 
     origins = [
