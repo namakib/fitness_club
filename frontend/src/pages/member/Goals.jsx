@@ -319,7 +319,9 @@ function Field({ label, ...props }) {
 
 function shortDate(d) {
   if (!d) return '';
-  return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const str = String(d);
+  const dt = /^\d{4}-\d{2}-\d{2}$/.test(str) ? new Date(str + 'T12:00:00') : new Date(str);
+  return isNaN(dt) ? '' : dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 function parseBloodPressure(bp) {
@@ -338,7 +340,12 @@ function fmtDate(d) {
 
 function fmtDateTime(d) {
   if (!d) return '—';
-  return new Date(d + 'T12:00:00').toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+  const str = String(d);
+  const dt = /^\d{4}-\d{2}-\d{2}$/.test(str) ? new Date(str + 'T12:00:00') : new Date(str);
+  if (isNaN(dt)) return '—';
+  const datePart = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const timePart = dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  return <><div>{datePart}</div><div className="text-xs text-gray-400">{timePart}</div></>;
 }
 
 function Skeleton() {

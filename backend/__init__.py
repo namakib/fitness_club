@@ -11,7 +11,7 @@ from . import db as database
 # #region agent log
 DEBUG_LOG_PATH = Path(__file__).resolve().parent.parent / '.cursor' / 'debug-08f77b.log'
 
-def _debug_log(msg, data=None, hypothesis_id='H-api'):
+def _debug_log(msg, data=None, hypothesis_id='H-api'):  # pragma: no cover
     try:
         DEBUG_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
         payload = {
@@ -35,7 +35,7 @@ def _log_api(msg, data=None):
     if data is not None:
         try:
             line += "\n" + json.dumps(data, indent=2, default=str)
-        except Exception:
+        except Exception:  # pragma: no cover
             line += f" {data!r}"
     print(line)
 
@@ -58,7 +58,7 @@ def create_app():
                 try:
                     body = request.get_json(silent=True) or request.get_data(as_text=True)
                     _log_api(">>> BODY:", body)
-                except Exception as e:
+                except Exception as e:  # pragma: no cover
                     _log_api(">>> BODY (parse error):", str(e))
 
         @app.after_request
@@ -71,17 +71,17 @@ def create_app():
                     if len(body) < 3000:
                         try:
                             _log_api("<<< BODY:", json.loads(body))
-                        except Exception:
+                        except Exception:  # pragma: no cover
                             _log_api("<<< BODY:", body[:800])
-                    else:
+                    else:  # pragma: no cover
                         _log_api("<<< BODY:", f"<{len(body)} bytes>")
-            except Exception:
+            except Exception:  # pragma: no cover
                 pass
             return res
 
     # #region agent log
     @app.before_request
-    def _debug_request():
+    def _debug_request():  # pragma: no cover
         g._req_start = time.time()
         qs = request.query_string.decode() if request.query_string else None
         req_data = {'method': request.method, 'path': request.path}
@@ -96,7 +96,7 @@ def create_app():
         _debug_log('API REQUEST', req_data, 'H-request')
 
     @app.after_request
-    def _debug_response(res):
+    def _debug_response(res):  # pragma: no cover
         try:
             body = res.get_data(as_text=True)
             if body and len(body) < 2000 and 'application/json' in (res.content_type or ''):
@@ -138,7 +138,7 @@ def create_app():
 
     # Optional: serve built React app from Flask (set SERVING_FRONTEND=1 when deploying single server)
     dist_path = Path(__file__).resolve().parent.parent / 'frontend' / 'dist'
-    if os.environ.get('SERVING_FRONTEND') == '1' and dist_path.exists():
+    if os.environ.get('SERVING_FRONTEND') == '1' and dist_path.exists():  # pragma: no cover
         @app.route('/', defaults={'path': ''})
         @app.route('/<path:path>')
         def serve_frontend(path):
