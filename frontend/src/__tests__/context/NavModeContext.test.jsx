@@ -48,4 +48,23 @@ describe('NavModeContext', () => {
     act(() => { screen.getByText('invalid').click(); });
     expect(screen.getByTestId('mode').textContent).toBe('sidebar');
   });
+
+  it('defaults to sidebar when localStorage throws', () => {
+    window.localStorage.getItem.mockImplementation(() => { throw new Error('blocked'); });
+    render(<NavModeProvider><TestConsumer /></NavModeProvider>);
+    expect(screen.getByTestId('mode').textContent).toBe('sidebar');
+  });
+
+  it('defaults to sidebar when localStorage has invalid value', () => {
+    localStorage.setItem('navMode', 'bogus');
+    render(<NavModeProvider><TestConsumer /></NavModeProvider>);
+    expect(screen.getByTestId('mode').textContent).toBe('sidebar');
+  });
+
+  it('handles localStorage.setItem throwing gracefully', () => {
+    window.localStorage.setItem.mockImplementation(() => { throw new Error('quota'); });
+    render(<NavModeProvider><TestConsumer /></NavModeProvider>);
+    act(() => { screen.getByText('dropdown').click(); });
+    expect(screen.getByTestId('mode').textContent).toBe('dropdown');
+  });
 });

@@ -106,4 +106,40 @@ describe('Login page', () => {
     await user.click(screen.getByLabelText('Show password'));
     expect(passwordInput.type).toBe('text');
   });
+
+  it('toggles password back to hidden', async () => {
+    const user = userEvent.setup();
+    renderLogin();
+
+    const toggle = screen.getByLabelText('Show password');
+    await user.click(toggle);
+    expect(screen.getByLabelText('Hide password')).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('Hide password'));
+    expect(screen.getByLabelText('Show password')).toBeInTheDocument();
+    expect(document.querySelector('input[type="password"]')).toBeInTheDocument();
+  });
+
+  it('changes role via dropdown', async () => {
+    const user = userEvent.setup();
+    mockLogin.mockResolvedValueOnce({});
+    renderLogin();
+
+    const roleTrigger = screen.getByText('Member');
+    await user.click(roleTrigger);
+
+    await waitFor(() => {
+      expect(screen.getByText('Trainer')).toBeInTheDocument();
+    });
+    await user.click(screen.getByText('Trainer'));
+
+    await user.type(document.querySelector('input[type="email"]'), 'a@b.com');
+    await user.type(document.querySelector('input[type="password"]'), 'pass123');
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
+
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalledWith('a@b.com', 'pass123', 'trainer');
+      expect(mockNavigate).toHaveBeenCalledWith('/trainer/dashboard');
+    });
+  });
 });

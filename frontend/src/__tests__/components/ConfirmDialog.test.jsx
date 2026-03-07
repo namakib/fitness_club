@@ -64,4 +64,84 @@ describe('ConfirmDialog', () => {
     await act(async () => { vi.advanceTimersByTime(100); });
     expect(screen.getByText('Please wait...')).toBeInTheDocument();
   });
+
+  it('renders default title "Confirm"', async () => {
+    render(
+      <ConfirmDialog open onClose={vi.fn()} onConfirm={vi.fn()} />
+    );
+    await act(async () => { vi.advanceTimersByTime(100); });
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Confirm');
+  });
+
+  it('renders custom title', async () => {
+    render(
+      <ConfirmDialog open onClose={vi.fn()} onConfirm={vi.fn()} title="Delete Item?" />
+    );
+    await act(async () => { vi.advanceTimersByTime(100); });
+    expect(screen.getByText('Delete Item?')).toBeInTheDocument();
+  });
+
+  it('does not render message when not provided', async () => {
+    render(
+      <ConfirmDialog open onClose={vi.fn()} onConfirm={vi.fn()} />
+    );
+    await act(async () => { vi.advanceTimersByTime(100); });
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Confirm');
+  });
+
+  it('uses danger variant styling', async () => {
+    render(
+      <ConfirmDialog open onClose={vi.fn()} onConfirm={vi.fn()} variant="danger" confirmLabel="Delete" message="This is destructive" />
+    );
+    await act(async () => { vi.advanceTimersByTime(100); });
+    expect(screen.getByText('Delete')).toBeInTheDocument();
+    expect(screen.getByText('This is destructive')).toBeInTheDocument();
+  });
+
+  it('uses default variant styling', async () => {
+    render(
+      <ConfirmDialog open onClose={vi.fn()} onConfirm={vi.fn()} variant="default" confirmLabel="OK" />
+    );
+    await act(async () => { vi.advanceTimersByTime(100); });
+    expect(screen.getByText('OK')).toBeInTheDocument();
+  });
+
+  it('disables buttons when loading', async () => {
+    render(
+      <ConfirmDialog open onClose={vi.fn()} onConfirm={vi.fn()} loading />
+    );
+    await act(async () => { vi.advanceTimersByTime(100); });
+    const buttons = screen.getAllByRole('button');
+    const cancelBtn = buttons.find(b => b.textContent === 'Cancel');
+    const confirmBtn = buttons.find(b => b.textContent === 'Please wait...');
+    expect(cancelBtn).toBeDisabled();
+    expect(confirmBtn).toBeDisabled();
+  });
+
+  it('calls onClose directly when onConfirm is not a function', async () => {
+    const onClose = vi.fn();
+    render(
+      <ConfirmDialog open onClose={onClose} onConfirm={null} confirmLabel="OK" />
+    );
+    await act(async () => { vi.advanceTimersByTime(100); });
+    await act(async () => { fireEvent.click(screen.getByText('OK')); });
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('calls onClose when onConfirm is undefined', async () => {
+    const onClose = vi.fn();
+    render(
+      <ConfirmDialog open onClose={onClose} confirmLabel="OK" />
+    );
+    await act(async () => { vi.advanceTimersByTime(100); });
+    await act(async () => { fireEvent.click(screen.getByText('OK')); });
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('renders nothing when not open', () => {
+    const { container } = render(
+      <ConfirmDialog open={false} onClose={vi.fn()} onConfirm={vi.fn()} message="Hidden" />
+    );
+    expect(screen.queryByText('Hidden')).not.toBeInTheDocument();
+  });
 });

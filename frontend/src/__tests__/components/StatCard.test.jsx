@@ -23,4 +23,9 @@ describe('StatCard', () => {
     render(<StatCard label="Test" value={1} />);
     expect(screen.getByText('Test')).toBeInTheDocument();
   });
+
+  it('falls back to orange when unknown color is passed', () => {
+    render(<StatCard label="Unknown" value={1} icon="users" color="nonexistent" />);
+    expect(screen.getByText('Unknown')).toBeInTheDocument();
+  });
 });

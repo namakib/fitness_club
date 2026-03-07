@@ -29,6 +29,18 @@ describe('ErrorBoundary', () => {
     spy.mockRestore();
   });
 
+  it('shows String(error) when error has no message', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    function ThrowString() { throw 'plain string error'; }
+    render(
+      <ErrorBoundary>
+        <ThrowString />
+      </ErrorBoundary>
+    );
+    expect(screen.getByText('plain string error')).toBeInTheDocument();
+    spy.mockRestore();
+  });
+
   it('Try again button resets the error boundary', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     let shouldThrow = true;
