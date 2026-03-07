@@ -5,7 +5,9 @@ import DataTable from '../../components/DataTable';
 export default function Schedule() {
   const [data, setData] = useState(null);
 
-  useEffect(() => { api.get('/trainer/schedule').then(setData); }, []);
+  useEffect(() => {
+    api.get('/trainer/schedule').then(setData).catch(() => setData({ sessions: [], classes: [], member_health: [] }));
+  }, []);
 
   if (!data) return <div className="animate-pulse space-y-6">{[...Array(3)].map((_, i) => <div key={i} className="h-40 rounded-xl bg-gray-200 dark:bg-gray-700" />)}</div>;
 
@@ -65,5 +67,8 @@ function Section({ title, children }) {
 
 function fmtDate(d) {
   if (!d) return '—';
-  return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const s = String(d);
+  const dt = (s.includes('T') || s.includes(' ')) ? new Date(s) : new Date(s + 'T12:00:00');
+  if (isNaN(dt)) return '—';
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }

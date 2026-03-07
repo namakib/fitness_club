@@ -1,6 +1,6 @@
 """Tests for admin routes (/api/admin/*)."""
 
-from conftest import SAMPLE_ADMIN
+from conftest import _exec_raises_after
 
 
 # ---------------------------------------------------------------------------
@@ -95,6 +95,7 @@ def test_room_booking_list(admin_auth):
 def test_book_session_success(admin_auth):
     client, mock_conn, mock_cur, admin = admin_auth
     mock_cur.fetchone.side_effect = [admin, {'1': 1}]
+    mock_cur.fetchall.return_value = []  # no booking conflicts
 
     resp = client.post('/api/admin/room-booking/session', json={
         'member_id': 1, 'trainer_id': 1, 'room_id': 1,
@@ -235,10 +236,6 @@ def test_create_payment_missing_fields(admin_auth):
 # ---------------------------------------------------------------------------
 # Helper for DB error side_effects
 # ---------------------------------------------------------------------------
-
-def _exec_raises_after(n, error_msg='db error'):
-    return [None] * n + [Exception(error_msg)]
-
 
 # ---------------------------------------------------------------------------
 # Profile update DB error

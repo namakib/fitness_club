@@ -12,7 +12,7 @@ export default function AdminProfile() {
   const [data, setData] = useState(null);
   const [stats, setStats] = useState(null);
 
-  const load = useCallback(() => api.get('/admin/profile').then(setData), []);
+  const load = useCallback(() => api.get('/admin/profile').then(setData).catch(() => setData({ admin: null })), []);
   useEffect(() => { load(); }, [load]);
   useEffect(() => { api.get('/admin/dashboard').then(setStats).catch(() => {}); }, []);
 
@@ -21,7 +21,7 @@ export default function AdminProfile() {
   const { admin } = data;
 
   const meta = [
-    { icon: <PhoneIcon />, label: 'Phone', value: admin.phone },
+    { icon: <PhoneIcon />, label: 'Phone', value: formatPhoneDisplay(admin.phone) || admin.phone },
     ...(stats ? [
       { icon: <UsersIcon />, label: 'Total Members', value: String(stats.total_members) },
       { icon: <TrainerIcon />, label: 'Total Trainers', value: String(stats.total_trainers) },

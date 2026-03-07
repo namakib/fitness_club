@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api';
 import { toastError, toastSuccess } from '../../toastUtil';
@@ -31,7 +31,7 @@ export function BookSessionForm({ onSuccess }) {
   const [weekOffset, setWeekOffset] = useState(0);
   const [loadingAvailability, setLoadingAvailability] = useState(false);
 
-  const load = useCallback(() => api.get('/member/booking-options').then(setData), []);
+  const load = useCallback(() => api.get('/member/booking-options').then(setData).catch(() => setData({ trainers: [], rooms: [] })), []);
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
@@ -39,11 +39,18 @@ export function BookSessionForm({ onSuccess }) {
       setAvailabilitySlots([]);
       return;
     }
+    let cancelled = false;
     setLoadingAvailability(true);
     api.get(`/member/trainer-availability?trainer_id=${form.trainer_id}`)
-      .then((res) => { setAvailabilitySlots(res.slots || []); setWeekOffset(0); })
-      .catch(() => setAvailabilitySlots([]))
-      .finally(() => setLoadingAvailability(false));
+      .then((res) => {
+        if (!cancelled) {
+          setAvailabilitySlots(res.slots || []);
+          setWeekOffset(0);
+        }
+      })
+      .catch(() => { if (!cancelled) setAvailabilitySlots([]); })
+      .finally(() => { if (!cancelled) setLoadingAvailability(false); });
+    return () => { cancelled = true; };
   }, [form.trainer_id]);
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });

@@ -16,7 +16,11 @@ export default function ConfirmDialog({
 
   async function handleConfirm() {
     if (typeof onConfirm === 'function') {
-      await onConfirm();
+      try {
+        await onConfirm();
+      } catch {
+        return;
+      }
     }
     onClose();
   }

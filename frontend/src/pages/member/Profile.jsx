@@ -18,7 +18,7 @@ const GENDERS = [
 export default function Profile() {
   const [data, setData] = useState(null);
 
-  const load = useCallback(() => api.get('/member/profile').then(setData), []);
+  const load = useCallback(() => api.get('/member/profile').then(setData).catch(() => setData({ member: null, goals: [], recent_metrics: [] })), []);
   useEffect(() => { load(); }, [load]);
 
   if (!data) return <Skeleton />;

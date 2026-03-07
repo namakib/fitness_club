@@ -16,6 +16,7 @@ from ..errors import (
     VAL_003,
     VAL_004,
     VAL_005,
+    VAL_011,
     make_error,
 )
 
@@ -86,6 +87,9 @@ def register():
         return jsonify(body), status
     if not email:
         body, status = make_error(VAL_002)
+        return jsonify(body), status
+    if '@' not in email or '.' not in email or email.count('@') != 1:
+        body, status = make_error(VAL_011)
         return jsonify(body), status
     if not dob:
         body, status = make_error(VAL_003)

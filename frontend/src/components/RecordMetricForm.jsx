@@ -11,6 +11,11 @@ export default function RecordMetricForm({ onSaved, onCancel }) {
 
   async function submit(e) {
     e.preventDefault();
+    const hasValue = form.weight || form.body_fat_pct || form.systolic || form.diastolic || form.heart_rate;
+    if (!hasValue) {
+      toastError('Please enter at least one metric.');
+      return;
+    }
     setBusy(true);
     try {
       const bp = (form.systolic || form.diastolic) ? `${form.systolic || ''}/${form.diastolic || ''}` : null;

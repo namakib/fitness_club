@@ -19,7 +19,7 @@ export default function TrainerDashboard() {
   const tooltipLabelStyle = tt.label;
   const tooltipItemStyle = tt.item;
 
-  useEffect(() => { api.get('/trainer/dashboard').then(setData); }, []);
+  useEffect(() => { api.get('/trainer/dashboard').then(setData).catch(() => setData({ total_sessions: 0, total_classes: 0, total_members: 0, total_availability_slots: 0, upcoming_sessions: [], session_trend: [], class_trend: [] })); }, []);
 
   if (!data) return <Skeleton />;
 

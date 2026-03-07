@@ -39,8 +39,8 @@ export default function Goals() {
   const [busy, setBusy] = useState(false);
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
-  const loadProfile = useCallback(() => api.get('/member/profile').then(setProfileData), []);
-  const loadMetrics = useCallback(() => api.get('/member/health-history').then(d => setMetrics(d.metrics)), []);
+  const loadProfile = useCallback(() => api.get('/member/profile').then(setProfileData).catch(() => setProfileData({ member: null, goals: [] })), []);
+  const loadMetrics = useCallback(() => api.get('/member/health-history').then(d => setMetrics(d.metrics)).catch(() => setMetrics([])), []);
   const loadAll = useCallback(() => { loadProfile(); loadMetrics(); }, [loadProfile, loadMetrics]);
   useEffect(() => { loadAll(); }, [loadAll]);
 

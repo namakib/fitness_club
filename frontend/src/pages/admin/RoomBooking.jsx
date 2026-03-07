@@ -12,7 +12,7 @@ export default function RoomBooking() {
   const [data, setData] = useState(null);
   const [tab, setTab] = useState('session');
 
-  const load = useCallback(() => api.get('/admin/room-booking').then(setData), []);
+  const load = useCallback(() => api.get('/admin/room-booking').then(setData).catch(() => setData({ rooms: [], members: [], trainers: [], bookings: [] })), []);
   useEffect(() => { load(); }, [load]);
 
   if (!data) return <div className="animate-pulse space-y-6">{[...Array(3)].map((_, i) => <div key={i} className="h-40 rounded-xl bg-gray-200 dark:bg-gray-700" />)}</div>;
@@ -67,7 +67,7 @@ function SessionForm({ rooms, members, trainers, onSaved }) {
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
-    try { await api.post('/admin/room-booking/session', form); toastSuccess('Session booked.'); onSaved(); }
+    try { await api.post('/admin/room-booking/session', form); toastSuccess('Session booked.'); setForm({ member_id: '', trainer_id: '', room_id: '', session_date: '', start_time: '', end_time: '' }); onSaved(); }
     catch (err) { toastError(err.message, err.details); }
     finally { setBusy(false); }
   }
@@ -95,7 +95,7 @@ function ClassForm({ rooms, trainers, onSaved }) {
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
-    try { await api.post('/admin/room-booking/class', form); toastSuccess('Class scheduled.'); onSaved(); }
+    try { await api.post('/admin/room-booking/class', form); toastSuccess('Class scheduled.'); setForm({ class_name: '', trainer_id: '', room_id: '', class_date: '', start_time: '', end_time: '', max_participants: '' }); onSaved(); }
     catch (err) { toastError(err.message, err.details); }
     finally { setBusy(false); }
   }

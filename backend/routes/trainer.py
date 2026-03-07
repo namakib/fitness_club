@@ -8,8 +8,13 @@ from ..errors import (
     ERR_002,
     RES_001,
     RES_002,
+    RES_004,
+    RES_004,
+    RES_004,
+    VAL_001,
     VAL_006,
     VAL_007,
+    _normalize_time,
     make_error,
     parse_db_error,
 )
@@ -166,6 +171,9 @@ def update_profile():
     name = data.get('name', '').strip()
     phone = data.get('phone', '').strip()
     specialization = data.get('specialization', '').strip()
+    if not name:
+        body, status = make_error(VAL_001)
+        return jsonify(body), status
 
     cur = get_cursor()
     try:
@@ -294,7 +302,7 @@ def update_or_delete_session(session_id):
         cur.close()
         body, status = make_error(VAL_006, fields='Date, start time, and end time')
         return jsonify(body), status
-    if start_time >= end_time:
+    if _normalize_time(start_time) >= _normalize_time(end_time):
         cur.close()
         body, status = make_error(VAL_007)
         return jsonify(body), status
@@ -361,7 +369,7 @@ def update_or_delete_class(class_id):
         cur.close()
         body, status = make_error(VAL_006, fields='Date, start time, and end time')
         return jsonify(body), status
-    if start_time >= end_time:
+    if _normalize_time(start_time) >= _normalize_time(end_time):
         cur.close()
         body, status = make_error(VAL_007)
         return jsonify(body), status
@@ -419,7 +427,7 @@ def add_availability():
     if not avail_date or not start_time or not end_time:
         body, status = make_error(VAL_006, fields='available_date, start_time, and end_time')
         return jsonify(body), status
-    if start_time >= end_time:
+    if _normalize_time(start_time) >= _normalize_time(end_time):
         body, status = make_error(VAL_007)
         return jsonify(body), status
 
@@ -459,6 +467,10 @@ def delete_availability(avail_id):
             '''DELETE FROM trainer_availability
                WHERE availability_id = %s AND trainer_id = %s''',
             (avail_id, g.user['trainer_id']))
+        if cur.rowcount == 0:
+            cur.close()
+            body, status = make_error(RES_004)
+            return jsonify(body), status
         get_db().commit()
         return jsonify(message='Availability slot removed.')
     except Exception:

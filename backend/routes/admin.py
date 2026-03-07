@@ -5,16 +5,25 @@ from flask import Blueprint, g, jsonify, request
 from ..db import get_cursor, get_db, serialize_row, serialize_rows
 from ..errors import (
     BOOK_001,
+    BOOK_002,
     BOOK_003,
     BOOK_004,
+    BOOK_005,
     ERR_001,
     ERR_002,
+    VAL_001,
     VAL_006,
+    VAL_007,
     VAL_008,
+    VAL_010,
+    VAL_010,
+    _format_date,
+    _format_time,
     make_error,
     parse_db_error,
 )
 from .auth import role_required
+from .member import _parse_detail_times
 
 bp = Blueprint('admin', __name__, url_prefix='/api/admin')
 
@@ -39,6 +48,9 @@ def update_profile():
     data = request.get_json(silent=True) or {}
     name = data.get('name', '').strip()
     phone = data.get('phone', '').strip()
+    if not name:
+        body, status = make_error(VAL_001)
+        return jsonify(body), status
 
     cur = get_cursor()
     try:
@@ -195,22 +207,85 @@ def room_booking():
 @role_required('admin')
 def book_session():
     data = request.get_json(silent=True) or {}
+    trainer_id = data.get('trainer_id')
+    member_id = data.get('member_id')
+    room_id = data.get('room_id')
+    session_date = (data.get('session_date') or '').strip()
+    start_time = (data.get('start_time') or '').strip()
+    end_time = (data.get('end_time') or '').strip()
+    missing = []
+    if not trainer_id:
+        missing.append('trainer_id')
+    if not member_id:
+        missing.append('member_id')
+    if not room_id:
+        missing.append('room_id')
+    if not session_date:
+        missing.append('session_date')
+    if not start_time:
+        missing.append('start_time')
+    if not end_time:
+        missing.append('end_time')
+    if missing:
+        body, status = make_error(VAL_006, fields=', '.join(missing))
+        return jsonify(body), status
+    if start_time >= end_time:
+        body, status = make_error(VAL_007)
+        return jsonify(body), status
+
     cur = get_cursor()
     try:
         cur.execute(
             '''SELECT 1 FROM trainer_availability
                WHERE trainer_id = %s AND available_date = %s
-                 AND start_time < %s AND end_time > %s''',
-            (data['trainer_id'], data['session_date'], data['end_time'], data['start_time']))
+                 AND start_time <= %s AND end_time >= %s''',
+            (trainer_id, session_date, start_time, end_time))
         if not cur.fetchone():
             body, status = make_error(BOOK_004)
             return jsonify(body), status
         cur.execute(
+            '''SELECT * FROM fn_check_booking_conflicts(
+                %s, %s, %s, %s, %s::time, %s::time)''',
+            (member_id, trainer_id, room_id, session_date, start_time, end_time))
+        conflicts = cur.fetchall()
+        if conflicts:
+            messages = []
+            primary_code = None
+            fmt_date = _format_date(session_date)
+            for c in conflicts:
+                ctype = c['conflict_type']
+                detail = c['detail'] or ''
+                times = _parse_detail_times(detail)
+                if ctype == 'member':
+                    primary_code = primary_code or BOOK_002
+                    messages.append(
+                        f'Member already has a session on {fmt_date}'
+                        + (f' from {times[0]} to {times[1]}' if times else '')
+                        + '.')
+                elif ctype == 'trainer':
+                    primary_code = primary_code or BOOK_005
+                    messages.append(
+                        f'The trainer is already booked on {fmt_date}'
+                        + (f' from {times[0]} to {times[1]}' if times else '')
+                        + '.')
+                else:
+                    primary_code = primary_code or BOOK_003
+                    messages.append(
+                        f'The room is already booked on {fmt_date}'
+                        + (f' from {times[0]} to {times[1]}' if times else '')
+                        + '.')
+            messages.append('Please choose a different time.')
+            body = {
+                'error': ' '.join(messages),
+                'error_code': primary_code,
+                'details': messages,
+            }
+            return jsonify(body), 409
+        cur.execute(
             '''INSERT INTO personal_session
                (member_id, trainer_id, room_id, session_date, start_time, end_time)
                VALUES (%s, %s, %s, %s, %s, %s)''',
-            (data['member_id'], data['trainer_id'], data['room_id'],
-             data['session_date'], data['start_time'], data['end_time']))
+            (member_id, trainer_id, room_id, session_date, start_time, end_time))
         get_db().commit()
         return jsonify(message='Personal session booked.'), 201
     except Exception as e:
@@ -237,6 +312,35 @@ def book_session():
 @role_required('admin')
 def book_class():
     data = request.get_json(silent=True) or {}
+    class_name = (data.get('class_name') or '').strip()
+    trainer_id = data.get('trainer_id')
+    room_id = data.get('room_id')
+    class_date = (data.get('class_date') or '').strip()
+    start_time = (data.get('start_time') or '').strip()
+    end_time = (data.get('end_time') or '').strip()
+    max_participants = data.get('max_participants')
+    missing = []
+    if not class_name:
+        missing.append('class_name')
+    if not trainer_id:
+        missing.append('trainer_id')
+    if not room_id:
+        missing.append('room_id')
+    if not class_date:
+        missing.append('class_date')
+    if not start_time:
+        missing.append('start_time')
+    if not end_time:
+        missing.append('end_time')
+    if max_participants is None:
+        missing.append('max_participants')
+    if missing:
+        body, status = make_error(VAL_006, fields=', '.join(missing))
+        return jsonify(body), status
+    if start_time >= end_time:
+        body, status = make_error(VAL_007)
+        return jsonify(body), status
+
     cur = get_cursor()
     try:
         cur.execute(
@@ -244,9 +348,8 @@ def book_class():
                (class_name, trainer_id, room_id, class_date,
                 start_time, end_time, max_participants)
                VALUES (%s, %s, %s, %s, %s, %s, %s)''',
-            (data['class_name'].strip(), data['trainer_id'], data['room_id'],
-             data['class_date'], data['start_time'], data['end_time'],
-             data['max_participants']))
+            (class_name, trainer_id, room_id, class_date,
+             start_time, end_time, max_participants))
         get_db().commit()
         return jsonify(message='Group class scheduled.'), 201
     except Exception as e:
@@ -300,8 +403,12 @@ def equipment():
 def log_issue():
     data = request.get_json(silent=True) or {}
     issue_desc = data.get('issue_description', '').strip()
+    equipment_id = data.get('equipment_id')
     if not issue_desc:
         body, status = make_error(VAL_008)
+        return jsonify(body), status
+    if equipment_id is None:
+        body, status = make_error(VAL_006, fields='equipment_id')
         return jsonify(body), status
 
     cur = get_cursor()
@@ -309,7 +416,7 @@ def log_issue():
         cur.execute(
             '''INSERT INTO equipment_maintenance
                (equipment_id, issue_description) VALUES (%s, %s)''',
-            (data['equipment_id'], issue_desc))
+            (equipment_id, issue_desc))
         get_db().commit()
         return jsonify(message='Maintenance issue logged.'), 201
     except Exception:
@@ -324,11 +431,15 @@ def log_issue():
 @role_required('admin')
 def update_equipment_status(equipment_id):
     data = request.get_json(silent=True) or {}
+    status_val = (data.get('status') or '').strip()
+    if not status_val:
+        body, status = make_error(VAL_006, fields='status')
+        return jsonify(body), status
     cur = get_cursor()
     try:
         cur.execute(
             'UPDATE equipment SET status = %s WHERE equipment_id = %s',
-            (data['status'], equipment_id))
+            (status_val, equipment_id))
         get_db().commit()
         return jsonify(message='Equipment status updated.')
     except Exception:
@@ -343,13 +454,17 @@ def update_equipment_status(equipment_id):
 @role_required('admin')
 def update_maintenance(log_id):
     data = request.get_json(silent=True) or {}
+    status_val = (data.get('status') or '').strip()
+    if not status_val:
+        body, status = make_error(VAL_006, fields='status')
+        return jsonify(body), status
     cur = get_cursor()
     try:
         cur.execute(
             '''UPDATE equipment_maintenance
                SET status = %s, resolved_date = %s
                WHERE log_id = %s''',
-            (data['status'], data.get('resolved_date') or None, log_id))
+            (status_val, data.get('resolved_date') or None, log_id))
         get_db().commit()
         return jsonify(message='Maintenance log updated.')
     except Exception:
@@ -383,12 +498,20 @@ def create_payment():
     if member_id is None or amount is None:
         body, status = make_error(VAL_006, fields='member_id and amount')
         return jsonify(body), status
+    try:
+        amount_float = float(amount)
+        if amount_float <= 0:
+            body, status = make_error(VAL_010)
+            return jsonify(body), status
+    except (TypeError, ValueError):
+        body, status = make_error(VAL_010)
+        return jsonify(body), status
     cur = get_cursor()
     try:
         cur.execute(
             '''INSERT INTO payment (member_id, amount, payment_status, payment_date, payment_method)
                VALUES (%s, %s, %s, %s, %s)''',
-            (member_id, amount,
+            (member_id, amount_float,
              data.get('payment_status') or 'pending',
              data.get('payment_date') or date.today().isoformat(),
              (data.get('payment_method') or '').strip() or None))
