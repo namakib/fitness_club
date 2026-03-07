@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import SearchInput from './SearchInput';
 import FilterDropdown from './FilterDropdown';
 import { CloseIcon } from './Icons';
@@ -96,7 +96,9 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
   const paged = filtered.slice(safePage * pageSize, (safePage + 1) * pageSize);
   const showPagination = filtered.length > pageSize;
 
-  if (safePage !== page) setPage(safePage);
+  useEffect(() => {
+    if (safePage !== page) setPage(safePage);
+  }, [safePage, page]);
 
   const hasToolbar = searchable || filterableCols.length > 0;
   const activeCount = Object.values(activeFilters).filter(Boolean).length;

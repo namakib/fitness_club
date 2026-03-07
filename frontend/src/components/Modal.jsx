@@ -45,6 +45,15 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
     return () => { document.body.style.overflow = ''; };
   }, [mounted]);
 
+  useEffect(() => {
+    if (!open || !mounted) return;
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') onClose();
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, mounted, onClose]);
+
   if (!mounted) return null;
 
   const maxWidth = SIZE_CLASSES[size] ?? SIZE_CLASSES.md;

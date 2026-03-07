@@ -22,7 +22,7 @@ export default function AdminDashboard() {
   const tooltipLabelStyle = tt.label;
   const tooltipItemStyle = tt.item;
 
-  useEffect(() => { api.get('/admin/dashboard').then(setData); }, []);
+  useEffect(() => { api.get('/admin/dashboard').then(setData).catch(() => setData({ total_members: 0, total_trainers: 0, total_equipment: 0, total_rooms: 0, equipment_status: [], maintenance_summary: { open: 0, resolved: 0 }, booking_trend: [], upcoming_bookings: [] })); }, []);
 
   if (!data) return <Skeleton />;
 

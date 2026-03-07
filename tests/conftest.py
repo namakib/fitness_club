@@ -98,6 +98,11 @@ def trainer_auth(client, mock_db):
     return client, mock_conn, mock_cur, dict(SAMPLE_TRAINER)
 
 
+def _exec_raises_after(n, error_msg='db error'):
+    """Return side_effect list: n Nones then Exception. For testing DB failure paths."""
+    return [None] * n + [Exception(error_msg)]
+
+
 @pytest.fixture
 def admin_auth(client, mock_db):
     """Authenticated admin client."""

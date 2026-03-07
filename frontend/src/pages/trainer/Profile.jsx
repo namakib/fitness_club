@@ -26,7 +26,7 @@ export default function TrainerProfile() {
   const [data, setData] = useState(null);
   const [stats, setStats] = useState(null);
 
-  const load = useCallback(() => api.get('/trainer/profile').then(setData), []);
+  const load = useCallback(() => api.get('/trainer/profile').then(setData).catch(() => setData({ trainer: null })), []);
   useEffect(() => { load(); }, [load]);
   useEffect(() => { api.get('/trainer/dashboard').then(setStats).catch(() => {}); }, []);
 

@@ -1,6 +1,6 @@
 """Tests for trainer routes (/api/trainer/*)."""
 
-from conftest import SAMPLE_TRAINER
+from conftest import _exec_raises_after
 
 
 # ---------------------------------------------------------------------------
@@ -274,14 +274,6 @@ def test_class_update_success(trainer_auth):
     })
     assert resp.status_code == 200
     assert 'Class updated' in resp.get_json()['message']
-
-
-# ---------------------------------------------------------------------------
-# Helper for DB error side_effects
-# ---------------------------------------------------------------------------
-
-def _exec_raises_after(n, error_msg='db error'):
-    return [None] * n + [Exception(error_msg)]
 
 
 # ---------------------------------------------------------------------------

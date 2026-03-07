@@ -26,10 +26,15 @@ def apply_role(role, user_id):
     pg_role = role_map.get(role)
     if pg_role is None:
         return
+    try:
+        uid = int(user_id)
+    except (TypeError, ValueError):
+        return
     db = get_db()
     with db.cursor() as cur:
+        # pg_role is from hardcoded map, not user input
         cur.execute(f'SET ROLE {pg_role}')
-        cur.execute(f"SET app.current_user_id = '{int(user_id)}'") 
+        cur.execute("SET app.current_user_id = %s", (str(uid),)) 
 
 
 def get_cursor():

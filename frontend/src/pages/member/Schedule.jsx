@@ -36,7 +36,7 @@ export default function Schedule() {
   const [jumpToDate, setJumpToDate] = useState(null);
   const [browseRefresh, setBrowseRefresh] = useState(0);
 
-  const load = useCallback(() => api.get('/member/dashboard').then(setData), []);
+  const load = useCallback(() => api.get('/member/dashboard').then(setData).catch(() => setData({ summary: null, active_goals: [], recent_metrics: [], all_metrics: [], upcoming_sessions: [], upcoming_classes: [] })), []);
   useEffect(() => { load(); }, [load]);
 
   function handleBookSuccess() {

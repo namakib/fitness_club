@@ -31,9 +31,12 @@ export function AuthProvider({ children }) {
   }
 
   async function logout() {
-    await api.post('/logout');
-    setUser(null);
-    setRole(null);
+    try {
+      await api.post('/logout');
+    } finally {
+      setUser(null);
+      setRole(null);
+    }
   }
 
   return (

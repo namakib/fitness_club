@@ -17,12 +17,12 @@ export default function Availability() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [rooms, setRooms] = useState([]);
 
-  const load = useCallback(() => api.get('/trainer/availability').then(d => setSlots(d.slots)), []);
+  const load = useCallback(() => api.get('/trainer/availability').then(d => setSlots(d.slots)).catch(() => setSlots([])), []);
   useEffect(() => { load(); }, [load]);
 
   const refreshCalendar = useCallback(() => setCalendarKey((k) => k + 1), []);
 
-  const loadRooms = useCallback(() => api.get('/trainer/rooms').then((d) => setRooms(d.rooms || [])), []);
+  const loadRooms = useCallback(() => api.get('/trainer/rooms').then((d) => setRooms(d.rooms || [])).catch(() => setRooms([])), []);
 
   const loadCalendarEvents = useCallback(async (weekStart) => {
     const weekEnd = new Date(weekStart);
@@ -65,7 +65,6 @@ export default function Availability() {
     } catch (err) {
       toastError(err.message, err.details);
       setDeleteConfirm((prev) => ({ ...prev, busy: false }));
-      throw err;
     }
   }
 

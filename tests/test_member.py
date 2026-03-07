@@ -1,6 +1,6 @@
 """Tests for member routes (/api/member/*)."""
 
-from conftest import SAMPLE_MEMBER
+from conftest import _exec_raises_after
 from backend.routes.member import _parse_detail_times
 
 
@@ -92,6 +92,7 @@ def test_update_goal_success(member_auth):
     resp = client.put('/api/member/goals/1', json={'status': 'achieved'})
     assert resp.status_code == 200
     assert 'Goal updated' in resp.get_json()['message']
+    mock_conn.commit.assert_called()
 
 
 # ---------------------------------------------------------------------------
@@ -215,6 +216,7 @@ def test_cancel_session_success(member_auth):
     resp = client.put('/api/member/sessions/1', json={'status': 'cancelled'})
     assert resp.status_code == 200
     assert 'Session cancelled' in resp.get_json()['message']
+    mock_conn.commit.assert_called()
 
 
 def test_cancel_session_not_found(member_auth):
@@ -282,6 +284,7 @@ def test_drop_class_success(member_auth):
     resp = client.delete('/api/member/classes/1/enroll')
     assert resp.status_code == 200
     assert 'Dropped' in resp.get_json()['message']
+    mock_conn.commit.assert_called()
 
 
 def test_drop_class_not_enrolled(member_auth):
@@ -309,11 +312,6 @@ def test_parse_detail_times_no_to():
 # ---------------------------------------------------------------------------
 # Profile update DB error
 # ---------------------------------------------------------------------------
-
-def _exec_raises_after(n, error_msg='db error'):
-    """Return a side_effect list: n Nones then an Exception."""
-    return [None] * n + [Exception(error_msg)]
-
 
 def test_profile_update_db_error(member_auth):
     client, mock_conn, mock_cur, _ = member_auth

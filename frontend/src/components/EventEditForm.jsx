@@ -48,7 +48,6 @@ export default function EventEditForm({ event, onClose, onSaved, rooms, onRoomsL
       onSaved();
     } catch (err) {
       toastError(err.message, err.details);
-      throw err;
     } finally {
       setConfirmDeleteBusy(false);
     }
