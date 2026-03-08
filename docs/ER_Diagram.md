@@ -2,143 +2,156 @@
 
 ## Entity-Relationship Model
 
-This document describes the conceptual ER model for the Health and Fitness Club Management System. The diagram below uses UML-like notation and can be rendered with any Mermaid-compatible tool.
+This document describes the conceptual ER model for the Health and Fitness Club Management System. The diagram below uses UML class-diagram notation with multiplicity labels and can be rendered with any Mermaid-compatible tool.
 
-## ER Diagram (Mermaid)
+## ER Diagram (Mermaid — UML Style)
 
 ```mermaid
-erDiagram
-    MEMBER {
-        int member_id PK
-        varchar name
-        varchar email UK
-        date dob
-        varchar gender
-        varchar phone
-        varchar password_hash
-        timestamp created_at
+classDiagram
+    class MEMBER {
+        <<Entity>>
+        +int member_id PK
+        +varchar name
+        +varchar email UK
+        +date dob
+        +varchar gender
+        +varchar phone
+        +varchar password_hash
+        +timestamp created_at
     }
 
-    TRAINER {
-        int trainer_id PK
-        varchar name
-        varchar email UK
-        varchar phone
-        varchar specialization
-        varchar password_hash
+    class TRAINER {
+        <<Entity>>
+        +int trainer_id PK
+        +varchar name
+        +varchar email UK
+        +varchar phone
+        +varchar specialization
+        +varchar password_hash
     }
 
-    ADMIN {
-        int admin_id PK
-        varchar name
-        varchar email UK
-        varchar phone
-        varchar password_hash
+    class ADMIN {
+        <<Entity>>
+        +int admin_id PK
+        +varchar name
+        +varchar email UK
+        +varchar phone
+        +varchar password_hash
     }
 
-    FITNESS_GOAL {
-        int goal_id PK
-        int member_id FK
-        varchar goal_type
-        varchar target_value
-        date start_date
-        date end_date
-        varchar status
+    class FITNESS_GOAL {
+        <<Entity>>
+        +int goal_id PK
+        +int member_id FK
+        +varchar goal_type
+        +varchar target_value
+        +date start_date
+        +date end_date
+        +varchar status
     }
 
-    HEALTH_METRIC {
-        int metric_id PK
-        int member_id FK
-        decimal weight
-        decimal body_fat_pct
-        varchar blood_pressure
-        int heart_rate
-        timestamp recorded_at
+    class HEALTH_METRIC {
+        <<Entity>>
+        +int metric_id PK
+        +int member_id FK
+        +decimal weight
+        +decimal body_fat_pct
+        +varchar blood_pressure
+        +int heart_rate
+        +timestamp recorded_at
     }
 
-    TRAINER_AVAILABILITY {
-        int availability_id PK
-        int trainer_id FK
-        date available_date
-        time start_time
-        time end_time
+    class TRAINER_AVAILABILITY {
+        <<Entity>>
+        +int availability_id PK
+        +int trainer_id FK
+        +date available_date
+        +time start_time
+        +time end_time
     }
 
-    ROOM {
-        int room_id PK
-        varchar room_name
-        int capacity
+    class ROOM {
+        <<Entity>>
+        +int room_id PK
+        +varchar room_name
+        +int capacity
     }
 
-    EQUIPMENT {
-        int equipment_id PK
-        varchar name
-        varchar type
-        int room_id FK
-        varchar status
-        date purchase_date
+    class EQUIPMENT {
+        <<Entity>>
+        +int equipment_id PK
+        +varchar name
+        +varchar type
+        +int room_id FK
+        +varchar status
+        +date purchase_date
     }
 
-    PERSONAL_SESSION {
-        int session_id PK
-        int member_id FK
-        int trainer_id FK
-        int room_id FK
-        date session_date
-        time start_time
-        time end_time
-        varchar status
+    class PERSONAL_SESSION {
+        <<Entity>>
+        +int session_id PK
+        +int member_id FK
+        +int trainer_id FK
+        +int room_id FK
+        +date session_date
+        +time start_time
+        +time end_time
+        +varchar status
     }
 
-    GROUP_CLASS {
-        int class_id PK
-        varchar class_name
-        int trainer_id FK
-        int room_id FK
-        date class_date
-        time start_time
-        time end_time
-        int max_participants
+    class GROUP_CLASS {
+        <<Entity>>
+        +int class_id PK
+        +varchar class_name
+        +int trainer_id FK
+        +int room_id FK
+        +date class_date
+        +time start_time
+        +time end_time
+        +int max_participants
     }
 
-    CLASS_ENROLLMENT {
-        int enrollment_id PK
-        int class_id FK
-        int member_id FK
-        timestamp enrolled_at
+    class CLASS_ENROLLMENT {
+        <<Entity>>
+        +int enrollment_id PK
+        +int class_id FK
+        +int member_id FK
+        +timestamp enrolled_at
     }
 
-    EQUIPMENT_MAINTENANCE {
-        int log_id PK
-        int equipment_id FK
-        text issue_description
-        date reported_date
-        date resolved_date
-        varchar status
+    class EQUIPMENT_MAINTENANCE {
+        <<Entity>>
+        +int log_id PK
+        +int equipment_id FK
+        +text issue_description
+        +date reported_date
+        +date resolved_date
+        +varchar status
     }
 
-    PAYMENT {
-        int payment_id PK
-        int member_id FK
-        decimal amount
-        varchar payment_status
-        date payment_date
-        varchar payment_method
+    class PAYMENT {
+        <<Entity>>
+        +int payment_id PK
+        +int member_id FK
+        +decimal amount
+        +varchar payment_status
+        +date payment_date
+        +varchar payment_method
     }
 
-    MEMBER ||--o{ FITNESS_GOAL : "sets"
-    MEMBER ||--o{ HEALTH_METRIC : "records"
-    MEMBER ||--o{ PERSONAL_SESSION : "books"
-    MEMBER ||--o{ CLASS_ENROLLMENT : "enrolls in"
-    TRAINER ||--o{ TRAINER_AVAILABILITY : "defines"
-    TRAINER ||--o{ PERSONAL_SESSION : "conducts"
-    TRAINER ||--o{ GROUP_CLASS : "teaches"
-    ROOM ||--o{ PERSONAL_SESSION : "hosts"
-    ROOM ||--o{ GROUP_CLASS : "hosts"
-    ROOM ||--o{ EQUIPMENT : "contains"
-    GROUP_CLASS ||--o{ CLASS_ENROLLMENT : "has"
-    EQUIPMENT ||--o{ EQUIPMENT_MAINTENANCE : "has"
-    MEMBER ||--o{ PAYMENT : "makes"
+    MEMBER "1" -- "0..*" FITNESS_GOAL : sets
+    MEMBER "1" -- "0..*" HEALTH_METRIC : records
+    MEMBER "1" -- "0..*" PERSONAL_SESSION : books
+    MEMBER "1" -- "0..*" CLASS_ENROLLMENT : enrolls in
+    TRAINER "1" -- "0..*" TRAINER_AVAILABILITY : defines
+    TRAINER "1" -- "0..*" PERSONAL_SESSION : conducts
+    TRAINER "1" -- "0..*" GROUP_CLASS : teaches
+    ROOM "1" -- "0..*" PERSONAL_SESSION : hosts
+    ROOM "1" -- "0..*" GROUP_CLASS : hosts
+    ROOM "1" -- "0..*" EQUIPMENT : contains
+    GROUP_CLASS "1" -- "0..*" CLASS_ENROLLMENT : has
+    EQUIPMENT "1" -- "0..*" EQUIPMENT_MAINTENANCE : has
+    MEMBER "1" -- "0..*" PAYMENT : makes
 ```
 
 ## Entities (13)
