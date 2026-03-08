@@ -1,7 +1,13 @@
-"""Tests for authentication routes: register, login, logout, me, config."""
+"""Tests for authentication routes: register, login, logout, me, config, refresh."""
+
+import time
 
 from flask import g, jsonify
+import jwt as pyjwt
 import pytest
+
+from backend.jwt_utils import create_access_token, create_refresh_token, decode_token
+from conftest import _make_token
 
 
 # ---------------------------------------------------------------------------
@@ -144,6 +150,8 @@ class TestLogin:
         assert data['role'] == 'member'
         assert data['user']['name'] == 'Test Member'
         assert 'password_hash' not in data['user']
+        assert 'access_token' in data
+        assert 'fc_refresh_token' in resp.headers.get('Set-Cookie', '')
 
     def test_trainer_success(self, client, mock_db, sample_trainer):
         _, mock_cur = mock_db
@@ -152,7 +160,9 @@ class TestLogin:
             'email': 'trainer@test.com', 'password': 'password123', 'role': 'trainer',
         })
         assert resp.status_code == 200
-        assert resp.get_json()['role'] == 'trainer'
+        data = resp.get_json()
+        assert data['role'] == 'trainer'
+        assert 'access_token' in data
 
     def test_admin_success(self, client, mock_db, sample_admin):
         _, mock_cur = mock_db
@@ -161,7 +171,9 @@ class TestLogin:
             'email': 'admin@test.com', 'password': 'password123', 'role': 'admin',
         })
         assert resp.status_code == 200
-        assert resp.get_json()['role'] == 'admin'
+        data = resp.get_json()
+        assert data['role'] == 'admin'
+        assert 'access_token' in data
 
     def test_invalid_role(self, client, mock_db):
         resp = client.post('/api/login', json={
@@ -198,6 +210,8 @@ class TestLogout:
         resp = client.post('/api/logout')
         assert resp.status_code == 200
         assert 'Logged out' in resp.get_json()['message']
+        cookie_header = resp.headers.get('Set-Cookie', '')
+        assert 'fc_refresh_token' in cookie_header
 
 
 # ---------------------------------------------------------------------------
@@ -230,15 +244,39 @@ class TestMe:
 
 
 # ---------------------------------------------------------------------------
-# load_logged_in_user – invalid role in session
+# load_logged_in_user – edge cases
 # ---------------------------------------------------------------------------
 
 class TestLoadLoggedInUser:
-    def test_invalid_role_in_session(self, client, mock_db):
-        with client.session_transaction() as sess:
-            sess['user_id'] = 1
-            sess['role'] = 'superuser'
-        resp = client.get('/api/me')
+    def test_invalid_role_in_token(self, client, app, mock_db):
+        token = _make_token(app, 1, 'superuser')
+        resp = client.get('/api/me', headers={'Authorization': f'Bearer {token}'})
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data['user'] is None
+
+    def test_expired_token(self, client, app, mock_db):
+        token = create_access_token(1, 'member', app.config['SECRET_KEY'], -1)
+        resp = client.get('/api/me', headers={'Authorization': f'Bearer {token}'})
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data['user'] is None
+
+    def test_malformed_token(self, client, mock_db):
+        resp = client.get('/api/me', headers={'Authorization': 'Bearer not.a.jwt'})
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data['user'] is None
+
+    def test_refresh_token_rejected_as_access(self, client, app, mock_db):
+        token = create_refresh_token(1, 'member', app.config['SECRET_KEY'], 900)
+        resp = client.get('/api/me', headers={'Authorization': f'Bearer {token}'})
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data['user'] is None
+
+    def test_no_bearer_prefix(self, client, mock_db):
+        resp = client.get('/api/me', headers={'Authorization': 'Token abc'})
         assert resp.status_code == 200
         data = resp.get_json()
         assert data['user'] is None
@@ -272,3 +310,84 @@ class TestLoginRequired:
             g.user = {'name': 'Test'}
             resp = protected_view()
             assert resp.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# Refresh endpoint
+# ---------------------------------------------------------------------------
+
+class TestRefresh:
+    def test_success(self, client, app, mock_db):
+        secret = app.config['SECRET_KEY']
+        refresh = create_refresh_token(1, 'member', secret, 3600)
+        client.set_cookie('fc_refresh_token', refresh, domain='localhost', path='/api')
+        resp = client.post('/api/refresh')
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert 'access_token' in data
+        payload = decode_token(data['access_token'], secret)
+        assert payload['sub'] == '1'
+        assert payload['role'] == 'member'
+        assert payload['type'] == 'access'
+
+    def test_missing_cookie(self, client, mock_db):
+        resp = client.post('/api/refresh')
+        assert resp.status_code == 401
+        assert resp.get_json()['error_code'] == 'AUTH_001'
+
+    def test_expired_refresh_token(self, client, app, mock_db):
+        secret = app.config['SECRET_KEY']
+        refresh = create_refresh_token(1, 'member', secret, -1)
+        client.set_cookie('fc_refresh_token', refresh, domain='localhost', path='/api')
+        resp = client.post('/api/refresh')
+        assert resp.status_code == 401
+        assert resp.get_json()['error_code'] == 'AUTH_001'
+
+    def test_access_token_rejected_as_refresh(self, client, app, mock_db):
+        secret = app.config['SECRET_KEY']
+        access = create_access_token(1, 'member', secret, 3600)
+        client.set_cookie('fc_refresh_token', access, domain='localhost', path='/api')
+        resp = client.post('/api/refresh')
+        assert resp.status_code == 401
+        assert resp.get_json()['error_code'] == 'AUTH_001'
+
+    def test_invalid_refresh_token(self, client, mock_db):
+        client.set_cookie('fc_refresh_token', 'garbage.token.here', domain='localhost', path='/api')
+        resp = client.post('/api/refresh')
+        assert resp.status_code == 401
+        assert resp.get_json()['error_code'] == 'AUTH_001'
+
+
+# ---------------------------------------------------------------------------
+# JWT utility functions
+# ---------------------------------------------------------------------------
+
+class TestJwtUtils:
+    def test_create_and_decode_access(self):
+        secret = 'a-long-enough-secret-key-for-hs256-tests'
+        token = create_access_token(42, 'admin', secret, 300)
+        payload = decode_token(token, secret)
+        assert payload['sub'] == '42'
+        assert payload['role'] == 'admin'
+        assert payload['type'] == 'access'
+
+    def test_create_and_decode_refresh(self):
+        secret = 'a-long-enough-secret-key-for-hs256-tests'
+        token = create_refresh_token(7, 'trainer', secret, 600)
+        payload = decode_token(token, secret)
+        assert payload['sub'] == '7'
+        assert payload['role'] == 'trainer'
+        assert payload['type'] == 'refresh'
+
+    def test_expired_token_raises(self):
+        secret = 'a-long-enough-secret-key-for-hs256-tests'
+        token = create_access_token(1, 'member', secret, -1)
+        with pytest.raises(pyjwt.ExpiredSignatureError):
+            decode_token(token, secret)
+
+    def test_wrong_secret_raises(self):
+        secret_a = 'a-long-enough-secret-key-for-hs256-aaaa'
+        secret_b = 'a-long-enough-secret-key-for-hs256-bbbb'
+        token = create_access_token(1, 'member', secret_a, 300)
+        with pytest.raises(pyjwt.InvalidSignatureError):
+            decode_token(token, secret_b)

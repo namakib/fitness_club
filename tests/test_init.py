@@ -45,7 +45,7 @@ class TestDebugApiLogging:
             from backend import create_app
             app = create_app()
         app.config['TESTING'] = True
-        app.config['SECRET_KEY'] = 'test-secret'
+        app.config['SECRET_KEY'] = 'test-secret-key-that-is-long-enough-for-hs256'
         return app
 
     def test_get_request_logging(self, debug_app, mock_db, capsys):

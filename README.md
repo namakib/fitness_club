@@ -15,7 +15,7 @@ A PostgreSQL-backed web application for managing a small fitness club, built wit
 - **Backend**: Python 3 / Flask (REST API)
 - **Database**: PostgreSQL
 - **Frontend**: React (Vite), Tailwind CSS, Recharts
-- **Auth**: Flask sessions with werkzeug password hashing (pbkdf2:sha256)
+- **Auth**: JWT (PyJWT) — short-lived access tokens + HTTP-only refresh cookie; werkzeug password hashing (pbkdf2:sha256)
 
 ## Prerequisites
 
@@ -113,8 +113,9 @@ fitness_club/
 │   ├── __init__.py         # App factory
 │   ├── config.py           # Configuration
 │   ├── db.py               # Database connection (PostgreSQL)
+│   ├── jwt_utils.py        # JWT token creation and verification
 │   └── routes/
-│       ├── auth.py         # Login, register, logout, role decorators
+│       ├── auth.py         # Login, register, logout, refresh, role decorators (JWT)
 │       ├── member.py       # Member operations (1-4)
 │       ├── trainer.py      # Trainer operations (5-6)
 │       └── admin.py       # Admin operations (7-8)

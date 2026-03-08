@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import api from '../api';
+import api, { setAccessToken } from '../api';
 
 const AuthContext = createContext(null);
 
@@ -7,6 +7,24 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  async function bootstrap() {
+    try {
+      const data = await api.post('/refresh');
+      if (data.access_token) {
+        setAccessToken(data.access_token);
+        const me = await api.get('/me');
+        setUser(me.user);
+        setRole(me.role);
+        return;
+      }
+    } catch {
+      // No valid refresh token -- user is not logged in
+    }
+    setAccessToken(null);
+    setUser(null);
+    setRole(null);
+  }
 
   async function fetchMe() {
     try {
@@ -21,10 +39,13 @@ export function AuthProvider({ children }) {
     }
   }
 
-  useEffect(() => { fetchMe(); }, []);
+  useEffect(() => {
+    bootstrap().finally(() => setLoading(false));
+  }, []);
 
   async function login(email, password, loginRole) {
     const data = await api.post('/login', { email, password, role: loginRole });
+    setAccessToken(data.access_token);
     setUser(data.user);
     setRole(data.role);
     return data;
@@ -34,6 +55,7 @@ export function AuthProvider({ children }) {
     try {
       await api.post('/logout');
     } finally {
+      setAccessToken(null);
       setUser(null);
       setRole(null);
     }

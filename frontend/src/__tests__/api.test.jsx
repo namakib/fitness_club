@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 let api;
+let setAccessToken;
+let getAccessToken;
 let originalFetch;
 
 beforeEach(async () => {
@@ -12,6 +14,8 @@ beforeEach(async () => {
   vi.resetModules();
   const mod = await import('../api');
   api = mod.default;
+  setAccessToken = mod.setAccessToken;
+  getAccessToken = mod.getAccessToken;
 });
 
 afterEach(() => {
@@ -134,5 +138,82 @@ describe('api', () => {
     groupSpy.mockRestore();
     logSpy.mockRestore();
     groupEndSpy.mockRestore();
+  });
+
+  it('sends Authorization header when access token is set', async () => {
+    setAccessToken('my-jwt-token');
+    mockFetch(200, { ok: true });
+    await api.get('/protected');
+    const call = globalThis.fetch.mock.calls[0];
+    expect(call[1].headers['Authorization']).toBe('Bearer my-jwt-token');
+  });
+
+  it('does not send Authorization header when token is null', async () => {
+    setAccessToken(null);
+    mockFetch(200, { ok: true });
+    await api.get('/public');
+    const call = globalThis.fetch.mock.calls[0];
+    expect(call[1].headers['Authorization']).toBeUndefined();
+  });
+
+  it('setAccessToken and getAccessToken work correctly', () => {
+    setAccessToken('abc123');
+    expect(getAccessToken()).toBe('abc123');
+    setAccessToken(null);
+    expect(getAccessToken()).toBeNull();
+  });
+
+  it('retries on 401 by calling /refresh then replaying request', async () => {
+    setAccessToken('expired-tok');
+    let callCount = 0;
+    globalThis.fetch = vi.fn().mockImplementation((url) => {
+      callCount++;
+      if (callCount === 1) {
+        return Promise.resolve({
+          ok: false, status: 401, statusText: 'Unauthorized',
+          headers: { get: () => 'application/json' },
+          json: () => Promise.resolve({ error: 'Token expired', error_code: 'AUTH_001' }),
+        });
+      }
+      if (url.includes('/refresh')) {
+        return Promise.resolve({
+          ok: true, status: 200, statusText: 'OK',
+          headers: { get: () => 'application/json' },
+          json: () => Promise.resolve({ access_token: 'new-tok' }),
+        });
+      }
+      return Promise.resolve({
+        ok: true, status: 200, statusText: 'OK',
+        headers: { get: () => 'application/json' },
+        json: () => Promise.resolve({ data: 'success' }),
+      });
+    });
+
+    const result = await api.get('/member/dashboard');
+    expect(result).toEqual({ data: 'success' });
+    expect(globalThis.fetch).toHaveBeenCalledTimes(3);
+    expect(getAccessToken()).toBe('new-tok');
+  });
+
+  it('does not retry /login on 401', async () => {
+    mockFetch(401, { error: 'Invalid credentials', error_code: 'AUTH_004' }, { statusText: 'Unauthorized' });
+    await expect(api.post('/login', { email: 'a@b.com', password: 'bad' })).rejects.toThrow('Invalid credentials');
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('throws 401 if refresh also fails', async () => {
+    setAccessToken('expired');
+    let callCount = 0;
+    globalThis.fetch = vi.fn().mockImplementation(() => {
+      callCount++;
+      return Promise.resolve({
+        ok: false, status: 401, statusText: 'Unauthorized',
+        headers: { get: () => 'application/json' },
+        json: () => Promise.resolve({ error: 'Auth required', error_code: 'AUTH_001' }),
+      });
+    });
+
+    await expect(api.get('/protected')).rejects.toThrow('Auth required');
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2);
   });
 });
