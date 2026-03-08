@@ -53,8 +53,6 @@ export function BookSessionForm({ onSuccess }) {
     return () => { cancelled = true; };
   }, [form.trainer_id]);
 
-  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
-
   async function submit(e) {
     e.preventDefault();
     setBusy(true);

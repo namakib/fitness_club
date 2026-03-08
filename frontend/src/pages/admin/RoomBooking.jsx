@@ -62,7 +62,6 @@ export default function RoomBooking() {
 function SessionForm({ rooms, members, trainers, onSaved }) {
   const [form, setForm] = useState({ member_id: '', trainer_id: '', room_id: '', session_date: '', start_time: '', end_time: '' });
   const [busy, setBusy] = useState(false);
-  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
   async function submit(e) {
     e.preventDefault();

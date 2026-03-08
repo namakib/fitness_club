@@ -18,7 +18,6 @@ import {
   faSun,
   faMoon,
   faRightFromBracket,
-  faGauge,
   faThLarge,
   faCalendarDays,
   faClock,
