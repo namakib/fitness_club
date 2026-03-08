@@ -32,3 +32,7 @@ services:
         sync: false
       - key: CORS_ORIGINS
         sync: false
+      - key: JWT_ACCESS_EXPIRES
+        value: "900"
+      - key: JWT_REFRESH_EXPIRES
+        value: "604800"
