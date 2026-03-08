@@ -80,6 +80,14 @@ ALTER TABLE trainer ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payment ENABLE ROW LEVEL SECURITY;
 
+-- fc_app: allow SELECT for login and load_logged_in_user (before SET ROLE)
+DROP POLICY IF EXISTS fc_app_select_member ON member;
+DROP POLICY IF EXISTS fc_app_select_trainer ON trainer;
+DROP POLICY IF EXISTS fc_app_select_admin ON admin;
+CREATE POLICY fc_app_select_member ON member FOR SELECT TO fc_app USING (true);
+CREATE POLICY fc_app_select_trainer ON trainer FOR SELECT TO fc_app USING (true);
+CREATE POLICY fc_app_select_admin ON admin FOR SELECT TO fc_app USING (true);
+
 -- Drop existing policies if re-running
 DROP POLICY IF EXISTS member_self ON member;
 DROP POLICY IF EXISTS goal_owner ON fitness_goal;
