@@ -106,19 +106,19 @@ describe('ScheduleCalendar', () => {
   });
 
   describe('navigation', () => {
-    it('goes to previous week', () => {
+    it('goes to previous day', () => {
       renderCal();
-      fireEvent.click(screen.getByLabelText('Previous week'));
+      fireEvent.click(screen.getByLabelText('Previous day'));
     });
 
-    it('goes to next week', () => {
+    it('goes to next day', () => {
       renderCal();
-      fireEvent.click(screen.getByLabelText('Next week'));
+      fireEvent.click(screen.getByLabelText('Next day'));
     });
 
     it('goes to today', () => {
       renderCal();
-      fireEvent.click(screen.getByLabelText('Previous week'));
+      fireEvent.click(screen.getByLabelText('Previous day'));
       fireEvent.click(screen.getByText('Today'));
     });
 
@@ -126,6 +126,45 @@ describe('ScheduleCalendar', () => {
       renderCal();
       const input = screen.getByTestId('date-picker-input');
       fireEvent.change(input, { target: { value: '2025-06-15' } });
+    });
+
+    it('today is leftmost day on initial load', () => {
+      renderCal();
+      const todayWeekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()];
+      const allDayLabels = screen.getAllByText(/^(Sun|Mon|Tue|Wed|Thu|Fri|Sat)$/);
+      expect(allDayLabels[0].textContent).toBe(todayWeekday);
+    });
+
+    it('next/prev move selected date by one day, not a full week', () => {
+      renderCal();
+      const input = screen.getByTestId('date-picker-input');
+      const now = new Date();
+      const fmt = (d) => {
+        const yy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yy}-${mm}-${dd}`;
+      };
+      expect(input.value).toBe(fmt(now));
+
+      fireEvent.click(screen.getByLabelText('Next day'));
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      expect(input.value).toBe(fmt(tomorrow));
+
+      fireEvent.click(screen.getByLabelText('Previous day'));
+      expect(input.value).toBe(fmt(now));
+    });
+
+    it('jump to centers selected date in the week window', () => {
+      renderCal();
+      const input = screen.getByTestId('date-picker-input');
+      fireEvent.change(input, { target: { value: '2025-07-10' } });
+
+      const windowStartDate = new Date(2025, 6, 7);
+      const expectedFirstDay = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][windowStartDate.getDay()];
+      const allDayLabels = screen.getAllByText(/^(Sun|Mon|Tue|Wed|Thu|Fri|Sat)$/);
+      expect(allDayLabels[0].textContent).toBe(expectedFirstDay);
     });
   });
 

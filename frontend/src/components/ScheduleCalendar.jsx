@@ -15,6 +15,16 @@ function toDateKey(d) {
   return toYMD(d instanceof Date ? d : new Date(d + 'T12:00:00'));
 }
 
+function sameDay(a, b) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+function noonDate(d) {
+  const c = new Date(d);
+  c.setHours(12, 0, 0, 0);
+  return c;
+}
+
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
@@ -80,28 +90,22 @@ export default function ScheduleCalendar({
   refreshTrigger,
   jumpToDate,
 }) {
-  const [viewDate, setViewDate] = useState(() => new Date());
+  const [selectedDate, setSelectedDate] = useState(() => noonDate(new Date()));
+  const [windowStart, setWindowStart] = useState(() => noonDate(new Date()));
   const [data, setData] = useState(loadEvents ? null : eventsProp);
   const [loading, setLoading] = useState(!!loadEvents);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  const weekStart = useMemo(() => {
-    const d = new Date(viewDate);
-    d.setDate(d.getDate() - d.getDay());
-    d.setHours(12, 0, 0, 0);
-    return d;
-  }, [viewDate]);
-
-  const weekKey = `${weekStart.getFullYear()}-${weekStart.getMonth()}-${weekStart.getDate()}`;
+  const windowKey = `${windowStart.getFullYear()}-${windowStart.getMonth()}-${windowStart.getDate()}`;
 
   const fetchData = useCallback(() => {
     if (!loadEvents) return;
     setLoading(true);
-    loadEvents(weekStart)
+    loadEvents(windowStart)
       .then((result) => { setData(result); setLoading(false); })
       .catch(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadEvents, weekKey]);
+  }, [loadEvents, windowKey]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (loadEvents) fetchData(); }, [fetchData, refreshTrigger]);
@@ -109,16 +113,22 @@ export default function ScheduleCalendar({
   useEffect(() => { if (!loadEvents) setData(eventsProp); }, [eventsProp, loadEvents]);
 
   useEffect(() => {
-    if (jumpToDate) setViewDate(new Date(jumpToDate + 'T12:00:00'));
+    if (jumpToDate) {
+      const sel = noonDate(new Date(jumpToDate + 'T12:00:00'));
+      setSelectedDate(sel);
+      const ws = new Date(sel);
+      ws.setDate(ws.getDate() - 3);
+      setWindowStart(ws);
+    }
   }, [jumpToDate]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const resolvedData = loadEvents ? data : (eventsProp ?? { sessions: [], classes: [] });
 
   const weekDays = useMemo(() => {
-    const [y, m, day] = [weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate()];
+    const [y, m, day] = [windowStart.getFullYear(), windowStart.getMonth(), windowStart.getDate()];
     return Array.from({ length: 7 }, (_, i) => new Date(y, m, day + i, 12, 0, 0));
-  }, [weekStart]);
+  }, [windowStart]);
 
   const allEvents = useMemo(() => {
     if (!resolvedData) return [];
@@ -161,17 +171,33 @@ export default function ScheduleCalendar({
     return map;
   }, [allEvents]);
 
-  function goPrevWeek() {
-    const d = new Date(weekStart);
-    d.setDate(d.getDate() - 7);
-    setViewDate(d);
+  function goPrev() {
+    const newSel = new Date(selectedDate);
+    newSel.setDate(newSel.getDate() - 1);
+    setSelectedDate(newSel);
+    if (newSel < windowStart) {
+      const ws = new Date(windowStart);
+      ws.setDate(ws.getDate() - 1);
+      setWindowStart(ws);
+    }
   }
-  function goNextWeek() {
-    const d = new Date(weekStart);
-    d.setDate(d.getDate() + 7);
-    setViewDate(d);
+  function goNext() {
+    const newSel = new Date(selectedDate);
+    newSel.setDate(newSel.getDate() + 1);
+    setSelectedDate(newSel);
+    const windowEnd = new Date(windowStart);
+    windowEnd.setDate(windowEnd.getDate() + 6);
+    if (newSel > windowEnd) {
+      const ws = new Date(windowStart);
+      ws.setDate(ws.getDate() + 1);
+      setWindowStart(ws);
+    }
   }
-  function goToday() { setViewDate(new Date()); }
+  function goToday() {
+    const now = noonDate(new Date());
+    setSelectedDate(now);
+    setWindowStart(now);
+  }
 
   const totalM = 24 * 60;
   function getEventStyle(ev) {
@@ -191,7 +217,7 @@ export default function ScheduleCalendar({
     if (loadEvents) fetchData();
   }
 
-  const monthLabel = viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const monthLabel = selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   const weekRange = `${weekDays[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${weekDays[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 
   const legendItems = legend
@@ -220,19 +246,26 @@ export default function ScheduleCalendar({
             <div className="w-44 shrink-0">
               <DatePicker
                 label="Jump to"
-                value={toYMD(viewDate)}
-                onChange={(val) => val && setViewDate(new Date(val + 'T12:00:00'))}
+                value={toYMD(selectedDate)}
+                onChange={(val) => {
+                  if (!val) return;
+                  const sel = noonDate(new Date(val + 'T12:00:00'));
+                  setSelectedDate(sel);
+                  const ws = new Date(sel);
+                  ws.setDate(ws.getDate() - 3);
+                  setWindowStart(ws);
+                }}
                 placeholder="Select date"
               />
             </div>
             <div className="flex items-center gap-1">
-              <button type="button" onClick={goPrevWeek} className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition" aria-label="Previous week">
+              <button type="button" onClick={goPrev} className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition" aria-label="Previous day">
                 <ChevronLeftIcon className="h-5 w-5" />
               </button>
               <button type="button" onClick={goToday} className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
                 Today
               </button>
-              <button type="button" onClick={goNextWeek} className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition" aria-label="Next week">
+              <button type="button" onClick={goNext} className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition" aria-label="Next day">
                 <ChevronRightIcon className="h-5 w-5" />
               </button>
             </div>
@@ -273,16 +306,39 @@ export default function ScheduleCalendar({
               {weekDays.map((d) => {
                 const key = toDateKey(d);
                 const dayEvents = eventsByDay[key] || [];
-                const today = new Date();
-                const isToday = d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+                const now = new Date();
+                const isToday = sameDay(d, now);
+                const isSelected = sameDay(d, selectedDate);
+
+                const colBg = isToday && isSelected
+                  ? 'bg-orange-50/50 dark:bg-orange-900/20'
+                  : isToday
+                    ? 'bg-orange-50/50 dark:bg-orange-900/20'
+                    : isSelected
+                      ? 'bg-blue-50/50 dark:bg-blue-900/20'
+                      : '';
+
+                let headerCls = 'text-gray-700 dark:text-gray-300';
+                let dayLabelCls = 'text-gray-500 dark:text-gray-400';
+                if (isToday && isSelected) {
+                  headerCls = 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 ring-2 ring-blue-500/60 dark:ring-blue-400/60';
+                  dayLabelCls = 'text-orange-600 dark:text-orange-400';
+                } else if (isToday) {
+                  headerCls = 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 ring-1 ring-orange-500/30 dark:ring-orange-400/30';
+                  dayLabelCls = 'text-orange-600 dark:text-orange-400';
+                } else if (isSelected) {
+                  headerCls = 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 ring-2 ring-blue-500/60 dark:ring-blue-400/60';
+                  dayLabelCls = 'text-blue-600 dark:text-blue-400';
+                }
+
                 return (
                   <div
                     key={key}
-                    className={`relative border-r border-gray-200 dark:border-gray-700 last:border-r-0 ${isToday ? 'bg-orange-50/50 dark:bg-orange-900/20' : ''}`}
+                    className={`relative border-r border-gray-200 dark:border-gray-700 last:border-r-0 ${colBg}`}
                     style={{ minHeight: 720 }}
                   >
-                    <div className={`h-12 flex flex-col items-center justify-center border-b border-gray-200 dark:border-gray-700 text-sm font-medium ${isToday ? 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 ring-1 ring-orange-500/30 dark:ring-orange-400/30' : 'text-gray-700 dark:text-gray-300'}`}>
-                      <span className={`text-xs ${isToday ? 'text-orange-600 dark:text-orange-400' : 'text-gray-500 dark:text-gray-400'}`}>{WEEKDAYS[d.getDay()]}</span>
+                    <div className={`h-12 flex flex-col items-center justify-center border-b border-gray-200 dark:border-gray-700 text-sm font-medium ${headerCls}`}>
+                      <span className={`text-xs ${dayLabelCls}`}>{WEEKDAYS[d.getDay()]}</span>
                       {d.getDate()}
                     </div>
                     <div className="absolute inset-x-0 top-12 bottom-0 pointer-events-none">
