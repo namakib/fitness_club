@@ -3,7 +3,7 @@ import api from '../../api';
 import { toastError, toastSuccess } from '../../toastUtil';
 import ProfileHeader from '../../components/ProfileHeader';
 import StatCard from '../../components/StatCard';
-import PhoneInput from '../../components/PhoneInput';
+import PhoneInput, { formatPhoneDisplay } from '../../components/PhoneInput';
 import { UserIcon, PhoneIcon, UsersIcon, TrainerIcon } from '../../components/Icons';
 import NavModeToggle from '../../components/NavModeToggle';
 import t from '../../theme';
