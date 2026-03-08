@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import ScheduleCalendar from '../../components/ScheduleCalendar';
 import { ThemeProvider } from '../../context/ThemeContext';
 
@@ -33,7 +33,7 @@ function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function getWeekDateStr(offsetDays = 0) {
+function _getWeekDateStr(offsetDays = 0) {
   const d = new Date();
   d.setDate(d.getDate() + offsetDays);
   return d.toISOString().slice(0, 10);
@@ -352,7 +352,7 @@ describe('ScheduleCalendar', () => {
     });
 
     it('refetches on refreshTrigger change', async () => {
-      const dateStr = today();
+      const _dateStr = today();
       const loadEvents = vi.fn().mockResolvedValue({ sessions: [], classes: [] });
       const { rerender } = render(
         <ThemeProvider>
@@ -557,7 +557,7 @@ describe('ScheduleCalendar', () => {
 
   describe('eventsByDay with non-string/non-ISO event_date (lines 152-154)', () => {
     it('handles event with numeric event_date falling back to toDateKey', () => {
-      const dateStr = today();
+      const _dateStr = today();
       renderCal({
         events: {
           sessions: [{ session_id: 1, trainer_name: 'Numeric', event_date: 12345, start_time: '10:00', end_time: '11:00' }],
@@ -568,7 +568,7 @@ describe('ScheduleCalendar', () => {
     });
 
     it('handles event with non-ISO date string in event_date', () => {
-      const dateStr = today();
+      const _dateStr = today();
       renderCal({
         events: {
           sessions: [{ session_id: 1, trainer_name: 'BadDate', session_date: 'not-a-date', start_time: '10:00', end_time: '11:00' }],

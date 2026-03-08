@@ -151,4 +151,5 @@ fitness_club/
 
 ## Video Demonstration
 
-_Link to be added here._
+<!-- TODO: Replace this placeholder with your actual video link -->
+_Link to be added here._ (max 15 minutes, must cover: ER model, schema mapping, DDL/DML, all 8 operations with success + failure cases, role-based access, code walkthrough)

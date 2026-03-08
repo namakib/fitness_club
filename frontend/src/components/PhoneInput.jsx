@@ -9,6 +9,7 @@ function formatPhone(value) {
   return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export { formatPhone as formatPhoneDisplay };
 
 export default function PhoneInput({ label, value, onChange, placeholder = '(555) 555-5555', required, className, ...props }) {

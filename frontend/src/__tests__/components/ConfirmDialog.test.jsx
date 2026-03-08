@@ -139,7 +139,7 @@ describe('ConfirmDialog', () => {
   });
 
   it('renders nothing when not open', () => {
-    const { container } = render(
+    const { container: _container } = render(
       <ConfirmDialog open={false} onClose={vi.fn()} onConfirm={vi.fn()} message="Hidden" />
     );
     expect(screen.queryByText('Hidden')).not.toBeInTheDocument();

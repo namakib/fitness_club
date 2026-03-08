@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api';
 import { toastError, toastSuccess } from '../../toastUtil';
@@ -52,8 +52,6 @@ export function BookSessionForm({ onSuccess }) {
       .finally(() => { if (!cancelled) setLoadingAvailability(false); });
     return () => { cancelled = true; };
   }, [form.trainer_id]);
-
-  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
   async function submit(e) {
     e.preventDefault();

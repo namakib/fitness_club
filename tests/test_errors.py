@@ -1,6 +1,7 @@
 from backend.errors import (
     _format_time,
     _format_date,
+    _normalize_time,
     strip_db_context,
     parse_db_error,
     get_message,
@@ -237,3 +238,18 @@ class TestMakeError:
     def test_unknown_code_defaults_to_400(self):
         _, status = make_error('UNKNOWN')
         assert status == 400
+
+
+# ---------------------------------------------------------------------------
+# _normalize_time
+# ---------------------------------------------------------------------------
+
+class TestNormalizeTime:
+    def test_none_returns_none(self):
+        assert _normalize_time(None) is None
+
+    def test_empty_returns_empty(self):
+        assert _normalize_time('') == ''
+
+    def test_invalid_non_numeric(self):
+        assert _normalize_time('abc:xyz') == 'abc:xyz'

@@ -30,6 +30,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
       }, DURATION_MS);
       return () => clearTimeout(timeout);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   useEffect(() => {

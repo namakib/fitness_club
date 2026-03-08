@@ -42,7 +42,7 @@ describe('FilterDropdown', () => {
   });
 
   it('closes dropdown when clicking outside', () => {
-    const { container } = render(
+    const { container: _container } = render(
       <div>
         <div data-testid="outside">Outside element</div>
         <FilterDropdown label="Status" value="" options={options} onChange={vi.fn()} />

@@ -79,6 +79,7 @@ All tables satisfy 3NF — no transitive dependencies exist:
 | `group_class` | class_name, trainer_id, room_id, class_date, start_time, end_time, max_participants | All depend on class_id |
 | `class_enrollment` | class_id, member_id, enrolled_at | All depend on enrollment_id |
 | `equipment_maintenance` | equipment_id, issue_description, reported_date, resolved_date, status | All depend on log_id |
+| `payment` | member_id, amount, payment_status, payment_date, payment_method | All depend on payment_id; member_id is a FK, not a transitive dependency |
 
 ### 3.4 No Derived Attributes
 
@@ -157,6 +158,13 @@ All database interactions use parameterized SQL queries via psycopg2 (no ORM). T
 
 ---
 
-## 7. Conclusion
+## 7. Video Demonstration
+
+<!-- TODO: Replace this placeholder with your actual video link -->
+_Link to be added here._
+
+---
+
+## 8. Conclusion
 
 The system meets all specified requirements: 13 entities in 3NF, 13 relationships, 8 fully functional operations, role-based access control, database-level constraint enforcement, and a clean web interface. All SQL is parameterized and executed directly against PostgreSQL without an ORM.
