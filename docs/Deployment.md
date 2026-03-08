@@ -116,6 +116,68 @@ CORS_ORIGINS=https://your-app.vercel.app,https://www.yourdomain.com
 
 ---
 
+## Option 4: Free demo deployment (Vercel + Render + Neon)
+
+A zero-cost live demo with registration disabled. All three services have generous free tiers — no credit card required.
+
+| Service | Role | Free Tier |
+|---------|------|-----------|
+| **Neon** | PostgreSQL database | 0.5 GB storage, 190 compute hours/mo |
+| **Render** | Flask API backend | 750 hours/mo, sleeps after 15 min idle |
+| **Vercel** | React frontend | 100 GB bandwidth/mo, unlimited deploys |
+
+### 1. Database (Neon)
+
+1. Sign up at [neon.tech](https://neon.tech) (free, no credit card).
+2. Create a project → create a database named `fitness_club`.
+3. Run the SQL scripts against the database (via Neon's SQL Editor or `psql`):
+   ```bash
+   psql "$NEON_CONNECTION_STRING" -f sql/DDL.sql
+   psql "$NEON_CONNECTION_STRING" -f sql/RBAC.sql
+   psql "$NEON_CONNECTION_STRING" -f sql/DML.sql
+   ```
+4. Note the host, database name, user, and password from the Neon dashboard.
+
+### 2. Backend (Render)
+
+1. Connect the GitHub repo to [Render](https://render.com).
+2. Create a new **Web Service** (free tier).
+3. Set root directory to `.` (project root).
+4. Build command: `pip install -r requirements.txt`
+5. Start command: `gunicorn -w 2 -b 0.0.0.0:$PORT "run:app"`
+6. Add environment variables:
+   - `DEMO_MODE=1`
+   - `SECRET_KEY` — generate a strong value (`openssl rand -hex 32`)
+   - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` — from Neon
+   - `DB_APP_USER=fc_app`, `DB_APP_PASSWORD` — your RBAC app password
+   - `CORS_ORIGINS` — set to the Vercel URL once known (e.g. `https://your-app.vercel.app`)
+
+> A `render.yaml` is included in the repo for one-click blueprint deploys.
+
+### 3. Frontend (Vercel)
+
+1. Connect the GitHub repo to [Vercel](https://vercel.com).
+2. Set root directory to `frontend`.
+3. Build command: `npm run build`, output directory: `dist`.
+4. Add environment variable:
+   - `VITE_API_URL=https://your-render-service.onrender.com/api`
+5. After deploy, copy the Vercel URL and update `CORS_ORIGINS` on Render.
+
+### Demo mode behaviour
+
+When `DEMO_MODE=1`:
+- New user registration is blocked (API returns 403).
+- The login page shows sample credentials (click-to-fill) for each role.
+- The "Create Account" link is hidden on the home and login pages.
+- Logged-in users can still perform all other actions (view dashboards, book sessions, etc.).
+
+### Console logging in production / demo
+
+- **Frontend**: API debug logs are off by default in production builds (`VITE_DEBUG_API` defaults to `0`). Dev scripts (`start.sh`, `run-frontend.sh`) set `VITE_DEBUG_API=1` for local development.
+- **Backend**: `DEBUG_API_LOGGING` defaults to `False`. Do not set `DEBUG_API=1` in production.
+
+---
+
 ## Checklist before going live
 
 - [ ] **SECRET_KEY** is a long random value, not the default.

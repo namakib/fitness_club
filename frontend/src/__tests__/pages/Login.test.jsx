@@ -6,6 +6,9 @@ import { MemoryRouter } from 'react-router-dom';
 const mockLogin = vi.fn();
 const mockNavigate = vi.fn();
 
+let mockDemoMode = false;
+let mockDemoAccounts = [];
+
 vi.mock('../../context/AuthContext', () => ({
   useAuth: () => ({
     user: null,
@@ -16,6 +19,11 @@ vi.mock('../../context/AuthContext', () => ({
     refetch: vi.fn(),
   }),
   AuthProvider: ({ children }) => children,
+}));
+
+vi.mock('../../context/DemoContext', () => ({
+  useDemo: () => ({ demoMode: mockDemoMode, demoAccounts: mockDemoAccounts }),
+  DemoProvider: ({ children }) => children,
 }));
 
 vi.mock('react-router-dom', async () => {
@@ -45,6 +53,8 @@ function renderLogin() {
 describe('Login page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockDemoMode = false;
+    mockDemoAccounts = [];
   });
 
   it('renders login form', () => {
@@ -141,5 +151,34 @@ describe('Login page', () => {
       expect(mockLogin).toHaveBeenCalledWith('a@b.com', 'pass123', 'trainer');
       expect(mockNavigate).toHaveBeenCalledWith('/trainer/dashboard');
     });
+  });
+
+  it('shows demo credentials card and hides register link in demo mode', () => {
+    mockDemoMode = true;
+    mockDemoAccounts = [
+      { role: 'member', email: 'alice@example.com', password: 'password123' },
+      { role: 'trainer', email: 'frank@example.com', password: 'password123' },
+      { role: 'admin', email: 'ivy@example.com', password: 'password123' },
+    ];
+    renderLogin();
+
+    expect(screen.getByText(/Demo Mode/)).toBeInTheDocument();
+    expect(screen.getByText('alice@example.com')).toBeInTheDocument();
+    expect(screen.getByText('frank@example.com')).toBeInTheDocument();
+    expect(screen.getByText('ivy@example.com')).toBeInTheDocument();
+    expect(screen.queryByText('Register')).not.toBeInTheDocument();
+  });
+
+  it('fills form when demo account is clicked', async () => {
+    const user = userEvent.setup();
+    mockDemoMode = true;
+    mockDemoAccounts = [
+      { role: 'member', email: 'alice@example.com', password: 'password123' },
+    ];
+    renderLogin();
+
+    await user.click(screen.getByText('alice@example.com'));
+
+    expect(document.querySelector('input[type="email"]').value).toBe('alice@example.com');
   });
 });

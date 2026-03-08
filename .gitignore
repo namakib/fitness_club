@@ -32,6 +32,7 @@ instance/
 # Test / Coverage
 .coverage
 htmlcov/
+frontend/coverage/
 
 # Node / Frontend
 node_modules/

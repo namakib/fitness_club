@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { useDemo } from '../context/DemoContext';
 import api from '../api';
 import { toastError, toastSuccess } from '../toastUtil';
 import ThemeToggle from '../components/ThemeToggle';
@@ -16,10 +17,13 @@ const GENDERS = [
 ];
 
 export default function Register() {
+  const { demoMode } = useDemo();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', dob: '', gender: 'male', phone: '', password: '' });
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  if (demoMode) return <Navigate to="/login" replace />;
 
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value });
 

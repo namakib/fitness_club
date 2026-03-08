@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useDemo } from '../context/DemoContext';
 import { toastError } from '../toastUtil';
 import ThemeToggle from '../components/ThemeToggle';
 import SelectDropdown from '../components/SelectDropdown';
@@ -15,12 +16,17 @@ const ROLE_OPTIONS = [
 
 export default function Login() {
   const { login } = useAuth();
+  const { demoMode, demoAccounts } = useDemo();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '', role: 'member' });
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const dest = { member: '/member/dashboard', trainer: '/trainer/dashboard', admin: '/admin/dashboard' };
+
+  function fillDemo(account) {
+    setForm({ email: account.email, password: account.password, role: account.role });
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -92,11 +98,34 @@ export default function Login() {
             {busy ? 'Signing in...' : 'Sign In'}
           </button>
 
-          <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
-            Don't have an account?{' '}
-            <Link to="/register" className={t.link}>Register</Link>
-          </p>
+          {!demoMode && (
+            <p className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+              Don't have an account?{' '}
+              <Link to="/register" className={t.link}>Register</Link>
+            </p>
+          )}
         </form>
+
+        {demoMode && demoAccounts.length > 0 && (
+          <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50/60 p-4 dark:border-orange-800 dark:bg-orange-900/20">
+            <p className="mb-3 text-center text-sm font-semibold text-orange-700 dark:text-orange-400">
+              Demo Mode &mdash; click a role to auto-fill
+            </p>
+            <div className="flex flex-col gap-2">
+              {demoAccounts.map((a) => (
+                <button
+                  key={a.role}
+                  type="button"
+                  onClick={() => fillDemo(a)}
+                  className="flex items-center justify-between rounded-lg border border-orange-200 bg-white px-3 py-2 text-left text-sm transition hover:border-orange-400 hover:shadow-sm dark:border-orange-700 dark:bg-gray-800 dark:hover:border-orange-500"
+                >
+                  <span className="font-medium capitalize text-gray-800 dark:text-gray-200">{a.role}</span>
+                  <span className="text-gray-500 dark:text-gray-400">{a.email}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       <footer className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
         Health & Fitness Club Management

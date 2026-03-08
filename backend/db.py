@@ -8,13 +8,17 @@ from flask import current_app, g
 
 def get_db():
     if 'db' not in g:
-        g.db = psycopg2.connect(
+        connect_kwargs = dict(
             host=current_app.config['DB_HOST'],
             port=current_app.config['DB_PORT'],
             dbname=current_app.config['DB_NAME'],
             user=current_app.config.get('DB_APP_USER', current_app.config['DB_USER']),
             password=current_app.config.get('DB_APP_PASSWORD', current_app.config['DB_PASSWORD']),
         )
+        sslmode = current_app.config.get('DB_SSLMODE')
+        if sslmode:
+            connect_kwargs['sslmode'] = sslmode
+        g.db = psycopg2.connect(**connect_kwargs)
     return g.db
 
 

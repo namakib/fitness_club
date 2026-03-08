@@ -1,6 +1,36 @@
-"""Tests for authentication routes: register, login, logout, me."""
+"""Tests for authentication routes: register, login, logout, me, config."""
 
 from flask import g, jsonify
+import pytest
+
+
+# ---------------------------------------------------------------------------
+# Config (demo mode)
+# ---------------------------------------------------------------------------
+
+class TestConfig:
+    def test_config_not_demo(self, client, mock_db):
+        resp = client.get('/api/config')
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data['demo_mode'] is False
+        assert 'demo_accounts' not in data
+
+    def test_config_demo_mode(self, mock_db):
+        from backend import create_app
+        app = create_app()
+        app.config['TESTING'] = True
+        app.config['DEMO_MODE'] = True
+        with app.test_client() as c:
+            resp = c.get('/api/config')
+            assert resp.status_code == 200
+            data = resp.get_json()
+            assert data['demo_mode'] is True
+            assert len(data['demo_accounts']) == 3
+            roles = [a['role'] for a in data['demo_accounts']]
+            assert 'member' in roles
+            assert 'trainer' in roles
+            assert 'admin' in roles
 
 
 # ---------------------------------------------------------------------------
@@ -8,6 +38,19 @@ from flask import g, jsonify
 # ---------------------------------------------------------------------------
 
 class TestRegister:
+    def test_blocked_in_demo_mode(self, mock_db):
+        from backend import create_app
+        app = create_app()
+        app.config['TESTING'] = True
+        app.config['DEMO_MODE'] = True
+        with app.test_client() as c:
+            resp = c.post('/api/register', json={
+                'name': 'New', 'email': 'new@test.com',
+                'dob': '2000-01-01', 'password': 'secret123',
+            })
+            assert resp.status_code == 403
+            assert 'demo mode' in resp.get_json()['error'].lower()
+
     def test_success(self, client, mock_db):
         mock_conn, mock_cur = mock_db
         resp = client.post('/api/register', json={
