@@ -79,6 +79,14 @@ class TestApplyRole:
             apply_role('unknown', 1)
             mock_cur.execute.assert_not_called()
 
+    def test_non_int_user_id_returns_early(self, app, mock_db):
+        mock_conn, mock_cur = mock_db
+        with app.test_request_context():
+            from flask import g
+            g.db = mock_conn
+            apply_role('member', 'not-a-number')
+            mock_cur.execute.assert_not_called()
+
 
 # ---------------------------------------------------------------------------
 # close_db

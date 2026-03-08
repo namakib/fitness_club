@@ -410,3 +410,142 @@ def test_create_payment_db_error(admin_auth):
     })
     assert resp.status_code == 500
     assert resp.get_json()['error_code'] == 'ERR_001'
+
+
+# ---------------------------------------------------------------------------
+# Profile update – empty name
+# ---------------------------------------------------------------------------
+
+def test_profile_update_empty_name(admin_auth):
+    client, _, _, _ = admin_auth
+
+    resp = client.put('/api/admin/profile', json={
+        'name': '', 'phone': '1234567890',
+    })
+    assert resp.status_code == 400
+    assert resp.get_json()['error_code'] == 'VAL_001'
+
+
+# ---------------------------------------------------------------------------
+# Book session – missing fields & end_time <= start_time
+# ---------------------------------------------------------------------------
+
+def test_book_session_missing_fields(admin_auth):
+    client, _, _, _ = admin_auth
+
+    resp = client.post('/api/admin/room-booking/session', json={})
+    assert resp.status_code == 400
+    assert resp.get_json()['error_code'] == 'VAL_006'
+
+
+def test_book_session_end_before_start(admin_auth):
+    client, _, _, _ = admin_auth
+
+    resp = client.post('/api/admin/room-booking/session', json={
+        'member_id': 1, 'trainer_id': 1, 'room_id': 1,
+        'session_date': '2026-04-01',
+        'start_time': '10:00', 'end_time': '09:00',
+    })
+    assert resp.status_code == 400
+    assert resp.get_json()['error_code'] == 'VAL_007'
+
+
+# ---------------------------------------------------------------------------
+# Book session – conflict handling (fn_check_booking_conflicts)
+# ---------------------------------------------------------------------------
+
+def test_book_session_conflicts(admin_auth):
+    client, _, mock_cur, admin = admin_auth
+    mock_cur.fetchone.side_effect = [admin, {'1': 1}]
+    mock_cur.fetchall.return_value = [
+        {'conflict_type': 'member', 'detail': 'from 10:00:00 to 11:00:00'},
+        {'conflict_type': 'trainer', 'detail': 'from 10:00:00 to 11:00:00'},
+        {'conflict_type': 'room', 'detail': None},
+    ]
+
+    resp = client.post('/api/admin/room-booking/session', json={
+        'member_id': 1, 'trainer_id': 1, 'room_id': 1,
+        'session_date': '2026-04-01',
+        'start_time': '10:00', 'end_time': '11:00',
+    })
+    assert resp.status_code == 409
+    assert resp.get_json()['error_code'] == 'BOOK_002'
+
+
+# ---------------------------------------------------------------------------
+# Book class – missing fields & end_time <= start_time
+# ---------------------------------------------------------------------------
+
+def test_book_class_missing_fields(admin_auth):
+    client, _, _, _ = admin_auth
+
+    resp = client.post('/api/admin/room-booking/class', json={})
+    assert resp.status_code == 400
+    assert resp.get_json()['error_code'] == 'VAL_006'
+
+
+def test_book_class_end_before_start(admin_auth):
+    client, _, _, _ = admin_auth
+
+    resp = client.post('/api/admin/room-booking/class', json={
+        'class_name': 'Yoga', 'trainer_id': 1, 'room_id': 1,
+        'class_date': '2026-04-01',
+        'start_time': '10:00', 'end_time': '09:00',
+        'max_participants': 20,
+    })
+    assert resp.status_code == 400
+    assert resp.get_json()['error_code'] == 'VAL_007'
+
+
+# ---------------------------------------------------------------------------
+# Equipment – missing fields
+# ---------------------------------------------------------------------------
+
+def test_log_issue_missing_equipment_id(admin_auth):
+    client, _, _, _ = admin_auth
+
+    resp = client.post('/api/admin/equipment/issue', json={
+        'issue_description': 'Broken belt',
+    })
+    assert resp.status_code == 400
+    assert resp.get_json()['error_code'] == 'VAL_006'
+
+
+def test_update_equipment_status_missing_status(admin_auth):
+    client, _, _, _ = admin_auth
+
+    resp = client.put('/api/admin/equipment/1/status', json={})
+    assert resp.status_code == 400
+    assert resp.get_json()['error_code'] == 'VAL_006'
+
+
+def test_update_maintenance_missing_status(admin_auth):
+    client, _, _, _ = admin_auth
+
+    resp = client.put('/api/admin/equipment/maintenance/1', json={})
+    assert resp.status_code == 400
+    assert resp.get_json()['error_code'] == 'VAL_006'
+
+
+# ---------------------------------------------------------------------------
+# Payment – invalid amount
+# ---------------------------------------------------------------------------
+
+def test_create_payment_negative_amount(admin_auth):
+    client, _, _, _ = admin_auth
+
+    resp = client.post('/api/admin/payments', json={
+        'member_id': 1, 'amount': -5,
+    })
+    assert resp.status_code == 400
+    assert resp.get_json()['error_code'] == 'VAL_010'
+
+
+def test_create_payment_non_numeric_amount(admin_auth):
+    client, _, _, _ = admin_auth
+
+    resp = client.post('/api/admin/payments', json={
+        'member_id': 1, 'amount': 'abc',
+    })
+    assert resp.status_code == 400
+    assert resp.get_json()['error_code'] == 'VAL_010'

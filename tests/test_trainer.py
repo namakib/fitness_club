@@ -492,3 +492,30 @@ def test_availability_delete_db_error(trainer_auth):
     resp = client.delete('/api/trainer/availability/1')
     assert resp.status_code == 500
     assert resp.get_json()['error_code'] == 'ERR_001'
+
+
+# ---------------------------------------------------------------------------
+# Profile update – empty name
+# ---------------------------------------------------------------------------
+
+def test_profile_update_empty_name(trainer_auth):
+    client, _, _, _ = trainer_auth
+
+    resp = client.put('/api/trainer/profile', json={
+        'name': '', 'phone': '1234567890', 'specialization': 'Yoga',
+    })
+    assert resp.status_code == 400
+    assert resp.get_json()['error_code'] == 'VAL_001'
+
+
+# ---------------------------------------------------------------------------
+# Delete availability – not found (rowcount=0)
+# ---------------------------------------------------------------------------
+
+def test_availability_delete_not_found(trainer_auth):
+    client, _, mock_cur, _ = trainer_auth
+    mock_cur.rowcount = 0
+
+    resp = client.delete('/api/trainer/availability/999')
+    assert resp.status_code == 404
+    assert resp.get_json()['error_code'] == 'RES_004'

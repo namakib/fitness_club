@@ -526,3 +526,97 @@ def test_enroll_generic_error(member_auth):
     resp = client.post('/api/member/classes/1/enroll')
     assert resp.status_code == 500
     assert resp.get_json()['error_code'] == 'ERR_001'
+
+
+# ---------------------------------------------------------------------------
+# Profile update – empty name
+# ---------------------------------------------------------------------------
+
+def test_profile_update_empty_name(member_auth):
+    client, _, _, _ = member_auth
+
+    resp = client.put('/api/member/profile', json={
+        'name': '', 'phone': '1234567890', 'gender': 'male',
+    })
+    assert resp.status_code == 400
+    assert resp.get_json()['error_code'] == 'VAL_001'
+
+
+# ---------------------------------------------------------------------------
+# Goal – partial missing fields
+# ---------------------------------------------------------------------------
+
+def test_add_goal_missing_goal_type(member_auth):
+    client, _, _, _ = member_auth
+
+    resp = client.post('/api/member/goals', json={
+        'target_value': '75 kg',
+        'start_date': '2026-03-01',
+    })
+    assert resp.status_code == 400
+    data = resp.get_json()
+    assert data['error_code'] == 'VAL_006'
+    assert 'goal_type' in data['error']
+
+
+def test_add_goal_missing_target_and_start(member_auth):
+    client, _, _, _ = member_auth
+
+    resp = client.post('/api/member/goals', json={
+        'goal_type': 'Weight Loss',
+    })
+    assert resp.status_code == 400
+    data = resp.get_json()
+    assert data['error_code'] == 'VAL_006'
+    assert 'target_value' in data['error']
+    assert 'start_date' in data['error']
+
+
+# ---------------------------------------------------------------------------
+# Goal – invalid status
+# ---------------------------------------------------------------------------
+
+def test_update_goal_invalid_status(member_auth):
+    client, _, _, _ = member_auth
+
+    resp = client.put('/api/member/goals/1', json={'status': 'invalid_status'})
+    assert resp.status_code == 400
+    assert resp.get_json()['error_code'] == 'VAL_006'
+
+
+# ---------------------------------------------------------------------------
+# Metric – all empty fields
+# ---------------------------------------------------------------------------
+
+def test_add_metric_all_empty(member_auth):
+    client, _, _, _ = member_auth
+
+    resp = client.post('/api/member/metrics', json={})
+    assert resp.status_code == 400
+    assert resp.get_json()['error_code'] == 'VAL_006'
+
+
+# ---------------------------------------------------------------------------
+# Cancel session – generic DB error
+# ---------------------------------------------------------------------------
+
+def test_cancel_session_db_error(member_auth):
+    client, _, mock_cur, _ = member_auth
+    mock_cur.execute.side_effect = _exec_raises_after(3)
+
+    resp = client.put('/api/member/sessions/1', json={'status': 'cancelled'})
+    assert resp.status_code == 500
+    assert resp.get_json()['error_code'] == 'ERR_001'
+
+
+# ---------------------------------------------------------------------------
+# Drop class – generic DB error
+# ---------------------------------------------------------------------------
+
+def test_drop_class_db_error(member_auth):
+    client, _, mock_cur, _ = member_auth
+    mock_cur.execute.side_effect = _exec_raises_after(3)
+
+    resp = client.delete('/api/member/classes/1/enroll')
+    assert resp.status_code == 500
+    assert resp.get_json()['error_code'] == 'ERR_001'

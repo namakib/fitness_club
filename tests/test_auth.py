@@ -56,6 +56,14 @@ class TestRegister:
         assert resp.status_code == 400
         assert resp.get_json()['error_code'] == 'VAL_005'
 
+    def test_invalid_email_format(self, client, mock_db):
+        resp = client.post('/api/register', json={
+            'name': 'User', 'email': 'bademail', 'dob': '2000-01-01',
+            'password': 'secret123',
+        })
+        assert resp.status_code == 400
+        assert resp.get_json()['error_code'] == 'VAL_011'
+
     def test_duplicate_email(self, client, mock_db):
         _, mock_cur = mock_db
         mock_cur.execute.side_effect = Exception('unique constraint violation')
