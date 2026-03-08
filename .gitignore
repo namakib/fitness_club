@@ -29,6 +29,10 @@ Thumbs.db
 instance/
 *.db
 
+# Test / Coverage
+.coverage
+htmlcov/
+
 # Node / Frontend
 node_modules/
 frontend/dist/
