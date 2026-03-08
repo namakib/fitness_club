@@ -25,9 +25,9 @@ describe('NavModeContext', () => {
     spy.mockRestore();
   });
 
-  it('defaults to sidebar', () => {
+  it('defaults to dropdown', () => {
     render(<NavModeProvider><TestConsumer /></NavModeProvider>);
-    expect(screen.getByTestId('mode').textContent).toBe('sidebar');
+    expect(screen.getByTestId('mode').textContent).toBe('dropdown');
   });
 
   it('reads initial value from localStorage', () => {
@@ -38,33 +38,33 @@ describe('NavModeContext', () => {
 
   it('setNavMode updates state and localStorage', () => {
     render(<NavModeProvider><TestConsumer /></NavModeProvider>);
-    act(() => { screen.getByText('dropdown').click(); });
-    expect(screen.getByTestId('mode').textContent).toBe('dropdown');
-    expect(localStorage.setItem).toHaveBeenCalledWith('navMode', 'dropdown');
+    act(() => { screen.getByText('sidebar').click(); });
+    expect(screen.getByTestId('mode').textContent).toBe('sidebar');
+    expect(localStorage.setItem).toHaveBeenCalledWith('navMode', 'sidebar');
   });
 
   it('rejects invalid mode values', () => {
     render(<NavModeProvider><TestConsumer /></NavModeProvider>);
     act(() => { screen.getByText('invalid').click(); });
-    expect(screen.getByTestId('mode').textContent).toBe('sidebar');
+    expect(screen.getByTestId('mode').textContent).toBe('dropdown');
   });
 
-  it('defaults to sidebar when localStorage throws', () => {
+  it('defaults to dropdown when localStorage throws', () => {
     window.localStorage.getItem.mockImplementation(() => { throw new Error('blocked'); });
     render(<NavModeProvider><TestConsumer /></NavModeProvider>);
-    expect(screen.getByTestId('mode').textContent).toBe('sidebar');
+    expect(screen.getByTestId('mode').textContent).toBe('dropdown');
   });
 
-  it('defaults to sidebar when localStorage has invalid value', () => {
+  it('defaults to dropdown when localStorage has invalid value', () => {
     localStorage.setItem('navMode', 'bogus');
     render(<NavModeProvider><TestConsumer /></NavModeProvider>);
-    expect(screen.getByTestId('mode').textContent).toBe('sidebar');
+    expect(screen.getByTestId('mode').textContent).toBe('dropdown');
   });
 
   it('handles localStorage.setItem throwing gracefully', () => {
     window.localStorage.setItem.mockImplementation(() => { throw new Error('quota'); });
     render(<NavModeProvider><TestConsumer /></NavModeProvider>);
-    act(() => { screen.getByText('dropdown').click(); });
-    expect(screen.getByTestId('mode').textContent).toBe('dropdown');
+    act(() => { screen.getByText('sidebar').click(); });
+    expect(screen.getByTestId('mode').textContent).toBe('sidebar');
   });
 });
