@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
+import { useDemo } from '../context/DemoContext';
 import ThemeToggle from '../components/ThemeToggle';
 import t from '../theme';
 
 export default function Home() {
+  const { demoMode } = useDemo();
   return (
     <div className={`flex min-h-screen flex-col ${t.authBg} transition-colors duration-200`}>
       <div className="absolute top-4 right-4">
@@ -26,13 +28,20 @@ export default function Home() {
             >
               Sign In
             </Link>
-            <Link
-              to="/register"
-              className="inline-flex items-center justify-center rounded-xl border-2 border-orange-600 px-6 py-3 text-base font-semibold text-orange-600 transition hover:bg-orange-50 dark:border-orange-400 dark:text-orange-400 dark:hover:bg-orange-900/20"
-            >
-              Create Account
-            </Link>
+            {!demoMode && (
+              <Link
+                to="/register"
+                className="inline-flex items-center justify-center rounded-xl border-2 border-orange-600 px-6 py-3 text-base font-semibold text-orange-600 transition hover:bg-orange-50 dark:border-orange-400 dark:text-orange-400 dark:hover:bg-orange-900/20"
+              >
+                Create Account
+              </Link>
+            )}
           </div>
+          {demoMode && (
+            <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+              Demo mode &mdash; sign in with pre-loaded sample accounts.
+            </p>
+          )}
         </div>
       </main>
 

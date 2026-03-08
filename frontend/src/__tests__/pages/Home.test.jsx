@@ -1,9 +1,21 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
 import { renderWithProviders } from '../helpers/renderWithProviders';
+
+let mockDemoMode = false;
+
+vi.mock('../../context/DemoContext', () => ({
+  useDemo: () => ({ demoMode: mockDemoMode, demoAccounts: [] }),
+  DemoProvider: ({ children }) => children,
+}));
+
 import Home from '../../pages/Home';
 
 describe('Home page', () => {
+  beforeEach(() => {
+    mockDemoMode = false;
+  });
+
   it('renders the hero heading', () => {
     renderWithProviders(<Home />);
     expect(screen.getByText('Fitness Club')).toBeInTheDocument();
@@ -31,5 +43,13 @@ describe('Home page', () => {
   it('renders footer', () => {
     renderWithProviders(<Home />);
     expect(screen.getByText('Health & Fitness Club Management')).toBeInTheDocument();
+  });
+
+  it('hides Create Account and shows demo hint in demo mode', () => {
+    mockDemoMode = true;
+    renderWithProviders(<Home />);
+    expect(screen.queryByText('Create Account')).not.toBeInTheDocument();
+    expect(screen.getByText(/Demo mode/)).toBeInTheDocument();
+    expect(screen.getByText('Sign In')).toBeInTheDocument();
   });
 });

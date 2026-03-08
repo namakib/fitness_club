@@ -134,15 +134,16 @@ describe('api module', () => {
     expect(console.groupEnd).toHaveBeenCalled();
   });
 
-  it('defaults to debug on when localStorage returns null and env not set', async () => {
+  it('defaults to debug off when localStorage returns null and env not set', async () => {
     window.localStorage.getItem.mockReturnValue(null);
+    const callsBefore = console.group.mock.calls.length;
     fetch.mockResolvedValueOnce({
       ok: true, status: 200, statusText: 'OK',
       headers: { get: () => 'application/json' },
       json: async () => ({}),
     });
     await api.get('/default-debug');
-    expect(console.group).toHaveBeenCalled();
+    expect(console.group.mock.calls.length).toBe(callsBefore);
   });
 
   it('throws "Request failed" when error field is empty', async () => {

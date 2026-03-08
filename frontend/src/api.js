@@ -1,7 +1,7 @@
-const BASE = '/api';
+const BASE = import.meta.env.VITE_API_URL || '/api';
 
 function isDebugApiOn() {
-  const v = localStorage.getItem('debugApi') ?? import.meta.env.VITE_DEBUG_API ?? '1';
+  const v = localStorage.getItem('debugApi') ?? import.meta.env.VITE_DEBUG_API ?? '0';
   return v === '1';
 }
 

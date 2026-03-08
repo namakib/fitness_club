@@ -5,6 +5,8 @@ import { MemoryRouter } from 'react-router-dom';
 
 const mockNavigate = vi.fn();
 
+let mockDemoMode = false;
+
 vi.mock('../../api', () => ({
   default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
 }));
@@ -22,6 +24,10 @@ vi.mock('../../components/DatePicker', () => ({
   default: ({ label, value, onChange }) => (
     <input data-testid={`dp-${label}`} value={value ?? ''} onChange={e => onChange(e.target.value)} />
   ),
+}));
+vi.mock('../../context/DemoContext', () => ({
+  useDemo: () => ({ demoMode: mockDemoMode, demoAccounts: [] }),
+  DemoProvider: ({ children }) => children,
 }));
 
 import api from '../../api';
@@ -42,6 +48,7 @@ function renderRegister() {
 describe('Register page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockDemoMode = false;
     api.post.mockResolvedValue({});
   });
 
@@ -174,5 +181,11 @@ describe('Register page', () => {
   it('renders phone input', () => {
     renderRegister();
     expect(screen.getByText('Phone (optional)')).toBeInTheDocument();
+  });
+
+  it('redirects to /login in demo mode', () => {
+    mockDemoMode = true;
+    const { container } = renderRegister();
+    expect(container.querySelector('form')).not.toBeInTheDocument();
   });
 });

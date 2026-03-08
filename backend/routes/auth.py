@@ -1,6 +1,6 @@
 import functools
 
-from flask import Blueprint, g, jsonify, request, session
+from flask import Blueprint, current_app, g, jsonify, request, session
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from ..db import apply_role, get_cursor, get_db, serialize_row
@@ -72,8 +72,24 @@ def load_logged_in_user():
         apply_role(role, user_id)
 
 
+@bp.route('/config', methods=('GET',))
+def get_config():
+    demo = current_app.config.get('DEMO_MODE', False)
+    resp = {'demo_mode': demo}
+    if demo:
+        resp['demo_accounts'] = [
+            {'role': 'member',  'email': 'alice@example.com', 'password': 'password123'},
+            {'role': 'trainer', 'email': 'frank@example.com', 'password': 'password123'},
+            {'role': 'admin',   'email': 'ivy@example.com',   'password': 'password123'},
+        ]
+    return jsonify(resp)
+
+
 @bp.route('/register', methods=('POST',))
 def register():
+    if current_app.config.get('DEMO_MODE'):
+        return jsonify(error='Registration is disabled in demo mode. '
+                       'Use the sample accounts to log in.'), 403
     data = request.get_json(silent=True) or {}
     name = data.get('name', '').strip()
     email = data.get('email', '').strip().lower()

@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: fitness-club-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 2 -b 0.0.0.0:$PORT "run:app"
+    envVars:
+      - key: DEMO_MODE
+        value: "1"
+      - key: SERVING_FRONTEND
+        value: "0"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_APP_USER
+        value: fc_app
+      - key: DB_APP_PASSWORD
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { DemoProvider } from './context/DemoContext';
 import { NavModeProvider } from './context/NavModeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
@@ -29,6 +30,7 @@ export default function App() {
   }, []);
 
   return (
+    <DemoProvider>
     <AuthProvider>
       <NavModeProvider>
       <Toaster position="top-right" containerStyle={{ zIndex: 99999 }} toastOptions={{ style: { maxWidth: 420 } }} />
@@ -61,5 +63,6 @@ export default function App() {
       </Routes>
       </NavModeProvider>
     </AuthProvider>
+    </DemoProvider>
   );
 }
