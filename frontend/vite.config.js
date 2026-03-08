@@ -19,5 +19,15 @@ export default defineConfig({
     globals: true,
     setupFiles: './src/__tests__/setup.js',
     css: false,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'text-summary', 'lcov'],
+      thresholds: {
+        lines: 90,
+        functions: 90,
+        branches: 90,
+        statements: 90,
+      },
+    },
   },
 })
