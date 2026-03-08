@@ -1,0 +1,132 @@
+erDiagram
+    member {
+        SERIAL member_id PK
+        VARCHAR_100 name "NOT NULL"
+        VARCHAR_150 email "UNIQUE NOT NULL"
+        DATE dob "NOT NULL"
+        VARCHAR_10 gender "CHECK male female other"
+        VARCHAR_20 phone
+        VARCHAR_255 password_hash "NOT NULL"
+        TIMESTAMP created_at "DEFAULT NOW()"
+    }
+
+    trainer {
+        SERIAL trainer_id PK
+        VARCHAR_100 name "NOT NULL"
+        VARCHAR_150 email "UNIQUE NOT NULL"
+        VARCHAR_20 phone
+        VARCHAR_100 specialization
+        VARCHAR_255 password_hash "NOT NULL"
+    }
+
+    admin {
+        SERIAL admin_id PK
+        VARCHAR_100 name "NOT NULL"
+        VARCHAR_150 email "UNIQUE NOT NULL"
+        VARCHAR_20 phone
+        VARCHAR_255 password_hash "NOT NULL"
+    }
+
+    fitness_goal {
+        SERIAL goal_id PK
+        INT member_id FK "NOT NULL REFERENCES member"
+        VARCHAR_50 goal_type "NOT NULL"
+        VARCHAR_100 target_value "NOT NULL"
+        DATE start_date "NOT NULL"
+        DATE end_date
+        VARCHAR_20 status "CHECK active completed cancelled"
+    }
+
+    health_metric {
+        SERIAL metric_id PK
+        INT member_id FK "NOT NULL REFERENCES member"
+        DECIMAL weight
+        DECIMAL body_fat_pct
+        VARCHAR_20 blood_pressure
+        INT heart_rate
+        TIMESTAMP recorded_at "DEFAULT NOW()"
+    }
+
+    trainer_availability {
+        SERIAL availability_id PK
+        INT trainer_id FK "NOT NULL REFERENCES trainer"
+        DATE available_date "NOT NULL"
+        TIME start_time "NOT NULL"
+        TIME end_time "NOT NULL"
+    }
+
+    room {
+        SERIAL room_id PK
+        VARCHAR_100 room_name "NOT NULL UNIQUE"
+        INT capacity "NOT NULL CHECK > 0"
+    }
+
+    equipment {
+        SERIAL equipment_id PK
+        VARCHAR_100 name "NOT NULL"
+        VARCHAR_50 type "NOT NULL"
+        INT room_id FK "NOT NULL REFERENCES room"
+        VARCHAR_20 status "CHECK operational under_repair out_of_service"
+        DATE purchase_date
+    }
+
+    personal_session {
+        SERIAL session_id PK
+        INT member_id FK "NOT NULL REFERENCES member"
+        INT trainer_id FK "NOT NULL REFERENCES trainer"
+        INT room_id FK "NOT NULL REFERENCES room"
+        DATE session_date "NOT NULL"
+        TIME start_time "NOT NULL"
+        TIME end_time "NOT NULL"
+        VARCHAR_20 status "CHECK scheduled completed cancelled"
+    }
+
+    group_class {
+        SERIAL class_id PK
+        VARCHAR_100 class_name "NOT NULL"
+        INT trainer_id FK "NOT NULL REFERENCES trainer"
+        INT room_id FK "NOT NULL REFERENCES room"
+        DATE class_date "NOT NULL"
+        TIME start_time "NOT NULL"
+        TIME end_time "NOT NULL"
+        INT max_participants "NOT NULL CHECK > 0"
+    }
+
+    class_enrollment {
+        SERIAL enrollment_id PK
+        INT class_id FK "NOT NULL REFERENCES group_class"
+        INT member_id FK "NOT NULL REFERENCES member"
+        TIMESTAMP enrolled_at "DEFAULT NOW()"
+    }
+
+    equipment_maintenance {
+        SERIAL log_id PK
+        INT equipment_id FK "NOT NULL REFERENCES equipment"
+        TEXT issue_description "NOT NULL"
+        DATE reported_date "NOT NULL DEFAULT CURRENT_DATE"
+        DATE resolved_date
+        VARCHAR_20 status "CHECK reported in_progress resolved"
+    }
+
+    payment {
+        SERIAL payment_id PK
+        INT member_id FK "NOT NULL REFERENCES member"
+        DECIMAL amount "NOT NULL CHECK >= 0"
+        VARCHAR_20 payment_status "CHECK pending completed failed refunded"
+        DATE payment_date "NOT NULL DEFAULT CURRENT_DATE"
+        VARCHAR_50 payment_method
+    }
+
+    member ||--o{ fitness_goal : "member_id"
+    member ||--o{ health_metric : "member_id"
+    member ||--o{ personal_session : "member_id"
+    member ||--o{ class_enrollment : "member_id"
+    trainer ||--o{ trainer_availability : "trainer_id"
+    trainer ||--o{ personal_session : "trainer_id"
+    trainer ||--o{ group_class : "trainer_id"
+    room ||--o{ personal_session : "room_id"
+    room ||--o{ group_class : "room_id"
+    room ||--o{ equipment : "room_id"
+    group_class ||--o{ class_enrollment : "class_id"
+    equipment ||--o{ equipment_maintenance : "equipment_id"
+    member ||--o{ payment : "member_id"
