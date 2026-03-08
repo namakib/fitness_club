@@ -13,9 +13,84 @@ The system is backed by PostgreSQL and accessed through a Python Flask web appli
 
 ---
 
-## 2. Design Decisions
+## 2. ER Model
 
-### 2.1 Separate User Tables
+The conceptual ER model uses UML-like notation and contains **13 entities** and **13 relationships**. The full diagram is provided in `docs/ER_Diagram.pdf`.
+
+### 2.1 Entities
+
+| # | Entity | Primary Key | Description |
+|---|--------|-------------|-------------|
+| 1 | Member | member_id | Registered club members |
+| 2 | Trainer | trainer_id | Staff who conduct sessions and classes |
+| 3 | Admin | admin_id | Administrative staff |
+| 4 | FitnessGoal | goal_id | Goals set by members (e.g., target weight) |
+| 5 | HealthMetric | metric_id | Append-only health measurements |
+| 6 | TrainerAvailability | availability_id | Time slots when trainers are available |
+| 7 | Room | room_id | Physical rooms in the club |
+| 8 | Equipment | equipment_id | Gym equipment tracked for maintenance |
+| 9 | PersonalSession | session_id | One-on-one training sessions |
+| 10 | GroupClass | class_id | Group fitness classes |
+| 11 | ClassEnrollment | enrollment_id | Junction entity: Member ↔ GroupClass (M:N) |
+| 12 | EquipmentMaintenance | log_id | Maintenance issue logs per equipment |
+| 13 | Payment | payment_id | Simulated billing records |
+
+### 2.2 Relationships
+
+| # | Relationship | Cardinality | Description |
+|---|---|---|---|
+| 1 | Member → FitnessGoal | 1:N | A member sets many goals |
+| 2 | Member → HealthMetric | 1:N | A member records many metrics |
+| 3 | Member → PersonalSession | 1:N | A member books many sessions |
+| 4 | Member → ClassEnrollment | 1:N | A member enrolls in many classes |
+| 5 | Trainer → TrainerAvailability | 1:N | A trainer defines many slots |
+| 6 | Trainer → PersonalSession | 1:N | A trainer conducts many sessions |
+| 7 | Trainer → GroupClass | 1:N | A trainer teaches many classes |
+| 8 | Room → PersonalSession | 1:N | A room hosts many sessions |
+| 9 | Room → GroupClass | 1:N | A room hosts many classes |
+| 10 | Room → Equipment | 1:N | A room contains many equipment items |
+| 11 | GroupClass → ClassEnrollment | 1:N | A class has many enrollments |
+| 12 | Equipment → EquipmentMaintenance | 1:N | Equipment has many maintenance logs |
+| 13 | Member → Payment | 1:N | A member makes many payments |
+
+**Many-to-many**: Member ↔ GroupClass is resolved through the ClassEnrollment junction entity.
+
+### 2.3 Participation Constraints
+
+- Every PersonalSession requires exactly one Member, Trainer, and Room (total participation)
+- Every GroupClass requires exactly one Trainer and Room (total participation)
+- Every ClassEnrollment references exactly one GroupClass and one Member (total participation)
+- Members, Trainers, and Rooms may have zero related sessions/classes (partial participation)
+
+---
+
+## 3. Mapping ER Model to Relational Schema
+
+The full relational schema diagram is provided in `docs/Relational_Schema.pdf`.
+
+Each entity maps directly to a PostgreSQL table. The mapping follows standard rules:
+
+| ER Concept | Relational Mapping |
+|---|---|
+| Entity | Table |
+| Entity attributes | Table columns |
+| Primary key | `SERIAL` surrogate key (auto-increment) |
+| 1:N relationship | Foreign key in the "many" side table |
+| M:N relationship (Member ↔ GroupClass) | Junction table `class_enrollment` with FKs to both `member` and `group_class`, plus a `UNIQUE(class_id, member_id)` constraint |
+| Unique email per role | `UNIQUE` constraint on `email` in `member`, `trainer`, and `admin` |
+
+### Key Mapping Details
+
+- **Separate user tables**: Member, Trainer, and Admin are separate tables (not a single user table) because each role has distinct attributes. See Section 4.1 for justification.
+- **ClassEnrollment**: Resolves the M:N between Member and GroupClass. Uses a surrogate `enrollment_id` as PK with a composite unique constraint on `(class_id, member_id)` to prevent duplicate enrollments.
+- **Equipment → Room**: Equipment references Room via `room_id` FK, satisfying the requirement that equipment is associated with a location.
+- **All FK constraints** use `REFERENCES ... ON DELETE CASCADE` or default restrict behavior as appropriate.
+
+---
+
+## 4. Design Decisions
+
+### 4.1 Separate User Tables
 
 Three separate tables (`member`, `trainer`, `admin`) were used instead of a single `user` table with a role column. This decision was made because:
 
@@ -23,11 +98,11 @@ Three separate tables (`member`, `trainer`, `admin`) were used instead of a sing
 - It avoids NULL columns that would be irrelevant to certain roles
 - Foreign key references are clearer (e.g., `personal_session.trainer_id` references `trainer`, not a generic user table)
 
-### 2.2 Append-Only Health Metrics
+### 4.2 Append-Only Health Metrics
 
 The `health_metric` table is designed as append-only. Members insert new records but never update or delete existing ones. This preserves a complete history of measurements and supports trend analysis on the dashboard.
 
-### 2.3 Equipment Maintenance Separation
+### 4.3 Equipment Maintenance Separation
 
 Equipment maintenance logs are stored in a separate `equipment_maintenance` table rather than as a status history column. This allows:
 
@@ -35,33 +110,33 @@ Equipment maintenance logs are stored in a separate `equipment_maintenance` tabl
 - Tracking of issue lifecycle (reported → in progress → resolved)
 - The `equipment.status` field reflects current operational status independently of historical maintenance records
 
-### 2.4 Room Booking via Trigger
+### 4.4 Room Booking via Trigger
 
 Room double-booking prevention is implemented as a PostgreSQL trigger (`fn_prevent_room_double_booking`) rather than application-level validation. This ensures data integrity regardless of how data is inserted — whether through the application, direct SQL, or future integrations.
 
-### 2.5 Dashboard View
+### 4.5 Dashboard View
 
 A PostgreSQL view (`member_dashboard_view`) aggregates data from multiple tables using LATERAL joins to power the member dashboard. This keeps complex aggregation logic in the database layer where it performs best.
 
 ---
 
-## 3. Normalization to Third Normal Form (3NF)
+## 5. Normalization to Third Normal Form (3NF)
 
-### 3.1 First Normal Form (1NF)
+### 5.1 First Normal Form (1NF)
 
 All tables satisfy 1NF:
 - Every attribute contains only atomic (indivisible) values
 - No repeating groups or arrays
 - Each table has a defined primary key
 
-### 3.2 Second Normal Form (2NF)
+### 5.2 Second Normal Form (2NF)
 
 All tables satisfy 2NF:
 - All non-key attributes are fully functionally dependent on the entire primary key
 - Since all tables use single-column surrogate primary keys (SERIAL), partial dependencies are impossible
 - The composite candidate key `(class_id, member_id)` in `class_enrollment` is enforced via a UNIQUE constraint; the surrogate `enrollment_id` is the primary key
 
-### 3.3 Third Normal Form (3NF)
+### 5.3 Third Normal Form (3NF)
 
 All tables satisfy 3NF — no transitive dependencies exist:
 
@@ -81,7 +156,7 @@ All tables satisfy 3NF — no transitive dependencies exist:
 | `equipment_maintenance` | equipment_id, issue_description, reported_date, resolved_date, status | All depend on log_id |
 | `payment` | member_id, amount, payment_status, payment_date, payment_method | All depend on payment_id; member_id is a FK, not a transitive dependency |
 
-### 3.4 No Derived Attributes
+### 5.4 No Derived Attributes
 
 No computed or derived attributes are stored:
 - **Age** is computed from `dob` at query time, not stored
@@ -92,15 +167,15 @@ No computed or derived attributes are stored:
 
 ---
 
-## 4. Advanced SQL Features
+## 6. Advanced SQL Features
 
-### 4.1 View
+### 6.1 View
 
 | View | Purpose |
 |------|---------|
 | `member_dashboard_view` | Aggregates data from `member`, `health_metric`, `fitness_goal`, `class_enrollment`, and `personal_session` using LATERAL joins to provide latest health metrics, active goal count, classes attended, and upcoming sessions per member |
 
-### 4.2 Triggers (7 functions, 10 triggers)
+### 6.2 Triggers (7 functions, 10 triggers)
 
 | Trigger Function | Tables | Purpose |
 |------------------|--------|---------|
@@ -112,14 +187,14 @@ No computed or derived attributes are stored:
 | `fn_prevent_trainer_availability_overlap` | `trainer_availability` | Prevents overlapping availability slots for the same trainer |
 | `fn_verify_trainer_availability` | `personal_session` | Ensures the trainer has an availability slot covering the session time |
 
-### 4.3 Stored Functions
+### 6.3 Stored Functions
 
 | Function | Purpose |
 |----------|---------|
 | `fn_check_booking_conflicts(member, trainer, room, date, start, end)` | Returns a set of conflict rows (member/trainer/room) for a proposed booking, used by the application to show detailed conflict messages |
 | `fn_trainer_slot_booking_status(trainer_id, member_id)` | Returns availability slots enriched with existing session/class bookings, used to display the booking calendar |
 
-### 4.4 Indexes (9)
+### 6.4 Indexes (9)
 
 | Index | Columns | Purpose |
 |-------|---------|---------|
@@ -135,9 +210,9 @@ No computed or derived attributes are stored:
 
 ---
 
-## 5. Implementation
+## 7. Implementation
 
-### 5.1 Architecture
+### 7.1 Architecture
 
 The application follows a standard Flask blueprint architecture:
 - `backend/__init__.py` — application factory
@@ -147,13 +222,13 @@ The application follows a standard Flask blueprint architecture:
 - `backend/routes/trainer.py` — trainer operations (5-6)
 - `backend/routes/admin.py` — admin operations (7-8)
 
-### 5.2 Role-Based Access Control
+### 7.2 Role-Based Access Control
 
 - Authentication uses Flask sessions with werkzeug's `pbkdf2:sha256` password hashing
 - A `role_required(role)` decorator checks both authentication and role authorization
 - The `load_logged_in_user` function runs before every request to load the current user from the database
 
-### 5.3 Error Handling
+### 7.3 Error Handling
 
 - Centralized error codes and message templates in `backend/errors.py` (e.g., `AUTH_001`, `VAL_006`, `BOOK_003`)
 - `make_error(code, **params)` returns structured JSON responses with `error`, `error_code`, and HTTP status
@@ -161,13 +236,13 @@ The application follows a standard Flask blueprint architecture:
 - All database operations are wrapped in try/except blocks with commit on success, rollback on failure
 - The frontend displays error messages from the JSON response using toast notifications
 
-### 5.4 SQL Interaction
+### 7.4 SQL Interaction
 
 All database interactions use parameterized SQL queries via psycopg2 (no ORM). This satisfies the requirement for direct SQL usage and prevents SQL injection.
 
 ---
 
-## 6. Operations Summary
+## 8. Operations Summary
 
 | # | Operation | SQL Statements Used |
 |---|-----------|-------------------|
@@ -182,21 +257,21 @@ All database interactions use parameterized SQL queries via psycopg2 (no ORM). T
 
 ---
 
-## 7. Testing and CI/CD
+## 9. Testing and CI/CD
 
-### 7.1 Backend Tests
+### 9.1 Backend Tests
 
 - **225 tests** using pytest with 100% code coverage (enforced via `pytest-cov --cov-fail-under=100`)
 - Tests cover all route handlers, error paths, validation branches, and utility functions
 - Database calls are mocked with `unittest.mock` so tests run without a live PostgreSQL instance
 
-### 7.2 Frontend Tests
+### 9.2 Frontend Tests
 
 - **52 test suites** (864 tests) using Vitest with jsdom environment
 - Coverage enforced at 90% for lines, functions, branches, and statements via `@vitest/coverage-v8`
 - ESLint with `eslint-plugin-react-hooks` and `eslint-plugin-react-refresh` enforces code quality with zero warnings
 
-### 7.3 CI Pipeline
+### 9.3 CI Pipeline
 
 A GitHub Actions workflow runs on every push and pull request to `develop`:
 - **Backend job**: installs dependencies, runs `pytest --cov=backend --cov-fail-under=100`
@@ -204,7 +279,7 @@ A GitHub Actions workflow runs on every push and pull request to `develop`:
 
 ---
 
-## 8. Challenges
+## 10. Challenges
 
 - **Trigger conflict messages**: PostgreSQL trigger `RAISE EXCEPTION` messages are opaque strings. We wrote `parse_db_error()` with regex patterns to extract structured information (dates, times, conflict types) from these messages and convert them into user-friendly error responses.
 - **Cross-table room booking**: Room double-booking prevention must check both `personal_session` and `group_class` tables simultaneously. A single trigger function queries both tables to detect overlaps, which was more complex than a simple unique constraint.
@@ -213,13 +288,13 @@ A GitHub Actions workflow runs on every push and pull request to `develop`:
 
 ---
 
-## 9. Video Demonstration
+## 11. Video Demonstration
 
 <!-- TODO: Replace this placeholder with your actual video link -->
 _Link to be added here._
 
 ---
 
-## 10. Conclusion
+## 12. Conclusion
 
 The system meets all specified requirements: 13 entities in 3NF, 13 relationships, 8 fully functional operations, role-based access control, database-level constraint enforcement, and a clean web interface. All SQL is parameterized and executed directly against PostgreSQL without an ORM.
