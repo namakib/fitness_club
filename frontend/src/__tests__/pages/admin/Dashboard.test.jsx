@@ -244,7 +244,7 @@ describe('Admin Dashboard', () => {
   });
 
   it('handles missing equipment_status and booking_trend keys', async () => {
-    const { equipment_status, booking_trend, ...rest } = fullMockData;
+    const { equipment_status: _equipment_status, booking_trend: _booking_trend, ...rest } = fullMockData;
     api.get.mockResolvedValueOnce(rest);
     renderDashboard();
     await waitFor(() => {

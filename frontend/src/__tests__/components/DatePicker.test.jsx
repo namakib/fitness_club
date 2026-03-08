@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent } from '@testing-library/react';
 import DatePicker from '../../components/DatePicker';
 
 describe('DatePicker', () => {
@@ -63,7 +62,7 @@ describe('DatePicker', () => {
     expect(screen.getByText('June 2025')).toBeInTheDocument();
 
     const buttons = screen.getAllByRole('button');
-    const nextBtn = buttons.find(b => {
+    const _nextBtn = buttons.find(b => {
       const parent = b.closest('.mb-3');
       return parent && b === parent.querySelector('button:last-child');
     });
@@ -174,7 +173,7 @@ describe('DatePicker', () => {
   });
 
   it('closes dropdown when clicking outside', () => {
-    const { container } = render(
+    const { container: _container } = render(
       <div>
         <div data-testid="outside">Outside</div>
         <DatePicker value="2025-06-15" onChange={vi.fn()} />

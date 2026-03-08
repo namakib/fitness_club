@@ -40,6 +40,7 @@ export default function SelectDropdown({ label, value, options, onChange, placeh
       }, DURATION_MS);
       return () => clearTimeout(timeout);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   useEffect(() => {

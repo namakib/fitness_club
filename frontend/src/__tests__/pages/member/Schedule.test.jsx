@@ -11,7 +11,7 @@ vi.mock('../../../toastUtil', () => ({
   toastSuccess: vi.fn(),
 }));
 vi.mock('../../../components/ScheduleCalendar', () => ({
-  default: function MockCalendar({ onEventClick, jumpToDate, events }) {
+  default: function MockCalendar({ onEventClick, jumpToDate, events: _events }) {
     return (
       <div data-testid="schedule-calendar">
         <button data-testid="click-session-event" onClick={() => onEventClick?.({ event_type: 'session', session_id: 99, session_date: '2025-07-01', start_time: '09:00' })}>ClickSession</button>
@@ -25,7 +25,7 @@ vi.mock('../../../pages/member/Classes', async () => {
   const actual = await vi.importActual('../../../pages/member/Classes');
   return {
     ...actual,
-    ClassesBrowser: function MockBrowser({ onSuccess, refreshTrigger }) {
+    ClassesBrowser: function MockBrowser({ onSuccess, refreshTrigger: _refreshTrigger }) {
       return (
         <div data-testid="classes-browser">
           <button data-testid="enroll-success" onClick={() => onSuccess?.({ class_date: '2025-07-05' })}>EnrollSuccess</button>

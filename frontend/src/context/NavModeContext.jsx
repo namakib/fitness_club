@@ -31,6 +31,7 @@ export function NavModeProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useNavMode() {
   const ctx = useContext(NavModeContext);
   if (!ctx) throw new Error('useNavMode must be used within NavModeProvider');

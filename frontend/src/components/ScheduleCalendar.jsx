@@ -100,8 +100,10 @@ export default function ScheduleCalendar({
     loadEvents(weekStart)
       .then((result) => { setData(result); setLoading(false); })
       .catch(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadEvents, weekKey]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (loadEvents) fetchData(); }, [fetchData, refreshTrigger]);
 
   useEffect(() => { if (!loadEvents) setData(eventsProp); }, [eventsProp, loadEvents]);
@@ -110,6 +112,7 @@ export default function ScheduleCalendar({
     if (jumpToDate) setViewDate(new Date(jumpToDate + 'T12:00:00'));
   }, [jumpToDate]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const resolvedData = loadEvents ? data : (eventsProp ?? { sessions: [], classes: [] });
 
   const weekDays = useMemo(() => {

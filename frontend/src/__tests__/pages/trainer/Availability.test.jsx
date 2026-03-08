@@ -11,12 +11,12 @@ vi.mock('../../../toastUtil', () => ({
   toastSuccess: vi.fn(),
 }));
 vi.mock('../../../components/DatePicker', () => ({
-  default: function MockDatePicker({ label, value, onChange, ...rest }) {
+  default: function MockDatePicker({ label, value, onChange, ..._rest }) {
     return <input data-testid={`dp-${label}`} value={value ?? ''} onChange={(e) => onChange(e.target.value)} />;
   },
 }));
 vi.mock('../../../components/TimePicker', () => ({
-  default: function MockTimePicker({ label, value, onChange, ...rest }) {
+  default: function MockTimePicker({ label, value, onChange, ..._rest }) {
     return <input data-testid={`tp-${label}`} value={value ?? ''} onChange={(e) => onChange(e.target.value)} />;
   },
 }));

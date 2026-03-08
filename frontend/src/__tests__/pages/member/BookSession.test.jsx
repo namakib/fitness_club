@@ -571,7 +571,7 @@ describe('BookSession page', () => {
   });
 
   it('changes date and time via form fields', async () => {
-    const { container } = renderPage();
+    const { container: _container } = renderPage();
     await waitFor(() => {
       expect(screen.getByTestId('dp-Date')).toBeInTheDocument();
     });
