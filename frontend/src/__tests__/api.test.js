@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import api from '../api';
+import api, { setAccessToken } from '../api';
 
 describe('api module', () => {
   beforeEach(() => {
@@ -8,6 +8,7 @@ describe('api module', () => {
     vi.spyOn(console, 'group').mockImplementation(() => {});
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'groupEnd').mockImplementation(() => {});
+    setAccessToken(null);
   });
 
   it('GET request builds correct URL and uses credentials', async () => {
@@ -153,5 +154,16 @@ describe('api module', () => {
       json: async () => ({}),
     });
     await expect(api.get('/test')).rejects.toThrow('Request failed');
+  });
+
+  it('attaches Authorization header when token is set', async () => {
+    setAccessToken('jwt-token');
+    fetch.mockResolvedValueOnce({
+      ok: true, headers: { get: () => 'application/json' },
+      json: async () => ({ ok: true }),
+    });
+    await api.get('/protected');
+    const call = fetch.mock.calls[0];
+    expect(call[1].headers['Authorization']).toBe('Bearer jwt-token');
   });
 });

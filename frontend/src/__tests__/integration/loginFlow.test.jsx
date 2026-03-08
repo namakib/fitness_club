@@ -10,6 +10,7 @@ vi.mock('../../api', () => ({
     put: vi.fn(),
     delete: vi.fn(),
   },
+  setAccessToken: vi.fn(),
 }));
 
 vi.mock('../../toastUtil', () => ({
@@ -41,12 +42,12 @@ function renderLoginFlow(route = '/login') {
 describe('Login Integration Flow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockRejectedValue(new Error('not logged in'));
+    api.post.mockRejectedValueOnce(new Error('no session'));
   });
 
   it('fills and submits login form successfully', async () => {
     const user = userEvent.setup();
-    api.post.mockResolvedValueOnce({ user: { name: 'Alice' }, role: 'member' });
+    api.post.mockResolvedValueOnce({ user: { name: 'Alice' }, role: 'member', access_token: 'tok' });
     renderLoginFlow();
 
     await waitFor(() => {
@@ -99,6 +100,6 @@ describe('Login Integration Flow', () => {
     await user.click(screen.getByText('Sign In'));
 
     expect(screen.getByText('Signing in...')).toBeInTheDocument();
-    resolvePost({ user: { name: 'A' }, role: 'member' });
+    resolvePost({ user: { name: 'A' }, role: 'member', access_token: 'tok' });
   });
 });

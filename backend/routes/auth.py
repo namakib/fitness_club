@@ -1,6 +1,7 @@
 import functools
+import os
 
-from flask import Blueprint, current_app, g, jsonify, request, session
+from flask import Blueprint, current_app, g, jsonify, make_response, request
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from ..db import apply_role, get_cursor, get_db, serialize_row
@@ -19,6 +20,7 @@ from ..errors import (
     VAL_011,
     make_error,
 )
+from ..jwt_utils import create_access_token, create_refresh_token, decode_token
 
 bp = Blueprint('auth', __name__, url_prefix='/api')
 
@@ -40,7 +42,7 @@ def role_required(role):
             if g.user is None:
                 body, status = make_error(AUTH_001)
                 return jsonify(body), status
-            if session.get('role') != role:
+            if g.role != role:
                 body, status = make_error(AUTH_002)
                 return jsonify(body), status
             return view(**kwargs)
@@ -48,22 +50,69 @@ def role_required(role):
     return decorator
 
 
+def _is_cross_origin():
+    return bool(os.environ.get('CORS_ORIGINS', ''))
+
+
+def _set_refresh_cookie(resp, token):
+    cross_origin = _is_cross_origin()
+    resp.set_cookie(
+        'fc_refresh_token',
+        token,
+        httponly=True,
+        secure=cross_origin,
+        samesite='None' if cross_origin else 'Lax',
+        max_age=current_app.config['JWT_REFRESH_EXPIRES'],
+        path='/api',
+    )
+
+
+def _clear_refresh_cookie(resp):
+    cross_origin = _is_cross_origin()
+    resp.delete_cookie(
+        'fc_refresh_token',
+        path='/api',
+        samesite='None' if cross_origin else 'Lax',
+        secure=cross_origin,
+    )
+
+
 @bp.before_app_request
 def load_logged_in_user():
-    user_id = session.get('user_id')
-    role = session.get('role')
     g.user = None
-    g.role = role
+    g.role = None
 
-    if user_id is None or role is None:
+    auth_header = request.headers.get('Authorization', '')
+    if not auth_header.startswith('Bearer '):
         return
 
-    cur = get_cursor()
+    token = auth_header[7:]
+    try:
+        payload = decode_token(token, current_app.config['SECRET_KEY'])
+    except Exception:
+        return
+
+    if payload.get('type') != 'access':
+        return
+
+    raw_id = payload.get('sub')
+    role = payload.get('role')
+    if raw_id is None or role is None:
+        return
+
+    try:
+        user_id = int(raw_id)
+    except (TypeError, ValueError):
+        return
+
+    g.role = role
+
     table = {'member': 'member', 'trainer': 'trainer', 'admin': 'admin'}.get(role)
     if table is None:
         return
 
     id_col = f'{table}_id'
+    cur = get_cursor()
     cur.execute(f'SELECT * FROM {table} WHERE {id_col} = %s', (user_id,))
     g.user = cur.fetchone()
     cur.close()
@@ -168,20 +217,64 @@ def login():
         body, status = make_error(AUTH_004)
         return jsonify(body), status
 
-    session.clear()
-    session['user_id'] = user[id_col]
-    session['role'] = role
+    secret = current_app.config['SECRET_KEY']
+    access_token = create_access_token(
+        user[id_col], role, secret,
+        current_app.config['JWT_ACCESS_EXPIRES'],
+    )
+    refresh_token = create_refresh_token(
+        user[id_col], role, secret,
+        current_app.config['JWT_REFRESH_EXPIRES'],
+    )
 
     safe_user = serialize_row(user)
     safe_user.pop('password_hash', None)
 
-    return jsonify(user=safe_user, role=role)
+    resp = make_response(jsonify(user=safe_user, role=role, access_token=access_token))
+    _set_refresh_cookie(resp, refresh_token)
+    return resp
 
 
 @bp.route('/logout', methods=('POST',))
 def logout():
-    session.clear()
-    return jsonify(message='Logged out.')
+    resp = make_response(jsonify(message='Logged out.'))
+    _clear_refresh_cookie(resp)
+    return resp
+
+
+@bp.route('/refresh', methods=('POST',))
+def refresh():
+    token = request.cookies.get('fc_refresh_token')
+    if not token:
+        body, status = make_error(AUTH_001)
+        return jsonify(body), status
+
+    try:
+        payload = decode_token(token, current_app.config['SECRET_KEY'])
+    except Exception:
+        body, status = make_error(AUTH_001)
+        resp = make_response(jsonify(body), status)
+        _clear_refresh_cookie(resp)
+        return resp
+
+    if payload.get('type') != 'refresh':
+        body, status = make_error(AUTH_001)
+        return jsonify(body), status
+
+    secret = current_app.config['SECRET_KEY']
+    uid = int(payload['sub'])
+    access_token = create_access_token(
+        uid, payload['role'], secret,
+        current_app.config['JWT_ACCESS_EXPIRES'],
+    )
+    new_refresh = create_refresh_token(
+        uid, payload['role'], secret,
+        current_app.config['JWT_REFRESH_EXPIRES'],
+    )
+
+    resp = make_response(jsonify(access_token=access_token))
+    _set_refresh_cookie(resp, new_refresh)
+    return resp
 
 
 @bp.route('/me')
@@ -190,4 +283,4 @@ def me():
         return jsonify(user=None, role=None)
     safe_user = serialize_row(g.user)
     safe_user.pop('password_hash', None)
-    return jsonify(user=safe_user, role=session.get('role'))
+    return jsonify(user=safe_user, role=g.role)

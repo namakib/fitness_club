@@ -14,8 +14,6 @@ class Config:
     DB_SSLMODE = os.environ.get('DB_SSLMODE', '')
     DEMO_MODE = os.environ.get('DEMO_MODE', '0') == '1'
     DEBUG_API_LOGGING = os.environ.get('DEBUG_API', '0') == '1'
-    # Cross-origin session cookies (Vercel frontend -> Render backend)
-    _cross_origin = os.environ.get('CORS_ORIGINS', '')
-    SESSION_COOKIE_SAMESITE = 'None' if _cross_origin else 'Lax'
-    SESSION_COOKIE_SECURE = bool(_cross_origin)
-    SESSION_COOKIE_HTTPONLY = True
+    # JWT token expiry (seconds)
+    JWT_ACCESS_EXPIRES = int(os.environ.get('JWT_ACCESS_EXPIRES', '900'))
+    JWT_REFRESH_EXPIRES = int(os.environ.get('JWT_REFRESH_EXPIRES', '604800'))

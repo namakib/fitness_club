@@ -9,9 +9,11 @@ vi.mock('../../api', () => ({
     put: vi.fn(),
     delete: vi.fn(),
   },
+  setAccessToken: vi.fn(),
 }));
 
 import api from '../../api';
+import { setAccessToken } from '../../api';
 import { AuthProvider, useAuth } from '../../context/AuthContext';
 
 function TestConsumer() {
@@ -48,29 +50,34 @@ describe('AuthContext', () => {
     spy.mockRestore();
   });
 
-  it('fetches /me on mount and sets user/role', async () => {
+  it('bootstraps via /refresh then /me on mount', async () => {
+    api.post.mockResolvedValueOnce({ access_token: 'tok123' });
     api.get.mockResolvedValueOnce({ user: { name: 'Alice' }, role: 'member' });
     renderAuth();
     await waitFor(() => {
       expect(screen.getByTestId('user').textContent).toContain('Alice');
       expect(screen.getByTestId('role').textContent).toBe('member');
     });
+    expect(api.post).toHaveBeenCalledWith('/refresh');
     expect(api.get).toHaveBeenCalledWith('/me');
+    expect(setAccessToken).toHaveBeenCalledWith('tok123');
   });
 
-  it('sets user/role to null when /me fails', async () => {
-    api.get.mockRejectedValueOnce(new Error('Unauthorized'));
+  it('sets user/role to null when /refresh fails', async () => {
+    api.post.mockRejectedValueOnce(new Error('No refresh token'));
     renderAuth();
     await waitFor(() => {
       expect(screen.getByTestId('loading').textContent).toBe('false');
     });
     expect(screen.getByTestId('user').textContent).toBe('null');
     expect(screen.getByTestId('role').textContent).toBe('null');
+    expect(setAccessToken).toHaveBeenCalledWith(null);
   });
 
-  it('login calls POST and updates state', async () => {
-    api.get.mockResolvedValueOnce({ user: null, role: null });
-    api.post.mockResolvedValueOnce({ user: { name: 'Bob' }, role: 'member' });
+  it('login calls POST and updates state with token', async () => {
+    api.post
+      .mockRejectedValueOnce(new Error('no session'))
+      .mockResolvedValueOnce({ user: { name: 'Bob' }, role: 'member', access_token: 'login-tok' });
     renderAuth();
     await waitFor(() => expect(screen.getByTestId('loading').textContent).toBe('false'));
 
@@ -78,12 +85,15 @@ describe('AuthContext', () => {
       screen.getByText('login').click();
     });
     expect(api.post).toHaveBeenCalledWith('/login', { email: 'a@b.com', password: 'pass', role: 'member' });
+    expect(setAccessToken).toHaveBeenCalledWith('login-tok');
     expect(screen.getByTestId('user').textContent).toContain('Bob');
   });
 
-  it('logout clears state even when API fails', async () => {
+  it('logout clears state and token even when API fails', async () => {
+    api.post
+      .mockResolvedValueOnce({ access_token: 'tok' })
+      .mockRejectedValueOnce(new Error('Network error'));
     api.get.mockResolvedValueOnce({ user: { name: 'Carol' }, role: 'trainer' });
-    api.post.mockRejectedValueOnce(new Error('Network error'));
     renderAuth();
     await waitFor(() => expect(screen.getByTestId('user').textContent).toContain('Carol'));
 
@@ -95,5 +105,6 @@ describe('AuthContext', () => {
       expect(screen.getByTestId('user').textContent).toBe('null');
       expect(screen.getByTestId('role').textContent).toBe('null');
     });
+    expect(setAccessToken).toHaveBeenCalledWith(null);
   });
 });

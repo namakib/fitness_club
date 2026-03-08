@@ -35,7 +35,9 @@ SERVING_FRONTEND=1
 ```
 
 - **SERVING_FRONTEND=1** tells Flask to serve the built React app from `frontend/dist` so one URL serves both API and UI.
-- Use a strong **SECRET_KEY** (e.g. `openssl rand -hex 32`).
+- Use a strong **SECRET_KEY** (e.g. `openssl rand -hex 32`). This key is used for signing JWT tokens.
+- **JWT_ACCESS_EXPIRES** (default 900) — access token lifetime in seconds (15 min).
+- **JWT_REFRESH_EXPIRES** (default 604800) — refresh token lifetime in seconds (7 days).
 
 ### 3. Run with Gunicorn (production WSGI server)
 

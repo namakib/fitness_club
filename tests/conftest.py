@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import MagicMock, patch
 from werkzeug.security import generate_password_hash
 
+from backend.jwt_utils import create_access_token
+
 SAMPLE_MEMBER = {
     'member_id': 1,
     'name': 'Test Member',
@@ -30,12 +32,39 @@ SAMPLE_ADMIN = {
 }
 
 
+class _AuthClient:
+    """Wraps Flask test client to inject JWT Authorization header automatically."""
+
+    def __init__(self, real_client, token):
+        self._client = real_client
+        self._auth = {'Authorization': f'Bearer {token}'}
+
+    def _kw(self, kwargs):
+        headers = dict(self._auth)
+        if 'headers' in kwargs:
+            headers.update(kwargs.pop('headers'))
+        kwargs['headers'] = headers
+        return kwargs
+
+    def get(self, *a, **kw):
+        return self._client.get(*a, **self._kw(kw))
+
+    def post(self, *a, **kw):
+        return self._client.post(*a, **self._kw(kw))
+
+    def put(self, *a, **kw):
+        return self._client.put(*a, **self._kw(kw))
+
+    def delete(self, *a, **kw):
+        return self._client.delete(*a, **self._kw(kw))
+
+
 @pytest.fixture
 def app():
     from backend import create_app
     application = create_app()
     application.config['TESTING'] = True
-    application.config['SECRET_KEY'] = 'test-secret'
+    application.config['SECRET_KEY'] = 'test-secret-key-that-is-long-enough-for-hs256'
     return application
 
 
@@ -71,31 +100,37 @@ def sample_admin():
     return dict(SAMPLE_ADMIN)
 
 
-@pytest.fixture
-def member_auth(client, mock_db):
-    """Authenticated member client. Returns (client, mock_conn, mock_cur, user_data).
+def _make_token(app, user_id, role):
+    return create_access_token(
+        user_id, role,
+        app.config['SECRET_KEY'],
+        app.config.get('JWT_ACCESS_EXPIRES', 900),
+    )
 
-    mock_cur.fetchone.return_value is preset to the member dict so
-    load_logged_in_user finds the user.  Override with side_effect in tests
-    that need multiple fetchone results.
-    """
+
+def _make_auth_client(client, app, mock_db, user_id, role, user_data):
     mock_conn, mock_cur = mock_db
-    with client.session_transaction() as sess:
-        sess['user_id'] = SAMPLE_MEMBER['member_id']
-        sess['role'] = 'member'
-    mock_cur.fetchone.return_value = dict(SAMPLE_MEMBER)
-    return client, mock_conn, mock_cur, dict(SAMPLE_MEMBER)
+    token = _make_token(app, user_id, role)
+    mock_cur.fetchone.return_value = dict(user_data)
+    return _AuthClient(client, token), mock_conn, mock_cur, dict(user_data)
 
 
 @pytest.fixture
-def trainer_auth(client, mock_db):
+def member_auth(client, app, mock_db):
+    """Authenticated member client. Returns (client, mock_conn, mock_cur, user_data)."""
+    return _make_auth_client(
+        client, app, mock_db,
+        SAMPLE_MEMBER['member_id'], 'member', SAMPLE_MEMBER,
+    )
+
+
+@pytest.fixture
+def trainer_auth(client, app, mock_db):
     """Authenticated trainer client."""
-    mock_conn, mock_cur = mock_db
-    with client.session_transaction() as sess:
-        sess['user_id'] = SAMPLE_TRAINER['trainer_id']
-        sess['role'] = 'trainer'
-    mock_cur.fetchone.return_value = dict(SAMPLE_TRAINER)
-    return client, mock_conn, mock_cur, dict(SAMPLE_TRAINER)
+    return _make_auth_client(
+        client, app, mock_db,
+        SAMPLE_TRAINER['trainer_id'], 'trainer', SAMPLE_TRAINER,
+    )
 
 
 def _exec_raises_after(n, error_msg='db error'):
@@ -104,11 +139,9 @@ def _exec_raises_after(n, error_msg='db error'):
 
 
 @pytest.fixture
-def admin_auth(client, mock_db):
+def admin_auth(client, app, mock_db):
     """Authenticated admin client."""
-    mock_conn, mock_cur = mock_db
-    with client.session_transaction() as sess:
-        sess['user_id'] = SAMPLE_ADMIN['admin_id']
-        sess['role'] = 'admin'
-    mock_cur.fetchone.return_value = dict(SAMPLE_ADMIN)
-    return client, mock_conn, mock_cur, dict(SAMPLE_ADMIN)
+    return _make_auth_client(
+        client, app, mock_db,
+        SAMPLE_ADMIN['admin_id'], 'admin', SAMPLE_ADMIN,
+    )
