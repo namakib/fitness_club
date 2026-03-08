@@ -94,21 +94,44 @@ No computed or derived attributes are stored:
 
 ## 4. Advanced SQL Features
 
-### 4.1 View: `member_dashboard_view`
+### 4.1 View
 
-Combines data from `member`, `health_metric`, `fitness_goal`, `class_enrollment`, and `personal_session` using LATERAL joins to provide:
-- Latest health metric per member
-- Count of active fitness goals
-- Total classes attended (past classes only)
-- Count of upcoming scheduled sessions
+| View | Purpose |
+|------|---------|
+| `member_dashboard_view` | Aggregates data from `member`, `health_metric`, `fitness_goal`, `class_enrollment`, and `personal_session` using LATERAL joins to provide latest health metrics, active goal count, classes attended, and upcoming sessions per member |
 
-### 4.2 Trigger: `fn_prevent_room_double_booking`
+### 4.2 Triggers (7 functions, 10 triggers)
 
-A `BEFORE INSERT OR UPDATE` trigger on both `personal_session` and `group_class` tables. It checks for time overlaps in the same room on the same date across both tables, raising an exception if a conflict is found.
+| Trigger Function | Tables | Purpose |
+|------------------|--------|---------|
+| `fn_prevent_room_double_booking` | `personal_session`, `group_class` | Prevents time overlaps in the same room across both tables |
+| `fn_prevent_member_overlapping_sessions` | `personal_session` | Prevents a member from being double-booked |
+| `fn_prevent_trainer_double_booking` | `personal_session`, `group_class` | Prevents a trainer from being booked in overlapping time slots |
+| `fn_prevent_full_class_enrollment` | `class_enrollment` | Rejects enrollment when a class reaches `max_participants` |
+| `fn_health_metric_immutable` | `health_metric` | Blocks UPDATE and DELETE to enforce append-only history |
+| `fn_prevent_trainer_availability_overlap` | `trainer_availability` | Prevents overlapping availability slots for the same trainer |
+| `fn_verify_trainer_availability` | `personal_session` | Ensures the trainer has an availability slot covering the session time |
 
-### 4.3 Index: `idx_health_metric_member_recorded`
+### 4.3 Stored Functions
 
-A composite index on `health_metric(member_id, recorded_at DESC)` to optimize the health history query, which sorts by `recorded_at DESC` and filters by `member_id`. This is the most frequent query pattern for health data.
+| Function | Purpose |
+|----------|---------|
+| `fn_check_booking_conflicts(member, trainer, room, date, start, end)` | Returns a set of conflict rows (member/trainer/room) for a proposed booking, used by the application to show detailed conflict messages |
+| `fn_trainer_slot_booking_status(trainer_id, member_id)` | Returns availability slots enriched with existing session/class bookings, used to display the booking calendar |
+
+### 4.4 Indexes (9)
+
+| Index | Columns | Purpose |
+|-------|---------|---------|
+| `idx_health_metric_member_recorded` | `(member_id, recorded_at DESC)` | Optimizes health history queries sorted by date |
+| `idx_personal_session_trainer` | `(trainer_id)` | Speeds up trainer schedule lookups |
+| `idx_personal_session_member` | `(member_id)` | Speeds up member session queries |
+| `idx_group_class_trainer` | `(trainer_id)` | Speeds up trainer class queries |
+| `idx_group_class_room` | `(room_id)` | Speeds up room booking conflict checks |
+| `idx_class_enrollment_class` | `(class_id)` | Speeds up enrollment count queries |
+| `idx_class_enrollment_member` | `(member_id)` | Speeds up member enrollment lookups |
+| `idx_payment_member` | `(member_id)` | Speeds up member payment history |
+| `idx_trainer_availability` | `(trainer_id, available_date)` | Speeds up availability lookups by trainer and date |
 
 ---
 
@@ -132,10 +155,11 @@ The application follows a standard Flask blueprint architecture:
 
 ### 5.3 Error Handling
 
-- All database operations are wrapped in try/except blocks
-- Transactions are committed on success, rolled back on failure
-- User-friendly error messages are shown via Flask flash messages
-- Unique constraint violations (e.g., duplicate email) produce specific error messages
+- Centralized error codes and message templates in `backend/errors.py` (e.g., `AUTH_001`, `VAL_006`, `BOOK_003`)
+- `make_error(code, **params)` returns structured JSON responses with `error`, `error_code`, and HTTP status
+- `parse_db_error()` maps PostgreSQL trigger/constraint messages to user-friendly error codes
+- All database operations are wrapped in try/except blocks with commit on success, rollback on failure
+- The frontend displays error messages from the JSON response using toast notifications
 
 ### 5.4 SQL Interaction
 
@@ -158,13 +182,44 @@ All database interactions use parameterized SQL queries via psycopg2 (no ORM). T
 
 ---
 
-## 7. Video Demonstration
+## 7. Testing and CI/CD
+
+### 7.1 Backend Tests
+
+- **225 tests** using pytest with 100% code coverage (enforced via `pytest-cov --cov-fail-under=100`)
+- Tests cover all route handlers, error paths, validation branches, and utility functions
+- Database calls are mocked with `unittest.mock` so tests run without a live PostgreSQL instance
+
+### 7.2 Frontend Tests
+
+- **52 test suites** (864 tests) using Vitest with jsdom environment
+- Coverage enforced at 90% for lines, functions, branches, and statements via `@vitest/coverage-v8`
+- ESLint with `eslint-plugin-react-hooks` and `eslint-plugin-react-refresh` enforces code quality with zero warnings
+
+### 7.3 CI Pipeline
+
+A GitHub Actions workflow runs on every push and pull request to `develop`:
+- **Backend job**: installs dependencies, runs `pytest --cov=backend --cov-fail-under=100`
+- **Frontend job**: installs dependencies, runs `eslint .` (lint), then `vitest run --coverage` (tests with coverage thresholds)
+
+---
+
+## 8. Challenges
+
+- **Trigger conflict messages**: PostgreSQL trigger `RAISE EXCEPTION` messages are opaque strings. We wrote `parse_db_error()` with regex patterns to extract structured information (dates, times, conflict types) from these messages and convert them into user-friendly error responses.
+- **Cross-table room booking**: Room double-booking prevention must check both `personal_session` and `group_class` tables simultaneously. A single trigger function queries both tables to detect overlaps, which was more complex than a simple unique constraint.
+- **Booking conflict UX**: When a booking fails, users need to know _why_ (member busy, trainer busy, or room busy) and _when_ (the conflicting time slot). The `fn_check_booking_conflicts` stored function returns multiple conflict rows, which the application aggregates into a single detailed error message.
+- **Append-only health metrics**: Enforcing immutability at the database level (via triggers that block UPDATE and DELETE) required careful coordination with the application layer, which must handle the resulting errors gracefully.
+
+---
+
+## 9. Video Demonstration
 
 <!-- TODO: Replace this placeholder with your actual video link -->
 _Link to be added here._
 
 ---
 
-## 8. Conclusion
+## 10. Conclusion
 
 The system meets all specified requirements: 13 entities in 3NF, 13 relationships, 8 fully functional operations, role-based access control, database-level constraint enforcement, and a clean web interface. All SQL is parameterized and executed directly against PostgreSQL without an ORM.
