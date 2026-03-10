@@ -166,7 +166,7 @@ describe('Trainer Availability', () => {
     });
   });
 
-  it('handles delete slot error', async () => {
+  it('handles delete slot error and keeps dialog open with busy reset', async () => {
     const user = userEvent.setup();
     api.delete.mockRejectedValueOnce({ message: 'Cannot delete', details: 'booked' });
     renderAvailability();
@@ -183,7 +183,9 @@ describe('Trainer Availability', () => {
 
     await waitFor(() => {
       expect(toastError).toHaveBeenCalledWith('Cannot delete', 'booked');
+      expect(api.delete).toHaveBeenCalledWith('/trainer/availability/1');
     });
+    expect(screen.getByText('Are you sure you want to remove this availability slot?')).toBeInTheDocument();
   });
 
   it('cancels delete dialog', async () => {
@@ -340,6 +342,17 @@ describe('Trainer Availability', () => {
     fireEvent.click(screen.getByTestId('trigger-load-rooms'));
     await waitFor(() => {
       expect(api.get).toHaveBeenCalledWith('/trainer/rooms');
+    });
+  });
+
+  it('loadCalendarEvents fetches both months when week spans two months', async () => {
+    const user = userEvent.setup();
+    renderAvailability();
+    await waitFor(() => expect(screen.getByTestId('trigger-load-cross-month')).toBeInTheDocument());
+    await user.click(screen.getByTestId('trigger-load-cross-month'));
+    await waitFor(() => {
+      expect(api.get).toHaveBeenCalledWith('/trainer/calendar?year=2025&month=7');
+      expect(api.get).toHaveBeenCalledWith('/trainer/calendar?year=2025&month=8');
     });
   });
 

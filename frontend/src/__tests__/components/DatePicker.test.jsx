@@ -224,6 +224,19 @@ describe('DatePicker', () => {
     expect(screen.getByText('December 2024')).toBeInTheDocument();
   });
 
+  it('formatDisplay returns empty string when value is falsy', () => {
+    render(<DatePicker value="" onChange={vi.fn()} placeholder="Pick" />);
+    expect(screen.getByText('Pick')).toBeInTheDocument();
+  });
+
+  it('does not close when clicking inside ref (button)', () => {
+    render(<DatePicker value="2025-06-15" onChange={vi.fn()} />);
+    fireEvent.click(screen.getByText(/Jun 15/));
+    expect(screen.getByText('Sun')).toBeInTheDocument();
+    fireEvent.mouseDown(screen.getByText(/Jun 15/).closest('button'));
+    expect(screen.getByText('Sun')).toBeInTheDocument();
+  });
+
   it('wraps from December to January when navigating next month', () => {
     render(<DatePicker value="2025-12-15" onChange={vi.fn()} />);
     fireEvent.click(screen.getByText(/Dec 15/));
@@ -242,5 +255,15 @@ describe('DatePicker', () => {
     fireEvent.click(screen.getByText('2025'));
     const year2025 = screen.getByText('2025');
     expect(year2025.className).toContain('bg-orange');
+  });
+
+  it('formatDisplay returns empty string when value is empty', () => {
+    render(<DatePicker value="" onChange={vi.fn()} placeholder="Pick date" />);
+    expect(screen.getByText('Pick date')).toBeInTheDocument();
+  });
+
+  it('formatDisplay returns empty string when value is null', () => {
+    render(<DatePicker value={null} onChange={vi.fn()} placeholder="Pick date" />);
+    expect(screen.getByText('Pick date')).toBeInTheDocument();
   });
 });

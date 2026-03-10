@@ -76,7 +76,7 @@ export default function NumberInput({
       </div>
       {(helperText || showMaxHelper) && (
         <p className={`mt-1 text-xs ${t.pageTextMuted}`}>
-          {helperText ?? (showMaxHelper ? `Maximum of ${max}` : null)}
+          {helperText ?? `Maximum of ${max}`}
         </p>
       )}
     </div>

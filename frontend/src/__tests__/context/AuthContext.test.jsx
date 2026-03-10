@@ -17,7 +17,7 @@ import { setAccessToken } from '../../api';
 import { AuthProvider, useAuth } from '../../context/AuthContext';
 
 function TestConsumer() {
-  const { user, role, loading, login, logout } = useAuth();
+  const { user, role, loading, login, logout, refetch } = useAuth();
   return (
     <div>
       <span data-testid="loading">{String(loading)}</span>
@@ -25,6 +25,7 @@ function TestConsumer() {
       <span data-testid="role">{role || 'null'}</span>
       <button onClick={() => login('a@b.com', 'pass', 'member')}>login</button>
       <button onClick={async () => { try { await logout(); } catch {} }}>logout</button>
+      <button onClick={() => refetch()}>refetch</button>
     </div>
   );
 }
@@ -106,5 +107,52 @@ describe('AuthContext', () => {
       expect(screen.getByTestId('role').textContent).toBe('null');
     });
     expect(setAccessToken).toHaveBeenCalledWith(null);
+  });
+
+  it('fetchMe (refetch) updates user and role on /me success', async () => {
+    api.post.mockResolvedValueOnce({ access_token: 'tok' });
+    api.get
+      .mockResolvedValueOnce({ user: { name: 'Dave' }, role: 'member' })
+      .mockResolvedValueOnce({ user: { name: 'Eve' }, role: 'admin' });
+    renderAuth();
+    await waitFor(() => expect(screen.getByTestId('user').textContent).toContain('Dave'));
+
+    await act(async () => {
+      screen.getByText('refetch').click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user').textContent).toContain('Eve');
+      expect(screen.getByTestId('role').textContent).toBe('admin');
+    });
+  });
+
+  it('bootstrap does not set user when refresh returns no access_token', async () => {
+    api.post.mockResolvedValueOnce({});
+    renderAuth();
+    await waitFor(() => {
+      expect(screen.getByTestId('loading').textContent).toBe('false');
+    });
+    expect(screen.getByTestId('user').textContent).toBe('null');
+    expect(screen.getByTestId('role').textContent).toBe('null');
+    expect(setAccessToken).toHaveBeenCalledWith(null);
+  });
+
+  it('fetchMe (refetch) catch sets user and role to null on /me failure', async () => {
+    api.post.mockResolvedValueOnce({ access_token: 'tok' });
+    api.get
+      .mockResolvedValueOnce({ user: { name: 'Dave' }, role: 'member' })
+      .mockRejectedValueOnce(new Error('Network error'));
+    renderAuth();
+    await waitFor(() => expect(screen.getByTestId('user').textContent).toContain('Dave'));
+
+    await act(async () => {
+      screen.getByText('refetch').click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user').textContent).toBe('null');
+      expect(screen.getByTestId('role').textContent).toBe('null');
+    });
   });
 });

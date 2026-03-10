@@ -64,6 +64,13 @@ describe('TimePicker', () => {
     expect(screen.queryByText('Enter time')).not.toBeInTheDocument();
   });
 
+  it('does not close on mouseDown inside the picker', () => {
+    openPicker();
+    expect(screen.getByText('Enter time')).toBeInTheDocument();
+    fireEvent.mouseDown(screen.getByText('Enter time'));
+    expect(screen.getByText('Enter time')).toBeInTheDocument();
+  });
+
   it('toggles open/closed on button click', () => {
     render(<TimePicker value="" onChange={vi.fn()} placeholder="Pick" />);
     fireEvent.click(screen.getByText('Pick'));
@@ -317,6 +324,21 @@ describe('TimePicker', () => {
     });
   });
 
+  describe('formatTimeDisplay and parseValue empty input', () => {
+    it('displays empty when value is empty string', () => {
+      render(<TimePicker value="" onChange={vi.fn()} placeholder="Pick" />);
+      expect(screen.getByText('Pick')).toBeInTheDocument();
+    });
+
+    it('parseValue handles empty string for default hour/minute/meridiem', () => {
+      const onChange = vi.fn();
+      render(<TimePicker value="" onChange={onChange} placeholder="Pick" />);
+      fireEvent.click(screen.getByText('Pick'));
+      const hourInput = screen.getAllByRole('spinbutton')[0];
+      expect(hourInput.value).toBe('12');
+    });
+  });
+
   describe('no value defaults', () => {
     it('defaults to hour 12, minute 0, am when no value and picker opened', () => {
       const onChange = vi.fn();
@@ -325,5 +347,10 @@ describe('TimePicker', () => {
       const hourInput = screen.getAllByRole('spinbutton')[0];
       expect(hourInput.value).toBe('12');
     });
+  });
+
+  it('formatTimeDisplay returns empty string when value is null', () => {
+    render(<TimePicker value={null} onChange={vi.fn()} placeholder="Select" />);
+    expect(screen.getByText('Select')).toBeInTheDocument();
   });
 });

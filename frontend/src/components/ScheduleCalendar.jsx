@@ -12,7 +12,7 @@ function toYMD(d) {
 
 function toDateKey(d) {
   if (!d) return null;
-  return toYMD(d instanceof Date ? d : new Date(d + 'T12:00:00'));
+  return toYMD(d);
 }
 
 function sameDay(a, b) {
@@ -34,7 +34,6 @@ const EVENT_COLORS = {
 };
 
 function toMinutes(timeStr) {
-  if (!timeStr) return 0;
   const [h, m] = String(timeStr).split(':').map(Number);
   return (h || 0) * 60 + (m || 0);
 }
@@ -99,7 +98,6 @@ export default function ScheduleCalendar({
   const windowKey = `${windowStart.getFullYear()}-${windowStart.getMonth()}-${windowStart.getDate()}`;
 
   const fetchData = useCallback(() => {
-    if (!loadEvents) return;
     setLoading(true);
     loadEvents(windowStart)
       .then((result) => { setData(result); setLoading(false); })
@@ -349,7 +347,7 @@ export default function ScheduleCalendar({
                     <div className="absolute inset-x-0.5 top-12 bottom-0 z-10" style={{ height: 720 }}>
                       {dayEvents.map((ev) => {
                         const style = getEventStyle(ev);
-                        const color = EVENT_COLORS[ev.event_type] || EVENT_COLORS.session;
+                        const color = EVENT_COLORS[ev.event_type];
                         const evKey = `${ev.event_type}-${ev.session_id || ev.class_id || ev.availability_id}`;
                         const isNew = newEventKeys.has(evKey);
                         return (

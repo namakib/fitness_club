@@ -1,0 +1,7 @@
+[run]
+source = backend
+omit =
+    backend/run.py
+    backend/run_operation.py
+    backend/operations/*
+    backend/tests/*

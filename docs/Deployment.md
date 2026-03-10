@@ -41,12 +41,12 @@ SERVING_FRONTEND=1
 
 ### 3. Run with Gunicorn (production WSGI server)
 
-From the **project root** (where `run.py` is):
+From the **project root**:
 
 ```bash
 source venv/bin/activate
-pip install -r requirements.txt
-gunicorn -w 4 -b 0.0.0.0:5001 "run:app"
+pip install -r backend/requirements.txt
+gunicorn -w 4 -b 0.0.0.0:5001 "backend.run:app"
 ```
 
 - **-w 4**: 4 worker processes (adjust as needed).
@@ -113,7 +113,7 @@ CORS_ORIGINS=https://your-app.vercel.app,https://www.yourdomain.com
 
 1. Build frontend: `cd frontend && npm run build && cd ..`
 2. Set env: `export SERVING_FRONTEND=1` (and DB vars if not default).
-3. Run: `gunicorn -w 2 -b 0.0.0.0:5001 "run:app"`
+3. Run: `gunicorn -w 2 -b 0.0.0.0:5001 "backend.run:app"`
 4. Open **http://localhost:5001** — you should see the app and API on the same port.
 
 ---
@@ -145,8 +145,8 @@ A zero-cost live demo with registration disabled. All three services have genero
 1. Connect the GitHub repo to [Render](https://render.com).
 2. Create a new **Web Service** (free tier).
 3. Set root directory to `.` (project root).
-4. Build command: `pip install -r requirements.txt`
-5. Start command: `gunicorn -w 2 -b 0.0.0.0:$PORT "run:app"`
+4. Build command: `pip install -r backend/requirements.txt`
+5. Start command: `gunicorn -w 2 -b 0.0.0.0:$PORT "backend.run:app"`
 6. Add environment variables:
    - `DEMO_MODE=1`
    - `SECRET_KEY` — generate a strong value (`openssl rand -hex 32`)
@@ -195,6 +195,6 @@ When `DEMO_MODE=1`:
 | Task              | Command / setting |
 |-------------------|-------------------|
 | Build frontend    | `cd frontend && npm run build` |
-| Run production    | `gunicorn -w 4 -b 0.0.0.0:5001 "run:app"` |
+| Run production    | `gunicorn -w 4 -b 0.0.0.0:5001 "backend.run:app"` |
 | Serve UI from Flask | `SERVING_FRONTEND=1` |
 | Add CORS origin   | `CORS_ORIGINS=https://your-frontend.com` |

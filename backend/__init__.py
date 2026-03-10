@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import time
 from pathlib import Path
@@ -43,6 +44,13 @@ def _log_api(msg, data=None):
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    # Configure logging based on env (LOG_LEVEL or FLASK_ENV)
+    logging.basicConfig(
+        level=app.config['LOG_LEVEL'],
+        format='%(asctime)s %(levelname)s [%(name)s] %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+    )
 
     if app.config.get('DEBUG_API_LOGGING'):
         print("[API] Debug logging enabled (DEBUG_API=1)")

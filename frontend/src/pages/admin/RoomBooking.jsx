@@ -6,6 +6,7 @@ import DatePicker from '../../components/DatePicker';
 import SelectDropdown from '../../components/SelectDropdown';
 import StatusBadge from '../../components/StatusBadge';
 import TimePicker from '../../components/TimePicker';
+import TrainerAvailabilityCalendar from '../../components/TrainerAvailabilityCalendar';
 import t from '../../theme';
 
 export default function RoomBooking() {
@@ -62,26 +63,94 @@ export default function RoomBooking() {
 function SessionForm({ rooms, members, trainers, onSaved }) {
   const [form, setForm] = useState({ member_id: '', trainer_id: '', room_id: '', session_date: '', start_time: '', end_time: '' });
   const [busy, setBusy] = useState(false);
+  const [availableRooms, setAvailableRooms] = useState(null);
+  const [availabilitySlots, setAvailabilitySlots] = useState([]);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
+
+  const hasMemberAndTrainer = form.member_id && form.trainer_id;
+  useEffect(() => {
+    if (!hasMemberAndTrainer) {
+      setAvailabilitySlots([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingAvailability(true);
+    api.get(`/admin/room-booking/trainer-availability?trainer_id=${form.trainer_id}&member_id=${form.member_id}`)
+      .then((res) => {
+        if (!cancelled) setAvailabilitySlots(res.slots || []);
+      })
+      .catch(() => { if (!cancelled) setAvailabilitySlots([]); })
+      .finally(() => { if (!cancelled) setLoadingAvailability(false); });
+    return () => { cancelled = true; };
+  }, [hasMemberAndTrainer, form.member_id, form.trainer_id]);
+
+  const hasSlot = form.session_date && form.start_time && form.end_time && form.start_time < form.end_time;
+  useEffect(() => {
+    if (!hasSlot) {
+      setAvailableRooms(null);
+      return;
+    }
+    api.get(`/admin/room-booking/available-rooms?date=${encodeURIComponent(form.session_date)}&start_time=${encodeURIComponent(form.start_time)}&end_time=${encodeURIComponent(form.end_time)}`)
+      .then(d => setAvailableRooms(d.available_rooms || []))
+      .catch(() => setAvailableRooms(null));
+  }, [hasSlot, form.session_date, form.start_time, form.end_time]);
+
+  const roomOptions = availableRooms
+    ? availableRooms.map(r => ({ value: r.room_id, label: r.room_name }))
+    : rooms.map(r => ({ value: r.room_id, label: r.room_name }));
+  const roomHint = hasSlot && availableRooms ? (availableRooms.length === 0 ? 'No rooms available for this slot' : `${availableRooms.length} room(s) available`) : null;
+
+  function setFormField(updates) {
+    const next = { ...form, ...updates };
+    if (updates.session_date ?? updates.start_time ?? updates.end_time) {
+      const hadSlot = form.session_date && form.start_time && form.end_time && form.start_time < form.end_time;
+      const hasSlotNow = next.session_date && next.start_time && next.end_time && next.start_time < next.end_time;
+      if (hadSlot && hasSlotNow && availableRooms && next.room_id && !availableRooms.some(r => String(r.room_id) === String(next.room_id))) {
+        next.room_id = '';
+      }
+    }
+    setForm(next);
+  }
 
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
-    try { await api.post('/admin/room-booking/session', form); toastSuccess('Session booked.'); setForm({ member_id: '', trainer_id: '', room_id: '', session_date: '', start_time: '', end_time: '' }); onSaved(); }
+    try { await api.post('/admin/room-booking/session', form); toastSuccess('Session booked.'); setForm({ member_id: '', trainer_id: '', room_id: '', session_date: '', start_time: '', end_time: '' }); setAvailableRooms(null); onSaved(); }
     catch (err) { toastError(err.message, err.details); }
     finally { setBusy(false); }
   }
 
   return (
-    <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <SelectDropdown label="Member" value={form.member_id} onChange={(val) => setForm({ ...form, member_id: val })} options={members.map(m => ({ value: m.member_id, label: `${m.name} (${m.email})` }))} placeholder="Select member" searchable={members.length > 5} />
-      <SelectDropdown label="Trainer" value={form.trainer_id} onChange={(val) => setForm({ ...form, trainer_id: val })} options={trainers.map(tr => ({ value: tr.trainer_id, label: `${tr.name} – ${tr.specialization}` }))} placeholder="Select trainer" searchable={trainers.length > 5} />
-      <SelectDropdown label="Room" value={form.room_id} onChange={(val) => setForm({ ...form, room_id: val })} options={rooms.map(r => ({ value: r.room_id, label: r.room_name }))} placeholder="Select room" searchable={rooms.length > 5} />
-      <DatePicker label="Date" value={form.session_date} onChange={(val) => setForm({ ...form, session_date: val })} placeholder="Select date" required />
-      <TimePicker label="Start Time" value={form.start_time} onChange={(val) => setForm({ ...form, start_time: val })} placeholder="Select start time" required />
-      <TimePicker label="End Time" value={form.end_time} onChange={(val) => setForm({ ...form, end_time: val })} placeholder="Select end time" required />
-      <div className="sm:col-span-2 lg:col-span-3">
-        <button type="submit" disabled={busy} className={t.btn}>{busy ? 'Booking...' : 'Book Session'}</button>
+    <form onSubmit={submit} className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <SelectDropdown label="Member" value={form.member_id} onChange={(val) => setFormField({ member_id: val })} options={members.map(m => ({ value: m.member_id, label: `${m.name} (${m.email})` }))} placeholder="Select member" searchable={members.length > 5} />
+        <SelectDropdown label="Trainer" value={form.trainer_id} onChange={(val) => setFormField({ trainer_id: val })} options={trainers.map(tr => ({ value: tr.trainer_id, label: `${tr.name} – ${tr.specialization}` }))} placeholder="Select trainer" searchable={trainers.length > 5} />
       </div>
+
+      {hasMemberAndTrainer ? (
+        <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4 space-y-3">
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Trainer availability</h3>
+          <TrainerAvailabilityCalendar
+            slots={availabilitySlots}
+            loading={loadingAvailability}
+            onSlotSelect={(date, start, end) => setFormField({ session_date: date, start_time: start, end_time: end })}
+            bookedByLabel="member's booking"
+          />
+        </div>
+      ) : (
+        <p className="text-sm text-gray-500 dark:text-gray-400">Select a member and trainer to see availability</p>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div>
+          <SelectDropdown label="Room" value={form.room_id} onChange={(val) => setFormField({ room_id: val })} options={roomOptions} placeholder="Select room" searchable={roomOptions.length > 5} />
+          {roomHint && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{roomHint}</p>}
+        </div>
+        <DatePicker label="Date" value={form.session_date} onChange={(val) => setFormField({ session_date: val })} placeholder="Select date" required />
+        <TimePicker label="Start Time" value={form.start_time} onChange={(val) => setFormField({ start_time: val })} placeholder="Select start time" required />
+        <TimePicker label="End Time" value={form.end_time} onChange={(val) => setFormField({ end_time: val })} placeholder="Select end time" required />
+      </div>
+      <button type="submit" disabled={busy} className={t.btn}>{busy ? 'Booking...' : 'Book Session'}</button>
     </form>
   );
 }
@@ -89,12 +158,41 @@ function SessionForm({ rooms, members, trainers, onSaved }) {
 function ClassForm({ rooms, trainers, onSaved }) {
   const [form, setForm] = useState({ class_name: '', trainer_id: '', room_id: '', class_date: '', start_time: '', end_time: '', max_participants: '' });
   const [busy, setBusy] = useState(false);
-  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const [availableRooms, setAvailableRooms] = useState(null);
+  const set = (k) => (e) => setForm(prev => ({ ...prev, [k]: e.target.value }));
+
+  const hasSlot = form.class_date && form.start_time && form.end_time && form.start_time < form.end_time;
+  useEffect(() => {
+    if (!hasSlot) {
+      setAvailableRooms(null);
+      return;
+    }
+    api.get(`/admin/room-booking/available-rooms?date=${encodeURIComponent(form.class_date)}&start_time=${encodeURIComponent(form.start_time)}&end_time=${encodeURIComponent(form.end_time)}`)
+      .then(d => setAvailableRooms(d.available_rooms || []))
+      .catch(() => setAvailableRooms(null));
+  }, [hasSlot, form.class_date, form.start_time, form.end_time]);
+
+  const roomOptions = availableRooms
+    ? availableRooms.map(r => ({ value: r.room_id, label: r.room_name }))
+    : rooms.map(r => ({ value: r.room_id, label: r.room_name }));
+  const roomHint = hasSlot && availableRooms ? (availableRooms.length === 0 ? 'No rooms available for this slot' : `${availableRooms.length} room(s) available`) : null;
+
+  function setFormField(updates) {
+    const next = { ...form, ...updates };
+    if (updates.class_date ?? updates.start_time ?? updates.end_time) {
+      const hadSlot = form.class_date && form.start_time && form.end_time && form.start_time < form.end_time;
+      const hasSlotNow = next.class_date && next.start_time && next.end_time && next.start_time < next.end_time;
+      if (hadSlot && hasSlotNow && availableRooms && next.room_id && !availableRooms.some(r => String(r.room_id) === String(next.room_id))) {
+        next.room_id = '';
+      }
+    }
+    setForm(next);
+  }
 
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
-    try { await api.post('/admin/room-booking/class', form); toastSuccess('Class scheduled.'); setForm({ class_name: '', trainer_id: '', room_id: '', class_date: '', start_time: '', end_time: '', max_participants: '' }); onSaved(); }
+    try { await api.post('/admin/room-booking/class', form); toastSuccess('Class scheduled.'); setForm({ class_name: '', trainer_id: '', room_id: '', class_date: '', start_time: '', end_time: '', max_participants: '' }); setAvailableRooms(null); onSaved(); }
     catch (err) { toastError(err.message, err.details); }
     finally { setBusy(false); }
   }
@@ -102,11 +200,14 @@ function ClassForm({ rooms, trainers, onSaved }) {
   return (
     <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <Field label="Class Name" value={form.class_name} onChange={set('class_name')} required />
-      <SelectDropdown label="Trainer" value={form.trainer_id} onChange={(val) => setForm({ ...form, trainer_id: val })} options={trainers.map(tr => ({ value: tr.trainer_id, label: `${tr.name} – ${tr.specialization}` }))} placeholder="Select trainer" searchable={trainers.length > 5} />
-      <SelectDropdown label="Room" value={form.room_id} onChange={(val) => setForm({ ...form, room_id: val })} options={rooms.map(r => ({ value: r.room_id, label: r.room_name }))} placeholder="Select room" searchable={rooms.length > 5} />
-      <DatePicker label="Date" value={form.class_date} onChange={(val) => setForm({ ...form, class_date: val })} placeholder="Select date" required />
-      <TimePicker label="Start Time" value={form.start_time} onChange={(val) => setForm({ ...form, start_time: val })} placeholder="Select start time" required />
-      <TimePicker label="End Time" value={form.end_time} onChange={(val) => setForm({ ...form, end_time: val })} placeholder="Select end time" required />
+      <SelectDropdown label="Trainer" value={form.trainer_id} onChange={(val) => setFormField({ trainer_id: val })} options={trainers.map(tr => ({ value: tr.trainer_id, label: `${tr.name} – ${tr.specialization}` }))} placeholder="Select trainer" searchable={trainers.length > 5} />
+      <div>
+        <SelectDropdown label="Room" value={form.room_id} onChange={(val) => setFormField({ room_id: val })} options={roomOptions} placeholder="Select room" searchable={roomOptions.length > 5} />
+        {roomHint && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{roomHint}</p>}
+      </div>
+      <DatePicker label="Date" value={form.class_date} onChange={(val) => setFormField({ class_date: val })} placeholder="Select date" required />
+      <TimePicker label="Start Time" value={form.start_time} onChange={(val) => setFormField({ start_time: val })} placeholder="Select start time" required />
+      <TimePicker label="End Time" value={form.end_time} onChange={(val) => setFormField({ end_time: val })} placeholder="Select end time" required />
       <Field label="Max Participants" type="number" min={1} value={form.max_participants} onChange={set('max_participants')} required />
       <div className="sm:col-span-2 lg:col-span-3">
         <button type="submit" disabled={busy} className={t.btn}>{busy ? 'Scheduling...' : 'Schedule Class'}</button>

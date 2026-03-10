@@ -202,4 +202,14 @@ describe('NumberInput', () => {
     const { container } = render(<NumberInput label="Qty" value="5" onChange={vi.fn()} />);
     expect(container.querySelector('.mt-1')).not.toBeInTheDocument();
   });
+
+  it('shows null when helperText is explicitly null and max is not set', () => {
+    const { container } = render(<NumberInput label="Qty" value="5" onChange={vi.fn()} helperText={null} />);
+    expect(container.querySelector('.mt-1')).not.toBeInTheDocument();
+  });
+
+  it('shows "Maximum of N" when max is set and no helperText', () => {
+    render(<NumberInput label="Qty" value="5" onChange={vi.fn()} max={20} />);
+    expect(screen.getByText('Maximum of 20')).toBeInTheDocument();
+  });
 });

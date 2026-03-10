@@ -216,4 +216,33 @@ describe('api', () => {
     await expect(api.get('/protected')).rejects.toThrow('Auth required');
     expect(globalThis.fetch).toHaveBeenCalledTimes(2);
   });
+
+  it('refresh catch handles json parse failure', async () => {
+    setAccessToken('expired');
+    let callCount = 0;
+    globalThis.fetch = vi.fn().mockImplementation((url) => {
+      callCount++;
+      if (callCount === 1) {
+        return Promise.resolve({
+          ok: false, status: 401, statusText: 'Unauthorized',
+          headers: { get: () => 'application/json' },
+          json: () => Promise.resolve({ error: 'Token expired', error_code: 'AUTH_001' }),
+        });
+      }
+      if (url.includes('/refresh')) {
+        return Promise.resolve({
+          ok: true, status: 200, statusText: 'OK',
+          headers: { get: () => 'application/json' },
+          json: () => Promise.reject(new Error('Invalid JSON')),
+        });
+      }
+      return Promise.resolve({
+        ok: true, headers: { get: () => 'application/json' },
+        json: () => Promise.resolve({ data: 'ok' }),
+      });
+    });
+
+    await expect(api.get('/member/dashboard')).rejects.toThrow('Token expired');
+    expect(getAccessToken()).toBeNull();
+  });
 });

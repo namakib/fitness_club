@@ -92,6 +92,78 @@ def test_room_booking_list(admin_auth):
     assert 'bookings' in data
 
 
+def test_available_rooms(admin_auth):
+    client, _, mock_cur, _ = admin_auth
+    mock_cur.fetchall.return_value = [
+        {'room_id': 2, 'room_name': 'Yoga Studio', 'capacity': 20},
+    ]
+
+    resp = client.get(
+        '/api/admin/room-booking/available-rooms'
+        '?date=2026-04-01&start_time=09:00&end_time=10:00'
+    )
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data['available_rooms'] == [
+        {'room_id': 2, 'room_name': 'Yoga Studio', 'capacity': 20},
+    ]
+
+
+def test_available_rooms_incomplete_params(admin_auth):
+    client, _, _, _ = admin_auth
+
+    resp = client.get('/api/admin/room-booking/available-rooms?date=2026-04-01')
+    assert resp.status_code == 200
+    assert resp.get_json()['available_rooms'] == []
+
+
+def test_available_rooms_start_after_end(admin_auth):
+    """When start_time >= end_time, return empty list."""
+    client, _, _, _ = admin_auth
+
+    resp = client.get(
+        '/api/admin/room-booking/available-rooms'
+        '?date=2026-04-01&start_time=10:00&end_time=09:00'
+    )
+    assert resp.status_code == 200
+    assert resp.get_json()['available_rooms'] == []
+
+
+def test_trainer_availability(admin_auth):
+    client, _, mock_cur, _ = admin_auth
+    mock_cur.fetchall.return_value = [
+        {
+            'availability_id': 1,
+            'available_date': '2026-04-01',
+            'start_time': '09:00',
+            'end_time': '10:00',
+            'is_booked': False,
+            'booked_by_me': False,
+        },
+    ]
+
+    resp = client.get(
+        '/api/admin/room-booking/trainer-availability'
+        '?trainer_id=1&member_id=2'
+    )
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert 'slots' in data
+    assert len(data['slots']) == 1
+    assert data['slots'][0]['available_date'] == '2026-04-01'
+    assert data['slots'][0]['start_time'] == '09:00'
+
+
+def test_trainer_availability_missing_params(admin_auth):
+    client, _, _, _ = admin_auth
+
+    resp = client.get('/api/admin/room-booking/trainer-availability?trainer_id=1')
+    assert resp.status_code == 400
+
+    resp = client.get('/api/admin/room-booking/trainer-availability?member_id=1')
+    assert resp.status_code == 400
+
+
 def test_book_session_success(admin_auth):
     client, mock_conn, mock_cur, admin = admin_auth
     mock_cur.fetchone.side_effect = [admin, {'1': 1}]

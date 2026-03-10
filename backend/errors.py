@@ -30,6 +30,7 @@ VAL_008 = 'VAL_008'  # Issue description required
 VAL_009 = 'VAL_009'  # Only cancellation allowed
 VAL_010 = 'VAL_010'  # Amount must be positive
 VAL_011 = 'VAL_011'  # Invalid email format
+VAL_012 = 'VAL_012'  # Invalid gender
 
 # BOOK -- Booking / Scheduling
 BOOK_001 = 'BOOK_001'  # Member overlapping session (date only)
@@ -75,6 +76,7 @@ ERROR_MESSAGES = {
     VAL_009: 'Only cancellation is allowed.',
     VAL_010: 'Amount must be a positive number.',
     VAL_011: 'Please enter a valid email address.',
+    VAL_012: 'Gender must be male, female, or other.',
     BOOK_001: (
         'You already have a session on {date}. '
         'Please choose a different time or cancel that session first.'
@@ -126,6 +128,7 @@ CODE_HTTP_STATUS = {
     VAL_009: 400,
     VAL_010: 400,
     VAL_011: 400,
+    VAL_012: 400,
     BOOK_001: 409,
     BOOK_002: 409,
     BOOK_003: 409,

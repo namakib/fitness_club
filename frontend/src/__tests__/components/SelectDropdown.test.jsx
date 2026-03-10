@@ -165,6 +165,52 @@ describe('SelectDropdown', () => {
       Object.defineProperty(window, 'innerHeight', { value: 768, writable: true });
     });
 
+    it('cleans up floating listeners on unmount', async () => {
+      const { unmount } = render(<SelectDropdown value="" options={options} onChange={vi.fn()} placeholder="Pick" floating />);
+      fireEvent.click(screen.getByText('Pick'));
+      await act(async () => { vi.advanceTimersByTime(50); });
+      expect(screen.getByText('Member')).toBeInTheDocument();
+      unmount();
+    });
+
+    it('cleanup cancels pending RAF on unmount after scroll', async () => {
+      const origRAF = window.requestAnimationFrame;
+      const origCAF = window.cancelAnimationFrame;
+      let pendingId = 1;
+      window.requestAnimationFrame = () => pendingId++;
+      window.cancelAnimationFrame = vi.fn();
+
+      const { unmount } = render(<SelectDropdown value="" options={options} onChange={vi.fn()} placeholder="Pick" floating />);
+      fireEvent.click(screen.getByText('Pick'));
+      await act(async () => { vi.advanceTimersByTime(50); });
+      fireEvent.scroll(window);
+      unmount();
+      expect(window.cancelAnimationFrame).toHaveBeenCalled();
+
+      window.requestAnimationFrame = origRAF;
+      window.cancelAnimationFrame = origCAF;
+    });
+
+    it('throttledUpdate cancels previous RAF', async () => {
+      const origRAF = window.requestAnimationFrame;
+      const origCAF = window.cancelAnimationFrame;
+      const callbacks = [];
+      window.requestAnimationFrame = (cb) => { callbacks.push(cb); return callbacks.length; };
+      window.cancelAnimationFrame = vi.fn();
+
+      render(<SelectDropdown value="" options={options} onChange={vi.fn()} placeholder="Pick" floating />);
+      fireEvent.click(screen.getByText('Pick'));
+      await act(async () => { vi.advanceTimersByTime(50); });
+
+      fireEvent.scroll(window);
+      fireEvent.scroll(window);
+      expect(window.cancelAnimationFrame).toHaveBeenCalled();
+      callbacks.forEach(cb => cb());
+
+      window.requestAnimationFrame = origRAF;
+      window.cancelAnimationFrame = origCAF;
+    });
+
     it('detects scrollable parents and listens for scroll', async () => {
       const wrapper = document.createElement('div');
       Object.defineProperty(wrapper, 'style', {
@@ -217,6 +263,32 @@ describe('SelectDropdown', () => {
       fireEvent.click(screen.getByText('Trainer'));
       expect(onChange).toHaveBeenCalledWith('trainer');
       await act(async () => { vi.advanceTimersByTime(200); });
+    });
+  });
+
+  describe('floating dropdown openAbove positioning', () => {
+    it('positions panel above trigger when space below is limited', async () => {
+      const orig = Element.prototype.getBoundingClientRect;
+      Element.prototype.getBoundingClientRect = function() {
+        return { top: 500, bottom: 530, left: 10, right: 200, width: 190, height: 30 };
+      };
+      Object.defineProperty(window, 'innerHeight', { value: 540, writable: true });
+
+      render(<SelectDropdown value="" options={options} onChange={vi.fn()} placeholder="Pick" floating />);
+      fireEvent.click(screen.getByText('Pick'));
+      await act(async () => { vi.advanceTimersByTime(50); });
+      const portalContent = document.querySelector('[style*="position: fixed"]');
+      expect(portalContent).toBeTruthy();
+
+      Element.prototype.getBoundingClientRect = orig;
+      Object.defineProperty(window, 'innerHeight', { value: 768, writable: true });
+    });
+
+    it('does not register scroll listener when floating=false', async () => {
+      render(<SelectDropdown value="" options={options} onChange={vi.fn()} placeholder="Pick" floating={false} />);
+      fireEvent.click(screen.getByText('Pick'));
+      await act(async () => { vi.advanceTimersByTime(50); });
+      expect(screen.getByText('Member')).toBeInTheDocument();
     });
   });
 

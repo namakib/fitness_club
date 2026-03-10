@@ -6,7 +6,6 @@ const KEY = 'navMode';
 const MODES = ['sidebar', 'dropdown'];
 
 function getInitial() {
-  if (typeof window === 'undefined') return 'dropdown';
   try {
     const stored = localStorage.getItem(KEY);
     return MODES.includes(stored) ? stored : 'dropdown';

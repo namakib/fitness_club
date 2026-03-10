@@ -80,7 +80,7 @@ python3 -m venv venv
 source venv/bin/activate
 
 # 2. Install dependencies
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 
 # 3. Create database and load schema + data
 createdb fitness_club
@@ -88,7 +88,7 @@ psql -d fitness_club -f sql/DDL.sql
 psql -d fitness_club -f sql/DML.sql
 
 # 4. Run the app
-python run.py
+python -m backend.run
 ```
 
 The API runs at **http://localhost:5001** and the frontend at **http://localhost:5173**.
@@ -114,11 +114,16 @@ fitness_club/
 │   ├── config.py           # Configuration
 │   ├── db.py               # Database connection (PostgreSQL)
 │   ├── jwt_utils.py        # JWT token creation and verification
-│   └── routes/
-│       ├── auth.py         # Login, register, logout, refresh, role decorators (JWT)
-│       ├── member.py       # Member operations (1-4)
-│       ├── trainer.py      # Trainer operations (5-6)
-│       └── admin.py       # Admin operations (7-8)
+│   ├── run.py              # Flask entry point
+│   ├── run_operation.py     # CLI for 8 operations
+│   ├── requirements.txt
+│   ├── operations/         # op1-op8 (standalone CLI)
+│   ├── routes/
+│   │   ├── auth.py         # Login, register, logout, refresh, role decorators (JWT)
+│   │   ├── member.py       # Member operations (1-4)
+│   │   ├── trainer.py      # Trainer operations (5-6)
+│   │   └── admin.py        # Admin operations (7-8)
+│   └── tests/              # Backend API tests
 ├── frontend/               # React (Vite) SPA
 │   └── src/
 │       ├── pages/          # Member, trainer, admin pages
@@ -131,8 +136,6 @@ fitness_club/
 │   ├── ER_Diagram.md       # ER model with Mermaid diagram
 │   ├── Relational_Schema.md
 │   └── Project_Report.md
-├── requirements.txt
-├── run.py                  # Flask entry point
 ├── start.sh                # One-click setup & launch script
 └── README.md
 ```
@@ -152,5 +155,6 @@ fitness_club/
 
 ## Video Demonstration
 
-<!-- TODO: Replace this placeholder with your actual video link -->
-_Link to be added here._ (max 15 minutes, must cover: ER model, schema mapping, DDL/DML, all 8 operations with success + failure cases, role-based access, code walkthrough)
+[Watch the demo on Loom](https://www.loom.com/share/84976c54bb6c4add935a211cda2ec75d)
+
+<div style="position: relative; padding-bottom: 73.31975560081466%; height: 0;"><iframe src="https://www.loom.com/embed/84976c54bb6c4add935a211cda2ec75d" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>

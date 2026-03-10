@@ -44,7 +44,7 @@ export const DEFAULT_ICON_VARIANT = 'fa';
 
 const cn = (base, className) => (className ? `${base} ${className}`.trim() : base);
 
-const FaIcon = ({ icon, className = 'h-4 w-4', ...props }) => (
+const FaIcon = ({ icon, className, ...props }) => (
   <FontAwesomeIcon icon={icon} className={cn('shrink-0', className)} {...props} />
 );
 

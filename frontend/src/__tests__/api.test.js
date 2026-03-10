@@ -166,4 +166,40 @@ describe('api module', () => {
     const call = fetch.mock.calls[0];
     expect(call[1].headers['Authorization']).toBe('Bearer jwt-token');
   });
+
+  it('refreshAccessToken returns existing promise when called concurrently (early return)', async () => {
+    setAccessToken(null);
+    const res401 = { ok: false, status: 401, headers: { get: () => 'application/json' }, json: async () => ({ error: 'unauthorized' }) };
+    const resOk = (data) => ({ ok: true, headers: { get: () => 'application/json' }, json: async () => data });
+    let callCountA = 0;
+    let callCountB = 0;
+    let resolveRefresh;
+    const refreshPromise = new Promise((r) => { resolveRefresh = r; });
+    fetch.mockImplementation((url) => {
+      const u = String(url || '');
+      if (u.includes('/refresh')) return refreshPromise.then(() => resOk({ access_token: 'refreshed' }));
+      if (u.endsWith('/a') || u.endsWith('/a/')) {
+        callCountA++;
+        return callCountA === 1 ? Promise.resolve(res401) : Promise.resolve(resOk({ data: 'a' }));
+      }
+      if (u.endsWith('/b') || u.endsWith('/b/')) {
+        callCountB++;
+        return callCountB === 1 ? Promise.resolve(res401) : Promise.resolve(resOk({ data: 'b' }));
+      }
+      return Promise.resolve(res401);
+    });
+
+    const reqA = api.get('/a');
+    const reqB = api.get('/b');
+
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 0));
+    resolveRefresh();
+
+    const [dataA, dataB] = await Promise.all([reqA, reqB]);
+    expect(dataA).toEqual({ data: 'a' });
+    expect(dataB).toEqual({ data: 'b' });
+    const refreshCalls = fetch.mock.calls.filter(c => String(c[0] || '').includes('/refresh'));
+    expect(refreshCalls.length).toBe(1);
+  });
 });

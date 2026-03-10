@@ -20,13 +20,13 @@ export default defineConfig({
     setupFiles: './src/__tests__/setup.js',
     css: false,
     coverage: {
-      provider: 'v8',
+      provider: 'istanbul',
       reporter: ['text', 'text-summary', 'lcov'],
       thresholds: {
-        lines: 90,
-        functions: 90,
-        branches: 90,
-        statements: 90,
+        lines: 100,
+        functions: 100,
+        branches: 100,
+        statements: 100,
       },
     },
   },

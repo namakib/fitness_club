@@ -141,3 +141,24 @@ class TestSerializeRows:
             {'d': datetime.date(2026, 12, 31)},
         ]
         assert serialize_rows(rows) == [{'d': '2026-01-01'}, {'d': '2026-12-31'}]
+
+
+# ---------------------------------------------------------------------------
+# get_db with DB_SSLMODE
+# ---------------------------------------------------------------------------
+
+class TestGetDbSslMode:
+    def test_connect_includes_sslmode_when_set(self, app):
+        mock_conn = MagicMock()
+        mock_cur = MagicMock()
+        mock_cur.__enter__ = MagicMock(return_value=mock_cur)
+        mock_cur.__exit__ = MagicMock(return_value=False)
+        mock_conn.cursor.return_value = mock_cur
+        with patch('psycopg2.connect', return_value=mock_conn) as mock_connect:
+            app.config['DB_SSLMODE'] = 'require'
+            with app.test_request_context():
+                from backend.db import get_db
+                get_db()
+            mock_connect.assert_called_once()
+            call_kwargs = mock_connect.call_args[1]
+            assert call_kwargs.get('sslmode') == 'require'

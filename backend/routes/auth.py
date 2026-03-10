@@ -1,7 +1,10 @@
 import functools
+import logging
 import os
 
 from flask import Blueprint, current_app, g, jsonify, make_response, request
+
+logger = logging.getLogger(__name__)
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from ..db import apply_role, get_cursor, get_db, serialize_row
@@ -18,6 +21,7 @@ from ..errors import (
     VAL_004,
     VAL_005,
     VAL_011,
+    VAL_012,
     make_error,
 )
 from ..jwt_utils import create_access_token, create_refresh_token, decode_token
@@ -140,12 +144,20 @@ def register():
         return jsonify(error='Registration is disabled in demo mode. '
                        'Use the sample accounts to log in.'), 403
     data = request.get_json(silent=True) or {}
-    name = data.get('name', '').strip()
-    email = data.get('email', '').strip().lower()
-    dob = data.get('dob', '')
-    gender = data.get('gender', '')
-    phone = data.get('phone', '').strip()
-    password = data.get('password', '')
+    # Extract values safely (handle unexpected types from frontend)
+    def _str(val):
+        if val is None: return ''
+        if isinstance(val, str): return val.strip()
+        if isinstance(val, dict) and 'target' in val: return _str(val.get('target', {}).get('value'))
+        try: return str(val).strip()
+        except Exception: return ''
+    name = _str(data.get('name'))
+    email = _str(data.get('email')).lower()
+    dob = _str(data.get('dob'))
+    gender = _str(data.get('gender')).lower()
+    phone = _str(data.get('phone'))
+    pw = data.get('password')
+    password = pw if isinstance(pw, str) else (str(pw) if pw else '')
 
     if not name:
         body, status = make_error(VAL_001)
@@ -165,6 +177,9 @@ def register():
     if len(password) < 6:
         body, status = make_error(VAL_005)
         return jsonify(body), status
+    if gender and gender not in ('male', 'female', 'other'):
+        body, status = make_error(VAL_012)
+        return jsonify(body), status
 
     cur = get_cursor()
     try:
@@ -178,6 +193,7 @@ def register():
         return jsonify(message='Registration successful.'), 201
     except Exception as e:
         get_db().rollback()
+        logger.exception('Registration failed: %s', e)
         if 'unique' in str(e).lower():
             body, status = make_error(AUTH_005)
             return jsonify(body), status

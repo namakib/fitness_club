@@ -34,6 +34,26 @@ vi.mock('../../../components/TimePicker', () => ({
     return <input data-testid={`tp-${label}`} value={value ?? ''} onChange={(e) => onChange(e.target.value)} />;
   },
 }));
+vi.mock('../../../components/TrainerAvailabilityCalendar', () => ({
+  default: function MockCalendar({ slots, loading, onSlotSelect }) {
+    if (loading) return <div data-testid="availability-loading">Loading…</div>;
+    if (!slots?.length) return <div data-testid="availability-empty">No slots</div>;
+    return (
+      <div data-testid="availability-calendar">
+        {slots.map(s => (
+          <button
+            key={s.availability_id}
+            type="button"
+            disabled={s.is_booked}
+            onClick={() => !s.is_booked && onSlotSelect(s.available_date, s.start_time, s.end_time)}
+          >
+            {s.available_date} {s.start_time}–{s.end_time}
+          </button>
+        ))}
+      </div>
+    );
+  },
+}));
 
 import api from '../../../api';
 import { toastError, toastSuccess } from '../../../toastUtil';
@@ -69,7 +89,15 @@ const mockData = {
 describe('Admin RoomBooking', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue(mockData);
+    api.get.mockImplementation((path) => {
+      if (path.startsWith('/admin/room-booking/available-rooms')) {
+        return Promise.resolve({ available_rooms: mockData.rooms });
+      }
+      if (path.startsWith('/admin/room-booking/trainer-availability')) {
+        return Promise.resolve({ slots: [{ availability_id: 1, available_date: '2025-08-01', start_time: '09:00', end_time: '10:00', is_booked: false, booked_by_me: false }] });
+      }
+      return Promise.resolve(mockData);
+    });
     api.post.mockResolvedValue({});
   });
 
@@ -92,6 +120,25 @@ describe('Admin RoomBooking', () => {
     renderRoomBooking();
     await waitFor(() => {
       expect(api.get).toHaveBeenCalledWith('/admin/room-booking');
+    });
+  });
+
+  it('fetches trainer availability when member and trainer are selected', async () => {
+    renderRoomBooking();
+    await waitFor(() => {
+      expect(screen.getByText('Book Session')).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByTestId('select-Member'), { target: { value: '1' } });
+    fireEvent.change(screen.getByTestId('select-Trainer'), { target: { value: '1' } });
+
+    await waitFor(() => {
+      const trainerAvailabilityCalls = api.get.mock.calls.filter(c =>
+        c[0]?.includes('/admin/room-booking/trainer-availability'),
+      );
+      expect(trainerAvailabilityCalls.length).toBeGreaterThanOrEqual(1);
+      expect(trainerAvailabilityCalls[0][0]).toContain('trainer_id=1');
+      expect(trainerAvailabilityCalls[0][0]).toContain('member_id=1');
     });
   });
 
@@ -267,6 +314,8 @@ describe('Admin RoomBooking', () => {
     });
 
     fireEvent.change(screen.getByTestId('select-Member'), { target: { value: '1' } });
+    fireEvent.change(screen.getByTestId('select-Trainer'), { target: { value: '1' } });
+    fireEvent.change(screen.getByTestId('select-Room'), { target: { value: '1' } });
     fireEvent.change(screen.getByTestId('dp-Date'), { target: { value: '2025-08-01' } });
     fireEvent.change(screen.getByTestId('tp-Start Time'), { target: { value: '09:00' } });
     fireEvent.change(screen.getByTestId('tp-End Time'), { target: { value: '10:00' } });
@@ -284,6 +333,41 @@ describe('Admin RoomBooking', () => {
     api.get.mockReturnValue(new Promise(() => {}));
     const { container } = renderRoomBooking();
     expect(container.querySelector('.animate-pulse')).toBeInTheDocument();
+  });
+
+  it('handles trainer-availability fetch failure (catch branch line 82)', async () => {
+    api.get.mockImplementation((path) => {
+      if (path.startsWith('/admin/room-booking/trainer-availability')) return Promise.reject(new Error('fail'));
+      if (path.startsWith('/admin/room-booking/available-rooms')) return Promise.resolve({ available_rooms: mockData.rooms });
+      return Promise.resolve(mockData);
+    });
+    renderRoomBooking();
+    await waitFor(() => expect(screen.getByText('Book Session')).toBeInTheDocument());
+    fireEvent.change(screen.getByTestId('select-Member'), { target: { value: '1' } });
+    fireEvent.change(screen.getByTestId('select-Trainer'), { target: { value: '1' } });
+    await waitFor(() => {
+      expect(screen.getByText("Trainer availability")).toBeInTheDocument();
+    });
+  });
+
+  it('handles available-rooms fetch failure (catch branch line 95)', async () => {
+    api.get.mockImplementation((path) => {
+      if (path.startsWith('/admin/room-booking/available-rooms')) return Promise.reject(new Error('unavailable'));
+      if (path.startsWith('/admin/room-booking/trainer-availability')) return Promise.resolve({ slots: [{ availability_id: 1, available_date: '2025-08-01', start_time: '09:00', end_time: '10:00', is_booked: false, booked_by_me: false }] });
+      return Promise.resolve(mockData);
+    });
+    renderRoomBooking();
+    await waitFor(() => expect(screen.getByText('Book Session')).toBeInTheDocument());
+    fireEvent.change(screen.getByTestId('select-Member'), { target: { value: '1' } });
+    fireEvent.change(screen.getByTestId('select-Trainer'), { target: { value: '1' } });
+    const user = userEvent.setup();
+    await waitFor(() => expect(screen.getByTestId('availability-calendar')).toBeInTheDocument());
+    const slotBtn = screen.getByText('2025-08-01 09:00–10:00');
+    await user.click(slotBtn);
+    await waitFor(() => {
+      const availCalls = api.get.mock.calls.filter(c => c[0]?.includes('available-rooms'));
+      expect(availCalls.length).toBeGreaterThanOrEqual(1);
+    });
   });
 
   it('handles API error gracefully', async () => {
@@ -323,6 +407,259 @@ describe('Admin RoomBooking', () => {
 
     await user.click(screen.getByText('Book Session'));
     expect(screen.getByText('Booking...')).toBeInTheDocument();
+  });
+
+  it('shows "No rooms available for this slot" when availableRooms is empty', async () => {
+    api.get.mockImplementation((path) => {
+      if (path.startsWith('/admin/room-booking/available-rooms')) return Promise.resolve({ available_rooms: [] });
+      if (path.startsWith('/admin/room-booking/trainer-availability')) return Promise.resolve({ slots: [] });
+      return Promise.resolve(mockData);
+    });
+    renderRoomBooking();
+    await waitFor(() => expect(screen.getByText('Book Session')).toBeInTheDocument());
+    fireEvent.change(screen.getByTestId('dp-Date'), { target: { value: '2025-08-01' } });
+    fireEvent.change(screen.getByTestId('tp-Start Time'), { target: { value: '09:00' } });
+    fireEvent.change(screen.getByTestId('tp-End Time'), { target: { value: '10:00' } });
+    await waitFor(() => {
+      expect(screen.getByText('No rooms available for this slot')).toBeInTheDocument();
+    });
+  });
+
+  it('shows "X room(s) available" when availableRooms has items', async () => {
+    api.get.mockImplementation((path) => {
+      if (path.startsWith('/admin/room-booking/available-rooms')) return Promise.resolve({ available_rooms: mockData.rooms });
+      return Promise.resolve(mockData);
+    });
+    renderRoomBooking();
+    await waitFor(() => expect(screen.getByText('Book Session')).toBeInTheDocument());
+    fireEvent.change(screen.getByTestId('dp-Date'), { target: { value: '2025-08-01' } });
+    fireEvent.change(screen.getByTestId('tp-Start Time'), { target: { value: '09:00' } });
+    fireEvent.change(screen.getByTestId('tp-End Time'), { target: { value: '10:00' } });
+    await waitFor(() => {
+      expect(screen.getByText('1 room(s) available')).toBeInTheDocument();
+    });
+  });
+
+  it('clears room when slot changes and selected room is no longer available (SessionForm)', async () => {
+    let availableRoomsCallCount = 0;
+    api.get.mockImplementation((path) => {
+      if (path.startsWith('/admin/room-booking/available-rooms')) {
+        availableRoomsCallCount++;
+        if (availableRoomsCallCount === 1) {
+          return Promise.resolve({ available_rooms: [{ room_id: 1, room_name: 'Room A' }, { room_id: 2, room_name: 'Room B' }] });
+        }
+        return Promise.resolve({ available_rooms: [{ room_id: 3, room_name: 'Room C' }, { room_id: 4, room_name: 'Room D' }] });
+      }
+      if (path.startsWith('/admin/room-booking/trainer-availability')) {
+        return Promise.resolve({ slots: [{ availability_id: 1, available_date: '2025-08-01', start_time: '09:00', end_time: '10:00', is_booked: false, booked_by_me: false }] });
+      }
+      return Promise.resolve(mockData);
+    });
+    const user = userEvent.setup();
+    renderRoomBooking();
+    await waitFor(() => expect(screen.getByText('Book Session')).toBeInTheDocument());
+
+    fireEvent.change(screen.getByTestId('select-Member'), { target: { value: '1' } });
+    fireEvent.change(screen.getByTestId('select-Trainer'), { target: { value: '1' } });
+    await waitFor(() => expect(screen.getByTestId('availability-calendar')).toBeInTheDocument());
+    const slotBtn = screen.getByText('2025-08-01 09:00–10:00');
+    await user.click(slotBtn);
+    await waitFor(() => {
+      expect(screen.getByText(/room\(s\) available/)).toBeInTheDocument();
+    });
+    fireEvent.change(screen.getByTestId('select-Room'), { target: { value: '1' } });
+    expect(screen.getByTestId('select-Room').value).toBe('1');
+
+    fireEvent.change(screen.getByTestId('dp-Date'), { target: { value: '2025-08-02' } });
+    fireEvent.change(screen.getByTestId('tp-Start Time'), { target: { value: '10:00' } });
+    fireEvent.change(screen.getByTestId('tp-End Time'), { target: { value: '11:00' } });
+    await waitFor(() => {
+      const availCalls = api.get.mock.calls.filter(c => c[0]?.includes('available-rooms'));
+      expect(availCalls.length).toBeGreaterThanOrEqual(2);
+    });
+    fireEvent.change(screen.getByTestId('tp-Start Time'), { target: { value: '10:30' } });
+    await waitFor(() => {
+      expect(screen.getByTestId('select-Room').value).toBe('');
+    });
+  });
+
+  it('clears room when slot changes and selected room is no longer available (ClassForm)', async () => {
+    let availableRoomsCallCount = 0;
+    api.get.mockImplementation((path) => {
+      if (path.startsWith('/admin/room-booking/available-rooms')) {
+        availableRoomsCallCount++;
+        if (availableRoomsCallCount === 1) {
+          return Promise.resolve({ available_rooms: [{ room_id: 1, room_name: 'Room A' }] });
+        }
+        return Promise.resolve({ available_rooms: [{ room_id: 2, room_name: 'Room B' }, { room_id: 3, room_name: 'Room C' }] });
+      }
+      return Promise.resolve(mockData);
+    });
+    const user = userEvent.setup();
+    renderRoomBooking();
+    await waitFor(() => expect(screen.getByText('Room Booking')).toBeInTheDocument());
+    const groupTab = screen.getAllByText('Group Class').find(el => el.tagName === 'BUTTON');
+    await user.click(groupTab);
+    await screen.findByText('Schedule Class');
+
+    fireEvent.change(screen.getByTestId('dp-Date'), { target: { value: '2025-08-01' } });
+    fireEvent.change(screen.getByTestId('tp-Start Time'), { target: { value: '09:00' } });
+    fireEvent.change(screen.getByTestId('tp-End Time'), { target: { value: '10:00' } });
+    await waitFor(() => expect(screen.getByText('1 room(s) available')).toBeInTheDocument());
+    fireEvent.change(screen.getByTestId('select-Room'), { target: { value: '1' } });
+    expect(screen.getByTestId('select-Room').value).toBe('1');
+
+    fireEvent.change(screen.getByTestId('dp-Date'), { target: { value: '2025-08-02' } });
+    await waitFor(() => expect(screen.getByText('2 room(s) available')).toBeInTheDocument());
+    fireEvent.change(screen.getByTestId('tp-Start Time'), { target: { value: '09:30' } });
+    await waitFor(() => {
+      expect(screen.getByTestId('select-Room').value).toBe('');
+    });
+  });
+
+  it('uses searchable Room dropdown when roomOptions has 6+ items (SessionForm)', async () => {
+    const sixRooms = [...Array(6)].map((_, i) => ({ room_id: i + 1, room_name: `Room ${i + 1}` }));
+    api.get.mockImplementation((path) => {
+      if (path.startsWith('/admin/room-booking/available-rooms')) return Promise.resolve({ available_rooms: sixRooms });
+      if (path.startsWith('/admin/room-booking/trainer-availability')) return Promise.resolve({ slots: [] });
+      return Promise.resolve({ ...mockData, rooms: sixRooms });
+    });
+    renderRoomBooking();
+    await waitFor(() => expect(screen.getByText('Book Session')).toBeInTheDocument());
+    fireEvent.change(screen.getByTestId('select-Member'), { target: { value: '1' } });
+    fireEvent.change(screen.getByTestId('select-Trainer'), { target: { value: '1' } });
+    fireEvent.change(screen.getByTestId('dp-Date'), { target: { value: '2025-08-01' } });
+    fireEvent.change(screen.getByTestId('tp-Start Time'), { target: { value: '09:00' } });
+    fireEvent.change(screen.getByTestId('tp-End Time'), { target: { value: '10:00' } });
+    await waitFor(() => {
+      expect(screen.getByText('6 room(s) available')).toBeInTheDocument();
+    });
+  });
+
+  it('uses searchable Room dropdown when roomOptions has 6+ items (ClassForm)', async () => {
+    const sixRooms = [...Array(6)].map((_, i) => ({ room_id: i + 1, room_name: `Room ${i + 1}` }));
+    api.get.mockImplementation((path) => {
+      if (path.startsWith('/admin/room-booking/available-rooms')) return Promise.resolve({ available_rooms: sixRooms });
+      return Promise.resolve({ ...mockData, rooms: sixRooms });
+    });
+    const user = userEvent.setup();
+    renderRoomBooking();
+    await waitFor(() => expect(screen.getByText('Room Booking')).toBeInTheDocument());
+    const groupTab = screen.getAllByText('Group Class').find(el => el.tagName === 'BUTTON');
+    await user.click(groupTab);
+    await screen.findByText('Schedule Class');
+    fireEvent.change(screen.getByTestId('dp-Date'), { target: { value: '2025-08-01' } });
+    fireEvent.change(screen.getByTestId('tp-Start Time'), { target: { value: '09:00' } });
+    fireEvent.change(screen.getByTestId('tp-End Time'), { target: { value: '10:00' } });
+    await waitFor(() => {
+      expect(screen.getByText('6 room(s) available')).toBeInTheDocument();
+    });
+  });
+
+  it('handles ClassForm available-rooms fetch failure (catch line 172)', async () => {
+    api.get.mockImplementation((path) => {
+      if (path.startsWith('/admin/room-booking/available-rooms')) return Promise.reject(new Error('network'));
+      return Promise.resolve(mockData);
+    });
+    const user = userEvent.setup();
+    renderRoomBooking();
+    await waitFor(() => expect(screen.getByText('Room Booking')).toBeInTheDocument());
+    const groupTab = screen.getAllByText('Group Class').find(el => el.tagName === 'BUTTON');
+    await user.click(groupTab);
+    await screen.findByText('Schedule Class');
+    fireEvent.change(screen.getByTestId('dp-Date'), { target: { value: '2025-08-01' } });
+    fireEvent.change(screen.getByTestId('tp-Start Time'), { target: { value: '09:00' } });
+    fireEvent.change(screen.getByTestId('tp-End Time'), { target: { value: '10:00' } });
+    await waitFor(() => {
+      const availCalls = api.get.mock.calls.filter(c => c[0]?.includes('available-rooms'));
+      expect(availCalls.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  it('exercises cancelled branch when member changes during in-flight trainer-availability', async () => {
+    let resolveFn;
+    api.get.mockImplementation((path) => {
+      if (path.startsWith('/admin/room-booking/trainer-availability')) {
+        return new Promise((resolve) => { resolveFn = resolve; });
+      }
+      return Promise.resolve(mockData);
+    });
+    renderRoomBooking();
+    await waitFor(() => expect(screen.getByText('Book Session')).toBeInTheDocument());
+    fireEvent.change(screen.getByTestId('select-Member'), { target: { value: '1' } });
+    fireEvent.change(screen.getByTestId('select-Trainer'), { target: { value: '1' } });
+    fireEvent.change(screen.getByTestId('select-Member'), { target: { value: '' } });
+    resolveFn({ slots: [{ availability_id: 99 }] });
+    await waitFor(() => expect(screen.getByText('Book Session')).toBeInTheDocument());
+  });
+
+  it('exercises cancelled branch when member changes during rejected trainer-availability', async () => {
+    let rejectFn;
+    api.get.mockImplementation((path) => {
+      if (path.startsWith('/admin/room-booking/trainer-availability')) {
+        return new Promise((_, reject) => { rejectFn = reject; });
+      }
+      return Promise.resolve(mockData);
+    });
+    renderRoomBooking();
+    await waitFor(() => expect(screen.getByText('Book Session')).toBeInTheDocument());
+    fireEvent.change(screen.getByTestId('select-Member'), { target: { value: '1' } });
+    fireEvent.change(screen.getByTestId('select-Trainer'), { target: { value: '1' } });
+    fireEvent.change(screen.getByTestId('select-Member'), { target: { value: '' } });
+    rejectFn(new Error('cancelled'));
+    await waitFor(() => expect(screen.getByText('Book Session')).toBeInTheDocument());
+  });
+
+  it('handles null slots in trainer-availability response', async () => {
+    api.get.mockImplementation((path) => {
+      if (path.startsWith('/admin/room-booking/trainer-availability')) return Promise.resolve({ slots: null });
+      if (path.startsWith('/admin/room-booking/available-rooms')) return Promise.resolve({ available_rooms: mockData.rooms });
+      return Promise.resolve(mockData);
+    });
+    renderRoomBooking();
+    await waitFor(() => expect(screen.getByText('Book Session')).toBeInTheDocument());
+    fireEvent.change(screen.getByTestId('select-Member'), { target: { value: '1' } });
+    fireEvent.change(screen.getByTestId('select-Trainer'), { target: { value: '1' } });
+    await waitFor(() => expect(screen.getByTestId('availability-empty')).toBeInTheDocument());
+  });
+
+  it('handles null available_rooms in session available-rooms response', async () => {
+    api.get.mockImplementation((path) => {
+      if (path.startsWith('/admin/room-booking/available-rooms')) return Promise.resolve({ available_rooms: null });
+      if (path.startsWith('/admin/room-booking/trainer-availability')) return Promise.resolve({ slots: [{ availability_id: 1, available_date: '2025-08-01', start_time: '09:00', end_time: '10:00', is_booked: false, booked_by_me: false }] });
+      return Promise.resolve(mockData);
+    });
+    const user = userEvent.setup();
+    renderRoomBooking();
+    await waitFor(() => expect(screen.getByText('Book Session')).toBeInTheDocument());
+    fireEvent.change(screen.getByTestId('select-Member'), { target: { value: '1' } });
+    fireEvent.change(screen.getByTestId('select-Trainer'), { target: { value: '1' } });
+    await waitFor(() => expect(screen.getByTestId('availability-calendar')).toBeInTheDocument());
+    await user.click(screen.getByText('2025-08-01 09:00–10:00'));
+    await waitFor(() => {
+      const availCalls = api.get.mock.calls.filter(c => c[0]?.includes('available-rooms'));
+      expect(availCalls.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  it('handles null available_rooms in class available-rooms response', async () => {
+    api.get.mockImplementation((path) => {
+      if (path.startsWith('/admin/room-booking/available-rooms')) return Promise.resolve({ available_rooms: null });
+      return Promise.resolve(mockData);
+    });
+    const user = userEvent.setup();
+    renderRoomBooking();
+    await waitFor(() => expect(screen.getByText('Room Booking')).toBeInTheDocument());
+    const groupTab = screen.getAllByText('Group Class').find(el => el.tagName === 'BUTTON');
+    await user.click(groupTab);
+    await screen.findByText('Schedule Class');
+    fireEvent.change(screen.getByTestId('dp-Date'), { target: { value: '2025-08-01' } });
+    fireEvent.change(screen.getByTestId('tp-Start Time'), { target: { value: '09:00' } });
+    fireEvent.change(screen.getByTestId('tp-End Time'), { target: { value: '10:00' } });
+    await waitFor(() => {
+      const availCalls = api.get.mock.calls.filter(c => c[0]?.includes('available-rooms'));
+      expect(availCalls.length).toBeGreaterThanOrEqual(1);
+    });
   });
 
   it('shows Scheduling... text while class form is submitting', async () => {
