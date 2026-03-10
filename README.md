@@ -155,6 +155,4 @@ fitness_club/
 
 ## Video Demonstration
 
-[Watch the demo on Loom](https://www.loom.com/share/84976c54bb6c4add935a211cda2ec75d)
-
-<div style="position: relative; padding-bottom: 73.31975560081466%; height: 0;"><iframe src="https://www.loom.com/embed/84976c54bb6c4add935a211cda2ec75d" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
+[![Watch the demo](https://cdn.loom.com/sessions/thumbnails/84976c54bb6c4add935a211cda2ec75d-with-play.gif)](https://www.loom.com/share/84976c54bb6c4add935a211cda2ec75d)
