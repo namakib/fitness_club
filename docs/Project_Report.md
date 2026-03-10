@@ -267,8 +267,8 @@ All database interactions use parameterized SQL queries via psycopg2 (no ORM). T
 
 ### 9.2 Frontend Tests
 
-- **52 test suites** (864 tests) using Vitest with jsdom environment
-- Coverage enforced at 90% for lines, functions, branches, and statements via `@vitest/coverage-v8`
+- **54 test suites** (949 tests) using Vitest with jsdom environment
+- 100% coverage across statements, branches, functions, and lines via `@vitest/coverage-istanbul`
 - ESLint with `eslint-plugin-react-hooks` and `eslint-plugin-react-refresh` enforces code quality with zero warnings
 
 ### 9.3 CI Pipeline
@@ -290,8 +290,9 @@ A GitHub Actions workflow runs on every push and pull request to `develop`:
 
 ## 11. Video Demonstration
 
-<!-- TODO: Replace this placeholder with your actual video link -->
-_Link to be added here._
+[Watch the demo on Loom](https://www.loom.com/share/84976c54bb6c4add935a211cda2ec75d)
+
+<div style="position: relative; padding-bottom: 73.31975560081466%; height: 0;"><iframe src="https://www.loom.com/embed/84976c54bb6c4add935a211cda2ec75d" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
 
 ---
 
