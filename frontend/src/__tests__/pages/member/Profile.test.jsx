@@ -161,7 +161,7 @@ describe('Member Profile', () => {
     });
   });
 
-  it('renders email field as disabled', async () => {
+  it('renders email field as disabled (Field disabled branch)', async () => {
     renderProfile();
 
     await waitFor(() => {
@@ -169,6 +169,7 @@ describe('Member Profile', () => {
       const emailField = Array.from(emailInputs).find(el => el.value === 'alice@test.com');
       expect(emailField).toBeTruthy();
       expect(emailField.disabled).toBe(true);
+      expect(emailField.className).toMatch(/bg-gray-50|dark:bg-gray-700/);
     });
   });
 
@@ -178,6 +179,13 @@ describe('Member Profile', () => {
       expect(screen.getAllByText('Date of Birth').length).toBeGreaterThanOrEqual(1);
       expect(screen.getAllByText('Gender').length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText('Joined')).toBeInTheDocument();
+    });
+  });
+
+  it('renders formatted date of birth (fmtDate line 117)', async () => {
+    renderProfile();
+    await waitFor(() => {
+      expect(screen.getByText('May 15, 1990')).toBeInTheDocument();
     });
   });
 
@@ -246,7 +254,7 @@ describe('Member Profile', () => {
     });
   });
 
-  it('handles member with null dob (fmtDate null branch line 117)', async () => {
+  it('handles member with null dob (fmtDate null branch)', async () => {
     api.get.mockResolvedValueOnce({
       member: { name: 'Test', email: 'test@test.com', phone: '1234567890', gender: 'male', dob: null, created_at: '2024-01-01' },
       goals: [],
@@ -256,5 +264,19 @@ describe('Member Profile', () => {
     await waitFor(() => {
       expect(screen.getByText('Test')).toBeInTheDocument();
     });
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('handles member with null created_at (fmtDate null branch for joined)', async () => {
+    api.get.mockResolvedValueOnce({
+      member: { name: 'Test', email: 'test@test.com', phone: '1234567890', gender: 'male', dob: '2000-01-01', created_at: null },
+      goals: [],
+      recent_metrics: [],
+    });
+    renderProfile();
+    await waitFor(() => {
+      expect(screen.getByText('Test')).toBeInTheDocument();
+    });
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(1);
   });
 });

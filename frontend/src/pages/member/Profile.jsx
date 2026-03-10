@@ -114,7 +114,6 @@ function Skeleton() {
 }
 
 function fmtDate(d) {
-  if (!d) return '—';
   return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 

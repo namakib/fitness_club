@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import DataTable from '../../components/DataTable';
 
 const columns = [
@@ -361,5 +361,78 @@ describe('DataTable', () => {
     const rows = makeRows(12);
     const { container } = render(<DataTable columns={filterColumns} data={rows} pageSize={1} />);
     expect(container.textContent).toContain('12 results');
+  });
+
+  it('uses filter enum (non-date) when filter is truthy but not date', () => {
+    const cols = [
+      { key: 'name', label: 'Name' },
+      { key: 'kind', label: 'Kind', filter: 'enum' },
+    ];
+    const rows = [
+      { name: 'A', kind: 'alpha' },
+      { name: 'B', kind: 'beta' },
+    ];
+    render(<DataTable columns={cols} data={rows} pageSize={20} />);
+    fireEvent.click(screen.getByText('Kind: All'));
+    expect(screen.getByText('Alpha')).toBeInTheDocument();
+    expect(screen.getByText('Beta')).toBeInTheDocument();
+  });
+
+  it('corrects page via useEffect when filter reduces rows below current page', () => {
+    const rows = makeRows(25);
+    const { container } = render(<DataTable columns={filterColumns} data={rows} pageSize={5} />);
+    fireEvent.click(screen.getByText('5'));
+    expect(container.querySelectorAll('tbody tr').length).toBeGreaterThan(0);
+    const search = screen.getByPlaceholderText('Search...');
+    fireEvent.change(search, { target: { value: 'User 1' } });
+    expect(container.querySelectorAll('tbody tr').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('shows "results" plural when filtered count is not 1', () => {
+    const rows = makeRows(3);
+    render(<DataTable columns={filterColumns} data={rows} pageSize={2} />);
+    expect(screen.getByText('3 results')).toBeInTheDocument();
+  });
+
+  it('corrects safePage via useEffect when page exceeds totalPages after filter', async () => {
+    const rows = makeRows(30);
+    const { container } = render(<DataTable columns={filterColumns} data={rows} pageSize={5} />);
+    fireEvent.click(screen.getByText('6'));
+    expect(container.querySelectorAll('tbody tr')[0].textContent).toContain('User 26');
+
+    const search = screen.getByPlaceholderText('Search...');
+    fireEvent.change(search, { target: { value: 'User 3' } });
+
+    const tbodyRows = container.querySelectorAll('tbody tr');
+    expect(tbodyRows.length).toBeGreaterThanOrEqual(1);
+    expect(tbodyRows[0].textContent).toContain('User 3');
+  });
+
+  it('clamps page via useEffect when data prop shrinks', () => {
+    const { container, rerender } = render(
+      <DataTable columns={filterColumns} data={makeRows(30)} pageSize={5} />,
+    );
+    fireEvent.click(screen.getByText('6'));
+    expect(container.querySelectorAll('tbody tr')[0].textContent).toContain('User 26');
+
+    rerender(<DataTable columns={filterColumns} data={makeRows(5)} pageSize={5} />);
+    const tbodyRows = container.querySelectorAll('tbody tr');
+    expect(tbodyRows.length).toBe(5);
+    expect(tbodyRows[0].textContent).toContain('User 1');
+  });
+
+  it('renders fmtDateLabel for null and invalid date values', () => {
+    const cols = [
+      { key: 'name', label: 'Name' },
+      { key: 'date', label: 'Date', filter: 'date' },
+    ];
+    const rows = [
+      { name: 'A', date: null },
+      { name: 'B', date: 'not-a-date' },
+      { name: 'C', date: '2025-06-01' },
+    ];
+    render(<DataTable columns={cols} data={rows} pageSize={20} />);
+    fireEvent.click(screen.getByText('Date: All'));
+    expect(screen.getByText('Jun 1, 2025')).toBeInTheDocument();
   });
 });

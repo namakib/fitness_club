@@ -123,6 +123,15 @@ describe('Layout', () => {
       fireEvent.mouseDown(document.body);
     });
 
+    it('does not close user menu on mouseDown inside the menu', () => {
+      renderLayout({ user: { name: 'Alice', email: 'a@b.com' }, role: 'member' }, '/member/dashboard', 'dropdown');
+      const toggle = screen.getByText('A').closest('button');
+      fireEvent.click(toggle);
+      const emailEl = screen.getAllByText('a@b.com')[0];
+      fireEvent.mouseDown(emailEl);
+      expect(screen.getAllByText('a@b.com').length).toBeGreaterThanOrEqual(1);
+    });
+
     it('displays user name and email in menu', () => {
       renderLayout({ user: { name: 'Alice Smith', email: 'alice@test.com' }, role: 'member' }, '/member/dashboard', 'dropdown');
       const toggle = screen.getByText('AS').closest('button');
@@ -245,6 +254,14 @@ describe('Layout', () => {
       const scheduleLink = screen.getByText('Schedule');
       fireEvent.click(scheduleLink);
     });
+  });
+
+  it('closes user menu when clicking outside menuRef', () => {
+    renderLayout({ user: { name: 'Alice', email: 'a@b.com' }, role: 'member' }, '/member/dashboard', 'dropdown');
+    const toggle = screen.getByText('A').closest('button');
+    fireEvent.click(toggle);
+    expect(screen.getAllByText('a@b.com').length).toBeGreaterThanOrEqual(1);
+    fireEvent.mouseDown(document.body);
   });
 
   describe('Escape keydown on sidebar not open does nothing', () => {

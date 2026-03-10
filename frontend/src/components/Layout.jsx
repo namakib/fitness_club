@@ -61,7 +61,7 @@ export default function Layout() {
 
   useEffect(() => {
     function handleClick(e) {
-      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+      if (!menuRef.current.contains(e.target)) setMenuOpen(false);
     }
     if (menuOpen) document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);

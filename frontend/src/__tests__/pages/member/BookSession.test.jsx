@@ -244,6 +244,27 @@ describe('BookSessionForm', () => {
     await user.click(availableSlot);
   });
 
+  it('does not throw when onSuccess is undefined', async () => {
+    const user = userEvent.setup();
+    api.post.mockResolvedValueOnce({});
+    renderForm({ onSuccess: undefined });
+
+    await waitFor(() => expect(screen.getByText('Select trainer')).toBeInTheDocument());
+    await user.click(screen.getByText('Select trainer'));
+    await waitFor(() => expect(screen.getByText('Bob – Strength')).toBeInTheDocument());
+    await user.click(screen.getByText('Bob – Strength'));
+    await waitFor(() => expect(screen.getByText('Trainer availability')).toBeInTheDocument());
+    await user.click(screen.getByText('Select room'));
+    await waitFor(() => expect(screen.getByText('Room A')).toBeInTheDocument());
+    await user.click(screen.getByText('Room A'));
+    await user.click(screen.getByText('Book Session'));
+
+    await waitFor(() => {
+      expect(api.post).toHaveBeenCalledWith('/member/sessions', expect.any(Object));
+      expect(toastSuccess).toHaveBeenCalledWith('Session booked.');
+    });
+  });
+
   it('submits form successfully', async () => {
     const user = userEvent.setup();
     const onSuccess = vi.fn();
@@ -647,6 +668,21 @@ describe('BookSessionForm - cancelled effect (lines 46-52)', () => {
 
     resolvers[0]({ slots: [] });
     resolvers[1]({ slots: [] });
+  });
+
+  it('handles availability response with null slots (res.slots || [] branch)', async () => {
+    setupMocks(bookingOptions, { slots: null });
+    const user = userEvent.setup();
+    renderForm();
+
+    await waitFor(() => expect(screen.getByText('Select trainer')).toBeInTheDocument());
+    await user.click(screen.getByText('Select trainer'));
+    await waitFor(() => expect(screen.getByText('Bob – Strength')).toBeInTheDocument());
+    await user.click(screen.getByText('Bob – Strength'));
+
+    await waitFor(() => {
+      expect(screen.getByText('No upcoming availability')).toBeInTheDocument();
+    });
   });
 
   it('handles availability fetch failure when cancelled', async () => {

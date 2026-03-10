@@ -52,6 +52,16 @@ describe('Icons', () => {
     expect(container.firstChild).toBeTruthy();
   });
 
+  it('ChevronIcon renders with default direction and variant', () => {
+    const { container } = render(<ChevronIcon />);
+    expect(container.firstChild).toBeTruthy();
+  });
+
+  it('ChevronDoubleIcon renders with default direction and variant', () => {
+    const { container } = render(<ChevronDoubleIcon />);
+    expect(container.firstChild).toBeTruthy();
+  });
+
   it('CheckIcon renders', () => {
     const { container } = render(<CheckIcon />);
     expect(container.firstChild).toBeTruthy();

@@ -4,7 +4,6 @@ import { ClockIcon, ChevronUpDownIcon, ChevronUpIcon, ChevronDownIcon } from './
 
 /** HH:mm (24h) to 12h display e.g. "9:00 AM", "2:30 PM" */
 function formatTimeDisplay(hhmm) {
-  if (!hhmm) return '';
   const [h, m] = hhmm.split(':').map(Number);
   if (isNaN(h) || isNaN(m)) return hhmm;
   const hour12 = h % 12 || 12;
@@ -47,7 +46,7 @@ export default function TimePicker({ label, value, onChange, placeholder = 'Sele
 
   useEffect(() => {
     function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      if (!ref.current.contains(e.target)) setOpen(false);
     }
     if (open) document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);

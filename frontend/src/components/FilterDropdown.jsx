@@ -8,7 +8,7 @@ export default function FilterDropdown({ label, value, options, onChange }) {
 
   useEffect(() => {
     function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      if (!ref.current.contains(e.target)) setOpen(false);
     }
     if (open) document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);

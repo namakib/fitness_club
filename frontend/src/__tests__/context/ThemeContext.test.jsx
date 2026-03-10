@@ -93,7 +93,7 @@ describe('ThemeContext', () => {
     expect(screen.getByTestId('dark').textContent).toBe('false');
   });
 
-  it('uses matchMedia when stored value is invalid', () => {
+  it('falls back to matchMedia when stored value is neither dark nor light', () => {
     store.theme = 'invalid';
     window.matchMedia.mockImplementation(() => ({
       matches: true, media: '', onchange: null,

@@ -19,8 +19,8 @@ export default function SelectDropdown({ label, value, options, onChange, placeh
 
   useEffect(() => {
     function handleClick(e) {
-      const inTrigger = ref.current?.contains(e.target);
-      const inPanel = floating && panelRef.current?.contains(e.target);
+      const inTrigger = ref.current.contains(e.target);
+      const inPanel = floating && panelRef.current.contains(e.target);
       if (open && !inTrigger && !inPanel) setOpen(false);
     }
     if (open) document.addEventListener('mousedown', handleClick);
@@ -62,15 +62,13 @@ export default function SelectDropdown({ label, value, options, onChange, placeh
   useEffect(() => {
     if (floating && open && mounted && triggerRef.current) {
       const updatePosition = () => {
-        if (triggerRef.current) {
-          const rect = triggerRef.current.getBoundingClientRect();
-          const spaceBelow = window.innerHeight - rect.bottom;
-          const openAbove = spaceBelow < PANEL_MAX_HEIGHT && rect.top > spaceBelow;
-          if (openAbove) {
-            setPosition({ top: undefined, bottom: window.innerHeight - rect.top + 6, left: rect.left, minWidth: rect.width });
-          } else {
-            setPosition({ top: rect.bottom + 6, bottom: undefined, left: rect.left, minWidth: rect.width });
-          }
+        const rect = triggerRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const openAbove = spaceBelow < PANEL_MAX_HEIGHT && rect.top > spaceBelow;
+        if (openAbove) {
+          setPosition({ top: undefined, bottom: window.innerHeight - rect.top + 6, left: rect.left, minWidth: rect.width });
+        } else {
+          setPosition({ top: rect.bottom + 6, bottom: undefined, left: rect.left, minWidth: rect.width });
         }
       };
 

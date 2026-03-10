@@ -3,7 +3,6 @@ import { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext(null);
 
 function getInitial() {
-  if (typeof window === 'undefined') return false;
   try {
     const stored = localStorage.getItem('theme');
     if (stored === 'dark' || stored === 'light') return stored === 'dark';

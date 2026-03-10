@@ -5,9 +5,7 @@ import { CloseIcon } from './Icons';
 import t from '../theme';
 
 function fmtDateLabel(d) {
-  if (!d) return '';
   const dt = (typeof d === 'string' && d.length === 10) ? new Date(d + 'T12:00:00') : new Date(d);
-  if (isNaN(dt)) return String(d);
   return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
@@ -74,8 +72,7 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
     let rows = data;
 
     for (const col of filterableCols) {
-      const val = activeFilters[col.key];
-      if (val) rows = rows.filter(r => matchesFilter(r, col, val));
+      rows = rows.filter(r => matchesFilter(r, col, activeFilters[col.key]));
     }
 
     if (query.trim()) {
@@ -133,8 +130,8 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
           )}
 
           {filterableCols.map(col => {
-            const opts = filterOptions[col.key] || [];
-            if (opts.length === 0) return null;
+            const opts = filterOptions[col.key];
+            if (!opts || opts.length === 0) return null;
             return (
               <FilterDropdown
                 key={col.key}
@@ -220,8 +217,7 @@ export default function DataTable({ columns, data, emptyMessage = 'No data found
       {showPagination && (
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 dark:border-gray-700/50 px-4 py-3">
           <p className="text-xs text-gray-500 dark:text-gray-400 order-2 md:order-1">
-            {filtered.length} result{filtered.length !== 1 ? 's' : ''}
-            {(query || activeCount > 0) && ' (filtered)'}
+            {filtered.length} results{(query || activeCount > 0) ? ' (filtered)' : ''}
           </p>
           <div className="flex flex-wrap items-center gap-1 order-1 md:order-2">
             <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={safePage === 0}

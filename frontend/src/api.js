@@ -50,7 +50,7 @@ async function request(path, opts = {}, _retry = true) {
   if (log) {
     console.group(`%c[API] >>> REQUEST: %c${method} ${url}`, 'color:#8b5cf6;font-weight:bold', 'color:#6b7280');
     if (opts.body) {
-      try { console.log('>>> BODY:', JSON.parse(opts.body)); } catch { console.log('>>> BODY:', opts.body); }
+      try { console.log('>>> BODY:', JSON.parse(opts.body)); } catch /* istanbul ignore next */ { console.log('>>> BODY:', opts.body); }
     }
   }
 

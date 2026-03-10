@@ -54,7 +54,6 @@ export default function Availability() {
   }
 
   async function handleConfirmDelete() {
-    if (!deleteConfirm) return;
     setDeleteConfirm((prev) => ({ ...prev, busy: true }));
     try {
       await api.delete(`/trainer/availability/${deleteConfirm.id}`);

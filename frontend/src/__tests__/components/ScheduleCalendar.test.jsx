@@ -484,6 +484,30 @@ describe('ScheduleCalendar', () => {
     });
   });
 
+  describe('goNext window scroll when selected date exceeds window', () => {
+    it('advances window when goNext pushes selected date past window end', () => {
+      const dateStr = today();
+      const { rerender } = renderCal({ events: { sessions: [], classes: [] } });
+      const input = screen.getByTestId('date-picker-input');
+      const now = new Date();
+      const nearEndOfWeek = new Date(now);
+      nearEndOfWeek.setDate(now.getDate() + 5);
+      const ymd = `${nearEndOfWeek.getFullYear()}-${String(nearEndOfWeek.getMonth() + 1).padStart(2, '0')}-${String(nearEndOfWeek.getDate()).padStart(2, '0')}`;
+      fireEvent.change(input, { target: { value: ymd } });
+      fireEvent.click(screen.getByLabelText('Next day'));
+      expect(input.value).toBeTruthy();
+    });
+
+    it('scrolls window forward when goNext navigates past day 7 of window', () => {
+      renderCal({ events: { sessions: [], classes: [] } });
+      const input = screen.getByTestId('date-picker-input');
+      for (let i = 0; i < 7; i++) {
+        fireEvent.click(screen.getByLabelText('Next day'));
+      }
+      expect(input.value).toBeTruthy();
+    });
+  });
+
   describe('null events data', () => {
     it('handles null resolvedData gracefully', () => {
       renderCal({ events: null });
@@ -675,5 +699,39 @@ describe('ScheduleCalendar', () => {
       });
       expect(screen.queryByText(/BadEvent/)).not.toBeInTheDocument();
     });
+  });
+
+  it('toMinutes handles time with NaN hour or minute', () => {
+    const dateStr = today();
+    renderCal({
+      events: {
+        sessions: [{ session_id: 99, trainer_name: 'Edge', session_date: dateStr, start_time: ':30', end_time: '1:' }],
+        classes: [],
+      },
+    });
+    expect(screen.getByText('Mon')).toBeInTheDocument();
+  });
+
+  it('renders without loadEvents prop (fetchData guard)', () => {
+    renderCal({ events: { sessions: [], classes: [] }, loadEvents: undefined });
+    expect(screen.getByText('Mon')).toBeInTheDocument();
+  });
+
+  it('DatePicker onChange with empty value is ignored', () => {
+    renderCal();
+    const dpInput = screen.getByTestId('date-picker-input');
+    fireEvent.change(dpInput, { target: { value: '' } });
+    expect(screen.getByText('Mon')).toBeInTheDocument();
+  });
+
+  it('toDateKey string branch when event_date is non-YYYY-MM-DD with date fallback', () => {
+    const dateStr = today();
+    renderCal({
+      events: {
+        sessions: [{ session_id: 88, trainer_name: 'FallbackDate', event_date: 'invalid-format', date: dateStr, start_time: '10:00', end_time: '11:00' }],
+        classes: [],
+      },
+    });
+    expect(screen.getByText('Mon')).toBeInTheDocument();
   });
 });
