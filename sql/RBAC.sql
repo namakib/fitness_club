@@ -97,6 +97,7 @@ DROP POLICY IF EXISTS session_member ON personal_session;
 DROP POLICY IF EXISTS enrollment_member ON personal_session;
 DROP POLICY IF EXISTS availability_trainer ON trainer_availability;
 DROP POLICY IF EXISTS member_availability_select ON trainer_availability;
+DROP POLICY IF EXISTS admin_availability_select ON trainer_availability;
 DROP POLICY IF EXISTS trainer_self ON trainer;
 DROP POLICY IF EXISTS admin_self ON admin;
 DROP POLICY IF EXISTS payment_admin ON payment;
@@ -155,6 +156,9 @@ CREATE POLICY availability_trainer ON trainer_availability
 
 CREATE POLICY member_availability_select ON trainer_availability
     FOR SELECT TO fc_member USING (true);
+
+CREATE POLICY admin_availability_select ON trainer_availability
+    FOR SELECT TO fc_admin USING (true);
 
 CREATE POLICY metric_trainer_read ON health_metric
     FOR SELECT TO fc_trainer

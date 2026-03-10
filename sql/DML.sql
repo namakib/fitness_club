@@ -32,6 +32,8 @@ INSERT INTO trainer (name, email, phone, specialization, password_hash) VALUES
 ('Grace Chen',    'grace@example.com',  '613-555-0202', 'Yoga & Flexibility',
  'pbkdf2:sha256:1000000$MqgHklKGjhz6v5TV$41233e3cfd6a60ecbf611e673c71f89c4f8613b72a118a95bfccb6741c3619c1'),
 ('Henry Brown',   'henry@example.com',  '613-555-0203', 'Cardio & HIIT',
+ 'pbkdf2:sha256:1000000$MqgHklKGjhz6v5TV$41233e3cfd6a60ecbf611e673c71f89c4f8613b72a118a95bfccb6741c3619c1'),
+('Dana White',    'dana@example.com',   '613-555-0204', 'General Fitness',
  'pbkdf2:sha256:1000000$MqgHklKGjhz6v5TV$41233e3cfd6a60ecbf611e673c71f89c4f8613b72a118a95bfccb6741c3619c1');
 
 -- ============================================================
@@ -131,7 +133,11 @@ INSERT INTO trainer_availability (trainer_id, available_date, start_time, end_ti
 (2, '2026-03-02', '09:00', '12:00'),
 (2, '2026-03-03', '07:00', '11:00'),
 (2, '2026-03-04', '09:00', '13:00'),
-(2, '2026-03-05', '14:00', '18:00');
+(2, '2026-03-05', '14:00', '18:00'),
+-- Dana White (trainer 4): availability but no sessions or classes — for Operation 6 empty-state demo
+(4, '2026-03-10', '09:00', '12:00'),
+(4, '2026-03-11', '14:00', '17:00'),
+(4, '2026-03-12', '09:00', '12:00');
 
 -- Trainer availability — next 2 months (March–April 2026), varied time slots
 -- Frank Miller (trainer 1): Mon/Wed/Fri 8–12, 14–18; Tue 9–13; Thu 10–14
@@ -604,3 +610,11 @@ INSERT INTO payment (member_id, amount, payment_status, payment_date, payment_me
 (3, 49.99,  'pending',   '2026-02-15', 'bank_transfer'),
 (4, 29.99,  'completed', '2026-02-10', 'credit_card'),
 (5, 49.99,  'completed', '2026-01-25', 'cash');
+
+-- ============================================================
+-- RLS policy for admin room booking (must run after RBAC.sql)
+-- Ensures admins can read trainer_availability when booking sessions
+-- ============================================================
+DROP POLICY IF EXISTS admin_availability_select ON trainer_availability;
+CREATE POLICY admin_availability_select ON trainer_availability
+    FOR SELECT TO fc_admin USING (true);

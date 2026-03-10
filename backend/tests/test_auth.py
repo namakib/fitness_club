@@ -113,6 +113,48 @@ class TestRegister:
         assert resp.status_code == 400
         assert resp.get_json()['error_code'] == 'VAL_011'
 
+    def test_invalid_gender(self, client, mock_db):
+        resp = client.post('/api/register', json={
+            'name': 'User', 'email': 'a@b.com', 'dob': '2000-01-01',
+            'password': 'secret123', 'gender': 'invalid',
+        })
+        assert resp.status_code == 400
+        assert resp.get_json()['error_code'] == 'VAL_012'
+
+    def test_register_with_target_dict_for_name(self, client, mock_db):
+        """MUI Select sends {target: {value: ...}}; _str extracts value."""
+        mock_conn, mock_cur = mock_db
+        resp = client.post('/api/register', json={
+            'name': {'target': {'value': '  Alice  '}},
+            'email': 'mui@test.com',
+            'dob': '2000-01-01',
+            'password': 'secret123',
+        })
+        assert resp.status_code == 201
+        mock_cur.execute.assert_called_once()
+        call_args = mock_cur.execute.call_args[0]
+        assert 'Alice' in str(call_args)
+
+    def test_register_str_exception_returns_empty(self, app, mock_db):
+        """When _str gets a value that raises on str(), it returns ''."""
+        from unittest.mock import Mock, patch
+
+        bad_val = Mock()
+        bad_val.__str__ = Mock(side_effect=TypeError('cannot stringify'))
+        data = {
+            'name': 'OK',
+            'email': 'ok@test.com',
+            'dob': '2000-01-01',
+            'password': 'secret123',
+            'phone': bad_val,
+        }
+        with patch('backend.routes.auth.request') as mock_req:
+            mock_req.get_json = Mock(return_value=data)
+            with app.test_request_context('/', method='POST'):
+                from backend.routes.auth import register
+                resp = register()
+        assert resp[1] == 201
+
     def test_duplicate_email(self, client, mock_db):
         _, mock_cur = mock_db
         mock_cur.execute.side_effect = Exception('unique constraint violation')
@@ -274,6 +316,39 @@ class TestLoadLoggedInUser:
         assert resp.status_code == 200
         data = resp.get_json()
         assert data['user'] is None
+
+    def test_token_missing_sub_rejected(self, client, app, mock_db):
+        """Token with type=access but sub=None leaves user unset."""
+        payload = {
+            'sub': None, 'role': 'member', 'type': 'access',
+            'iat': int(time.time()), 'exp': int(time.time()) + 900,
+        }
+        token = pyjwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
+        resp = client.get('/api/me', headers={'Authorization': f'Bearer {token}'})
+        assert resp.status_code == 200
+        assert resp.get_json()['user'] is None
+
+    def test_token_missing_role_rejected(self, client, app, mock_db):
+        """Token with type=access but role=None leaves user unset."""
+        payload = {
+            'sub': '1', 'role': None, 'type': 'access',
+            'iat': int(time.time()), 'exp': int(time.time()) + 900,
+        }
+        token = pyjwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
+        resp = client.get('/api/me', headers={'Authorization': f'Bearer {token}'})
+        assert resp.status_code == 200
+        assert resp.get_json()['user'] is None
+
+    def test_token_non_numeric_sub_rejected(self, client, app, mock_db):
+        """Token with sub that cannot convert to int leaves user unset."""
+        payload = {
+            'sub': 'not-a-number', 'role': 'member', 'type': 'access',
+            'iat': int(time.time()), 'exp': int(time.time()) + 900,
+        }
+        token = pyjwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
+        resp = client.get('/api/me', headers={'Authorization': f'Bearer {token}'})
+        assert resp.status_code == 200
+        assert resp.get_json()['user'] is None
 
     def test_no_bearer_prefix(self, client, mock_db):
         resp = client.get('/api/me', headers={'Authorization': 'Token abc'})

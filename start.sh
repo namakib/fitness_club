@@ -178,7 +178,7 @@ setup_python() {
     source "$VENV_DIR/bin/activate"
 
     info "Installing Python dependencies..."
-    pip install -q -r "$PROJECT_DIR/requirements.txt" 2>&1 | tail -1
+    pip install -q -r "$PROJECT_DIR/backend/requirements.txt" 2>&1 | tail -1
     success "Dependencies installed"
 }
 
@@ -205,7 +205,7 @@ setup_frontend() {
 # ── 7. Export environment variables for Flask ─────────────────
 configure_env() {
     export DB_HOST DB_PORT DB_NAME DB_USER DB_PASSWORD
-    export FLASK_APP=run.py
+    export FLASK_APP=backend.run
     export FLASK_ENV=development
     export SECRET_KEY="${SECRET_KEY:-dev-secret-key-$(date +%s)}"
     # API debug: print request/response (set DEBUG_API=0 to disable)
@@ -270,10 +270,10 @@ launch_app() {
             echo "export FLASK_PORT=\"$FLASK_PORT\" VITE_PORT=\"$VITE_PORT\""
         } > "$env_file"
         if [[ "$(uname)" == "Darwin" ]]; then
-            osascript -e "tell application \"Terminal\" to do script \"source \\\"$env_file\\\" && cd \\\"$PROJECT_DIR\\\" && source venv/bin/activate && python run.py\""
+            osascript -e "tell application \"Terminal\" to do script \"source \\\"$env_file\\\" && cd \\\"$PROJECT_DIR\\\" && source venv/bin/activate && python -m backend.run\""
             osascript -e "tell application \"Terminal\" to do script \"source \\\"$env_file\\\" && cd \\\"$PROJECT_DIR/frontend\\\" && npx vite --port \\\"$VITE_PORT\\\"\""
         elif command -v gnome-terminal &>/dev/null; then
-            gnome-terminal --tab --title="Backend" -- bash -c "source \"$env_file\" && cd \"$PROJECT_DIR\" && source venv/bin/activate && python run.py; exec bash"
+            gnome-terminal --tab --title="Backend" -- bash -c "source \"$env_file\" && cd \"$PROJECT_DIR\" && source venv/bin/activate && python -m backend.run; exec bash"
             gnome-terminal --tab --title="Frontend" -- bash -c "source \"$env_file\" && cd \"$PROJECT_DIR/frontend\" && npx vite --port \"$VITE_PORT\"; exec bash"
         else
             warn "Cannot open new terminals on this system. Use: ./start.sh (without --split)"
@@ -291,7 +291,7 @@ launch_app() {
     echo ""
 
     cd "$PROJECT_DIR"
-    python run.py &
+    python -m backend.run &
     FLASK_PID=$!
 
     cd "$PROJECT_DIR/frontend"

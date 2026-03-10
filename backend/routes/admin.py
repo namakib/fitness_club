@@ -203,6 +203,56 @@ def room_booking():
     )
 
 
+@bp.route('/room-booking/available-rooms')
+@role_required('admin')
+def available_rooms():
+    """Return rooms available for a given date and time slot (no overlapping bookings)."""
+    date = (request.args.get('date') or '').strip()
+    start_time = (request.args.get('start_time') or '').strip()
+    end_time = (request.args.get('end_time') or '').strip()
+    if not date or not start_time or not end_time:
+        return jsonify(available_rooms=[]), 200
+    if start_time >= end_time:
+        return jsonify(available_rooms=[]), 200
+
+    cur = get_cursor()
+    cur.execute(
+        '''SELECT r.room_id, r.room_name, r.capacity FROM room r
+           WHERE r.room_id NOT IN (
+             SELECT room_id FROM personal_session
+             WHERE session_date = %s AND status != 'cancelled'
+               AND start_time < %s AND end_time > %s
+             UNION
+             SELECT room_id FROM group_class
+             WHERE class_date = %s AND start_time < %s AND end_time > %s
+           )
+           ORDER BY r.room_name''',
+        (date, end_time, start_time, date, end_time, start_time),
+    )
+    rooms = cur.fetchall()
+    cur.close()
+    return jsonify(available_rooms=serialize_rows(rooms)), 200
+
+
+@bp.route('/room-booking/trainer-availability')
+@role_required('admin')
+def trainer_availability():
+    """Return trainer availability slots with is_booked/booked_by_me for the selected member."""
+    trainer_id = request.args.get('trainer_id')
+    member_id = request.args.get('member_id')
+    if not trainer_id or not member_id:
+        body, status = make_error(VAL_006, fields='trainer_id and member_id')
+        return jsonify(body), status
+    cur = get_cursor()
+    cur.execute(
+        '''SELECT * FROM fn_trainer_slot_booking_status(%s, %s)''',
+        (trainer_id, member_id),
+    )
+    slots = cur.fetchall()
+    cur.close()
+    return jsonify(slots=serialize_rows(slots)), 200
+
+
 @bp.route('/room-booking/session', methods=('POST',))
 @role_required('admin')
 def book_session():
