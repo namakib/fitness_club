@@ -106,19 +106,19 @@ describe('ScheduleCalendar', () => {
   });
 
   describe('navigation', () => {
-    it('goes to previous day', () => {
+    it('goes to previous week', () => {
       renderCal();
-      fireEvent.click(screen.getByLabelText('Previous day'));
+      fireEvent.click(screen.getByLabelText('Previous week'));
     });
 
-    it('goes to next day', () => {
+    it('goes to next week', () => {
       renderCal();
-      fireEvent.click(screen.getByLabelText('Next day'));
+      fireEvent.click(screen.getByLabelText('Next week'));
     });
 
     it('goes to today', () => {
       renderCal();
-      fireEvent.click(screen.getByLabelText('Previous day'));
+      fireEvent.click(screen.getByLabelText('Previous week'));
       fireEvent.click(screen.getByText('Today'));
     });
 
@@ -135,7 +135,7 @@ describe('ScheduleCalendar', () => {
       expect(allDayLabels[0].textContent).toBe(todayWeekday);
     });
 
-    it('next/prev move selected date by one day, not a full week', () => {
+    it('next/prev move selected date by a full week', () => {
       renderCal();
       const input = screen.getByTestId('date-picker-input');
       const now = new Date();
@@ -147,12 +147,12 @@ describe('ScheduleCalendar', () => {
       };
       expect(input.value).toBe(fmt(now));
 
-      fireEvent.click(screen.getByLabelText('Next day'));
-      const tomorrow = new Date(now);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      expect(input.value).toBe(fmt(tomorrow));
+      fireEvent.click(screen.getByLabelText('Next week'));
+      const nextWeek = new Date(now);
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      expect(input.value).toBe(fmt(nextWeek));
 
-      fireEvent.click(screen.getByLabelText('Previous day'));
+      fireEvent.click(screen.getByLabelText('Previous week'));
       expect(input.value).toBe(fmt(now));
     });
 
@@ -484,27 +484,60 @@ describe('ScheduleCalendar', () => {
     });
   });
 
-  describe('goNext window scroll when selected date exceeds window', () => {
-    it('advances window when goNext pushes selected date past window end', () => {
-      const dateStr = today();
-      const { rerender } = renderCal({ events: { sessions: [], classes: [] } });
-      const input = screen.getByTestId('date-picker-input');
-      const now = new Date();
-      const nearEndOfWeek = new Date(now);
-      nearEndOfWeek.setDate(now.getDate() + 5);
-      const ymd = `${nearEndOfWeek.getFullYear()}-${String(nearEndOfWeek.getMonth() + 1).padStart(2, '0')}-${String(nearEndOfWeek.getDate()).padStart(2, '0')}`;
-      fireEvent.change(input, { target: { value: ymd } });
-      fireEvent.click(screen.getByLabelText('Next day'));
-      expect(input.value).toBeTruthy();
-    });
-
-    it('scrolls window forward when goNext navigates past day 7 of window', () => {
+  describe('goNext/goPrev shift the entire window by a week', () => {
+    it('advances window by 7 days when clicking next week', () => {
       renderCal({ events: { sessions: [], classes: [] } });
       const input = screen.getByTestId('date-picker-input');
-      for (let i = 0; i < 7; i++) {
-        fireEvent.click(screen.getByLabelText('Next day'));
-      }
-      expect(input.value).toBeTruthy();
+      const now = new Date();
+      const fmt = (d) => {
+        const yy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yy}-${mm}-${dd}`;
+      };
+      fireEvent.click(screen.getByLabelText('Next week'));
+      const expected = new Date(now);
+      expected.setDate(expected.getDate() + 7);
+      expect(input.value).toBe(fmt(expected));
+    });
+
+    it('moves window back by 7 days when clicking previous week', () => {
+      renderCal({ events: { sessions: [], classes: [] } });
+      const input = screen.getByTestId('date-picker-input');
+      const now = new Date();
+      const fmt = (d) => {
+        const yy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yy}-${mm}-${dd}`;
+      };
+      fireEvent.click(screen.getByLabelText('Previous week'));
+      const expected = new Date(now);
+      expected.setDate(expected.getDate() - 7);
+      expect(input.value).toBe(fmt(expected));
+    });
+  });
+
+  describe('clicking a day column selects it', () => {
+    it('selects a day when its column is clicked', () => {
+      renderCal({ events: { sessions: [], classes: [] } });
+      const input = screen.getByTestId('date-picker-input');
+      const now = new Date();
+      const fmt = (d) => {
+        const yy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yy}-${mm}-${dd}`;
+      };
+      expect(input.value).toBe(fmt(now));
+
+      const dayAfterTomorrow = new Date(now);
+      dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
+      const targetDayNum = String(dayAfterTomorrow.getDate());
+      const dayHeaders = screen.getAllByText(targetDayNum);
+      const dayHeader = dayHeaders.find(el => el.closest('[style*="min-height"]'));
+      fireEvent.click(dayHeader.closest('[style*="min-height"]'));
+      expect(input.value).toBe(fmt(dayAfterTomorrow));
     });
   });
 
