@@ -15,6 +15,26 @@ function fmtDate(d) {
   return new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function Skeleton() {
+  return (
+    <div className="space-y-8 animate-pulse">
+      <div className="flex justify-between items-center">
+        <div>
+          <div className={`h-8 w-40 rounded ${t.skeletonBg}`} />
+          <div className="mt-2 h-4 w-72 rounded bg-gray-100 dark:bg-gray-700/50" />
+        </div>
+        <div className={`h-10 w-32 rounded-lg ${t.skeletonBg}`} />
+      </div>
+      <div className={`h-96 rounded-xl ${t.skeletonBg}`} />
+      <div className="grid gap-6">
+        <div className={`h-48 rounded-xl ${t.skeletonBg}`} />
+        <div className={`h-48 rounded-xl ${t.skeletonBg}`} />
+      </div>
+      <div className={`h-64 rounded-xl ${t.skeletonBg}`} />
+    </div>
+  );
+}
+
 function Section({ title, icon, children }) {
   return (
     <div>
@@ -44,7 +64,7 @@ export default function Schedule() {
     load();
   }
 
-  if (!data) return <div className="animate-pulse space-y-6">{[...Array(3)].map((_, i) => <div key={i} className="h-40 rounded-xl bg-gray-200 dark:bg-gray-700" />)}</div>;
+  if (!data) return <Skeleton />;
 
   const { upcoming_sessions, upcoming_classes } = data;
 
