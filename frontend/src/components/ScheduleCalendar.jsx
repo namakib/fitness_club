@@ -171,25 +171,19 @@ export default function ScheduleCalendar({
 
   function goPrev() {
     const newSel = new Date(selectedDate);
-    newSel.setDate(newSel.getDate() - 1);
+    newSel.setDate(newSel.getDate() - 7);
     setSelectedDate(newSel);
-    if (newSel < windowStart) {
-      const ws = new Date(windowStart);
-      ws.setDate(ws.getDate() - 1);
-      setWindowStart(ws);
-    }
+    const ws = new Date(windowStart);
+    ws.setDate(ws.getDate() - 7);
+    setWindowStart(ws);
   }
   function goNext() {
     const newSel = new Date(selectedDate);
-    newSel.setDate(newSel.getDate() + 1);
+    newSel.setDate(newSel.getDate() + 7);
     setSelectedDate(newSel);
-    const windowEnd = new Date(windowStart);
-    windowEnd.setDate(windowEnd.getDate() + 6);
-    if (newSel > windowEnd) {
-      const ws = new Date(windowStart);
-      ws.setDate(ws.getDate() + 1);
-      setWindowStart(ws);
-    }
+    const ws = new Date(windowStart);
+    ws.setDate(ws.getDate() + 7);
+    setWindowStart(ws);
   }
   function goToday() {
     const now = noonDate(new Date());
@@ -257,13 +251,13 @@ export default function ScheduleCalendar({
               />
             </div>
             <div className="flex items-center gap-1">
-              <button type="button" onClick={goPrev} className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition" aria-label="Previous day">
+              <button type="button" onClick={goPrev} className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition" aria-label="Previous week">
                 <ChevronLeftIcon className="h-5 w-5" />
               </button>
               <button type="button" onClick={goToday} className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
                 Today
               </button>
-              <button type="button" onClick={goNext} className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition" aria-label="Next day">
+              <button type="button" onClick={goNext} className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition" aria-label="Next week">
                 <ChevronRightIcon className="h-5 w-5" />
               </button>
             </div>
@@ -332,7 +326,8 @@ export default function ScheduleCalendar({
                 return (
                   <div
                     key={key}
-                    className={`relative border-r border-gray-200 dark:border-gray-700 last:border-r-0 ${colBg}`}
+                    onClick={() => setSelectedDate(noonDate(d))}
+                    className={`relative cursor-pointer border-r border-gray-200 dark:border-gray-700 last:border-r-0 ${colBg}`}
                     style={{ minHeight: 720 }}
                   >
                     <div className={`h-12 flex flex-col items-center justify-center border-b border-gray-200 dark:border-gray-700 text-sm font-medium ${headerCls}`}>
