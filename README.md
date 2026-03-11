@@ -155,4 +155,6 @@ fitness_club/
 
 ## Video Demonstration
 
-[![Watch the demo](https://cdn.loom.com/sessions/thumbnails/84976c54bb6c4add935a211cda2ec75d-720b919fd83634ec.gif)](https://www.loom.com/share/84976c54bb6c4add935a211cda2ec75d)
+<a href="https://www.loom.com/share/84976c54bb6c4add935a211cda2ec75d" target="_blank">
+  <img src="https://cdn.loom.com/sessions/thumbnails/84976c54bb6c4add935a211cda2ec75d-720b919fd83634ec.gif" alt="Watch the demo" />
+</a>
